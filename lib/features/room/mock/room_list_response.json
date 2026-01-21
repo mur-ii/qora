@@ -1,0 +1,159 @@
+{
+  "success": true,
+  "message": "Daftar kamar berhasil diambil",
+  "data": {
+    "hotelId": "hotel-002",
+    "hotelName": "Sunset Beach Resort",
+    "checkIn": "2026-02-15",
+    "checkOut": "2026-02-18",
+    "nights": 3,
+    "rooms": [
+      {
+        "id": "room-001",
+        "name": "Kamar Superior",
+        "description": "Kamar nyaman dengan fasilitas modern dan pemandangan laut parsial",
+        "size": 32,
+        "sizeUnit": "m²",
+        "maxGuests": 2,
+        "bedType": "1 Tempat Tidur King atau 2 Tempat Tidur Single",
+        "imageUrl": "https://picsum.photos/seed/room001/600/400",
+        "gallery": [
+          "https://picsum.photos/seed/room001a/600/400",
+          "https://picsum.photos/seed/room001b/600/400",
+          "https://picsum.photos/seed/room001c/600/400"
+        ],
+        "pricePerNight": 1800000,
+        "totalPrice": 5400000,
+        "amenities": [
+          "WiFi Gratis",
+          "AC",
+          "TV Layar Datar",
+          "Mini Bar",
+          "Pembuat Kopi",
+          "Brankas",
+          "Kamar Mandi dengan Shower"
+        ],
+        "availableRooms": 5,
+        "cancellationPolicy": {
+          "type": "flexible",
+          "description": "Pembatalan gratis hingga 24 jam sebelum check-in",
+          "refundable": true,
+          "deadline": "2026-02-14T14:00:00.000Z"
+        }
+      },
+      {
+        "id": "room-002",
+        "name": "Kamar Deluxe",
+        "description": "Kamar luas dengan balkon dan pemandangan laut yang menakjubkan",
+        "size": 42,
+        "sizeUnit": "m²",
+        "maxGuests": 2,
+        "bedType": "1 Tempat Tidur King",
+        "imageUrl": "https://picsum.photos/seed/room002/600/400",
+        "gallery": [
+          "https://picsum.photos/seed/room002a/600/400",
+          "https://picsum.photos/seed/room002b/600/400",
+          "https://picsum.photos/seed/room002c/600/400"
+        ],
+        "pricePerNight": 2400000,
+        "totalPrice": 7200000,
+        "amenities": [
+          "WiFi Gratis",
+          "AC",
+          "TV Layar Datar",
+          "Mini Bar",
+          "Pembuat Kopi",
+          "Brankas",
+          "Bathtub",
+          "Balkon Pemandangan Laut",
+          "Jubah Mandi & Sandal"
+        ],
+        "availableRooms": 3,
+        "cancellationPolicy": {
+          "type": "flexible",
+          "description": "Pembatalan gratis hingga 24 jam sebelum check-in",
+          "refundable": true,
+          "deadline": "2026-02-14T14:00:00.000Z"
+        }
+      },
+      {
+        "id": "room-003",
+        "name": "Ocean View Suite",
+        "description": "Suite mewah dengan ruang tamu terpisah dan pemandangan laut panorama",
+        "size": 68,
+        "sizeUnit": "m²",
+        "maxGuests": 3,
+        "bedType": "1 Tempat Tidur King + 1 Sofa Bed",
+        "imageUrl": "https://picsum.photos/seed/room003/600/400",
+        "gallery": [
+          "https://picsum.photos/seed/room003a/600/400",
+          "https://picsum.photos/seed/room003b/600/400",
+          "https://picsum.photos/seed/room003c/600/400",
+          "https://picsum.photos/seed/room003d/600/400"
+        ],
+        "pricePerNight": 3600000,
+        "totalPrice": 10800000,
+        "amenities": [
+          "WiFi Gratis",
+          "AC",
+          "TV Layar Datar",
+          "Mini Bar",
+          "Mesin Nespresso",
+          "Brankas",
+          "Jacuzzi",
+          "Balkon Pemandangan Laut",
+          "Jubah Mandi & Sandal",
+          "Ruang Tamu Terpisah",
+          "Perlengkapan Mandi Premium",
+          "Sarapan Gratis"
+        ],
+        "availableRooms": 2,
+        "cancellationPolicy": {
+          "type": "moderate",
+          "description": "Pembatalan gratis hingga 7 hari sebelum check-in",
+          "refundable": true,
+          "deadline": "2026-02-08T14:00:00.000Z"
+        }
+      },
+      {
+        "id": "room-004",
+        "name": "Kamar Family",
+        "description": "Sempurna untuk keluarga dengan kamar yang terhubung dan pemandangan pantai",
+        "size": 55,
+        "sizeUnit": "m²",
+        "maxGuests": 4,
+        "bedType": "1 Tempat Tidur King + 2 Tempat Tidur Single",
+        "imageUrl": "https://picsum.photos/seed/room004/600/400",
+        "gallery": [
+          "https://picsum.photos/seed/room004a/600/400",
+          "https://picsum.photos/seed/room004b/600/400",
+          "https://picsum.photos/seed/room004c/600/400"
+        ],
+        "pricePerNight": 2900000,
+        "totalPrice": 8700000,
+        "amenities": [
+          "WiFi Gratis",
+          "AC",
+          "2 TV Layar Datar",
+          "Mini Bar",
+          "Pembuat Kopi",
+          "Brankas",
+          "2 Kamar Mandi",
+          "Balkon Pemandangan Pantai",
+          "Paket Sambutan Anak"
+        ],
+        "availableRooms": 4,
+        "cancellationPolicy": {
+          "type": "flexible",
+          "description": "Pembatalan gratis hingga 24 jam sebelum check-in",
+          "refundable": true,
+          "deadline": "2026-02-14T14:00:00.000Z"
+        }
+      }
+    ]
+  },
+  "meta": {
+    "timestamp": "2026-01-19T10:31:00.000Z",
+    "requestId": "room-list-550e8400-e29b-41d4-a716-446655440004"
+  }
+}

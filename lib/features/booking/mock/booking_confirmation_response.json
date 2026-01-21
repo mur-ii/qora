@@ -1,0 +1,113 @@
+{
+  "success": true,
+  "message": "Pemesanan berhasil dikonfirmasi",
+  "data": {
+    "bookingId": "BKG-2026-00001234",
+    "confirmationNumber": "SBR-15FEB26-1234",
+    "bookingStatus": "confirmed",
+    "bookingDate": "2026-01-19T10:32:15.000Z",
+    "hotel": {
+      "id": "hotel-002",
+      "name": "Sunset Beach Resort",
+      "address": "Jl. Pantai Kuta No. 88, Bali, Indonesia",
+      "rating": 4.9,
+      "imageUrl": "https://picsum.photos/seed/hotel002/400/300",
+      "phone": "+62-361-7654321",
+      "email": "info@sunsetbeachresort.com",
+      "coordinates": {
+        "latitude": -8.7183,
+        "longitude": 115.1686
+      }
+    },
+    "room": {
+      "id": "room-002",
+      "name": "Kamar Deluxe",
+      "imageUrl": "https://picsum.photos/seed/room002/600/400",
+      "bedType": "1 Tempat Tidur King",
+      "maxGuests": 2,
+      "roomNumber": null
+    },
+    "bookingDetails": {
+      "checkIn": "2026-02-15",
+      "checkOut": "2026-02-18",
+      "checkInTime": "14:00",
+      "checkOutTime": "12:00",
+      "nights": 3,
+      "guests": 2,
+      "rooms": 1
+    },
+    "guestInfo": {
+      "primaryGuest": {
+        "title": "Mr",
+        "fullName": "John Doe",
+        "email": "john.doe@example.com",
+        "phone": "+62-812-3456-7890"
+      },
+      "specialRequests": "Mohon siapkan kamar dengan pemandangan laut. Merayakan ulang tahun pernikahan."
+    },
+    "pricing": {
+      "subtotal": 7200000,
+      "taxes": 1512000,
+      "fees": 50000,
+      "discount": 0,
+      "grandTotal": 8762000,
+      "currency": "IDR",
+      "paidAmount": 2628600,
+      "remainingAmount": 6133400,
+      "paymentStatus": "partial_paid"
+    },
+    "payment": {
+      "transactionId": "TRX-2026-00005678",
+      "paymentMethod": "credit_card",
+      "paymentDate": "2026-01-19T10:32:15.000Z",
+      "amount": 2628600,
+      "status": "success",
+      "cardDetails": {
+        "cardType": "Visa",
+        "lastFourDigits": "4532",
+        "cardholderName": "John Doe"
+      }
+    },
+    "cancellationPolicy": {
+      "type": "flexible",
+      "description": "Pembatalan gratis hingga 24 jam sebelum check-in",
+      "refundable": true,
+      "deadline": "2026-02-14T14:00:00.000Z"
+    },
+    "voucherUrl": "https://api.sunsetbeachresort.com/voucher/BKG-2026-00001234",
+    "qrCode": "https://api.sunsetbeachresort.com/qr/BKG-2026-00001234",
+    "importantInfo": [
+      "Harap tunjukkan konfirmasi pemesanan dan ID yang valid saat check-in",
+      "Check-in lebih awal tergantung ketersediaan",
+      "Sisa pembayaran akan diselesaikan di properti",
+      "Harap beritahu hotel jika Anda berencana tiba setelah pukul 22:00"
+    ],
+    "nextSteps": [
+      {
+        "step": 1,
+        "title": "Periksa email Anda",
+        "description": "Email konfirmasi telah dikirim ke john.doe@example.com"
+      },
+      {
+        "step": 2,
+        "title": "Persiapkan check-in",
+        "description": "Bawa konfirmasi pemesanan dan ID yang valid"
+      },
+      {
+        "step": 3,
+        "title": "Nikmati masa menginap Anda",
+        "description": "Check-in dimulai pukul 14:00 pada 15 Februari 2026"
+      }
+    ],
+    "contactSupport": {
+      "phone": "+62-361-7654321",
+      "email": "reservations@sunsetbeachresort.com",
+      "whatsapp": "+62-812-7654321",
+      "availableHours": "24/7"
+    }
+  },
+  "meta": {
+    "timestamp": "2026-01-19T10:32:15.000Z",
+    "requestId": "booking-confirm-550e8400-e29b-41d4-a716-446655440009"
+  }
+}

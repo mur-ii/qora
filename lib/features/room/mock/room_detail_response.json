@@ -1,0 +1,170 @@
+{
+  "success": true,
+  "message": "Detail kamar berhasil diambil",
+  "data": {
+    "id": "room-002",
+    "name": "Kamar Deluxe",
+    "description": "Kamar luas dengan balkon dan pemandangan laut yang menakjubkan. Sempurna untuk pasangan yang mencari liburan romantis dengan fasilitas modern dan pemandangan yang memukau.",
+    "hotelId": "hotel-002",
+    "hotelName": "Sunset Beach Resort",
+    "size": 42,
+    "sizeUnit": "m²",
+    "maxGuests": 2,
+    "maxChildren": 1,
+    "bedType": "1 Tempat Tidur King",
+    "bedConfiguration": [
+      {
+        "type": "Tempat Tidur King",
+        "count": 1,
+        "size": "180 x 200 cm"
+      }
+    ],
+    "imageUrl": "https://picsum.photos/seed/room002/600/400",
+    "gallery": [
+      {
+        "id": "img-room-001",
+        "url": "https://picsum.photos/seed/room002a/800/600",
+        "type": "bedroom",
+        "caption": "Kamar Tidur dengan Pemandangan Laut"
+      },
+      {
+        "id": "img-room-002",
+        "url": "https://picsum.photos/seed/room002b/800/600",
+        "type": "balcony",
+        "caption": "Balkon Pribadi"
+      },
+      {
+        "id": "img-room-003",
+        "url": "https://picsum.photos/seed/room002c/800/600",
+        "type": "bathroom",
+        "caption": "Kamar Mandi Modern"
+      },
+      {
+        "id": "img-room-004",
+        "url": "https://picsum.photos/seed/room002d/800/600",
+        "type": "view",
+        "caption": "Pemandangan Laut dari Balkon"
+      }
+    ],
+    "pricePerNight": 2400000,
+    "amenities": [
+      {
+        "id": "am-001",
+        "name": "WiFi Gratis",
+        "icon": "wifi",
+        "category": "konektivitas"
+      },
+      {
+        "id": "am-002",
+        "name": "AC",
+        "icon": "ac",
+        "category": "kenyamanan"
+      },
+      {
+        "id": "am-003",
+        "name": "TV Layar Datar 55 inci",
+        "icon": "tv",
+        "category": "hiburan"
+      },
+      {
+        "id": "am-004",
+        "name": "Mini Bar",
+        "icon": "minibar",
+        "category": "makanan"
+      },
+      {
+        "id": "am-005",
+        "name": "Pembuat Kopi",
+        "icon": "coffee",
+        "category": "makanan"
+      },
+      {
+        "id": "am-006",
+        "name": "Brankas dalam Kamar",
+        "icon": "safe",
+        "category": "keamanan"
+      },
+      {
+        "id": "am-007",
+        "name": "Bathtub",
+        "icon": "bathtub",
+        "category": "kamar_mandi"
+      },
+      {
+        "id": "am-008",
+        "name": "Balkon Pemandangan Laut",
+        "icon": "balcony",
+        "category": "pemandangan"
+      },
+      {
+        "id": "am-009",
+        "name": "Jubah Mandi & Sandal",
+        "icon": "robe",
+        "category": "kenyamanan"
+      },
+      {
+        "id": "am-010",
+        "name": "Pengering Rambut",
+        "icon": "hairdryer",
+        "category": "kamar_mandi"
+      },
+      {
+        "id": "am-011",
+        "name": "Setrika & Papan Setrika",
+        "icon": "iron",
+        "category": "kemudahan"
+      },
+      {
+        "id": "am-012",
+        "name": "Perlengkapan Mandi Premium",
+        "icon": "toiletries",
+        "category": "kamar_mandi"
+      }
+    ],
+    "availableRooms": 3,
+    "cancellationPolicy": {
+      "type": "flexible",
+      "title": "Pembatalan Fleksibel",
+      "description": "Pembatalan gratis hingga 24 jam sebelum check-in. Tidak ada biaya yang akan dikenakan jika dibatalkan sebelum batas waktu.",
+      "refundable": true,
+      "deadline": "2026-02-14T14:00:00.000Z",
+      "rules": [
+        {
+          "period": "Sebelum 2026-02-14 14:00",
+          "charge": "Tanpa biaya",
+          "refundPercentage": 100
+        },
+        {
+          "period": "Setelah 2026-02-14 14:00",
+          "charge": "Pembayaran penuh",
+          "refundPercentage": 0
+        }
+      ]
+    },
+    "inclusions": [
+      "Pembersihan kamar harian",
+      "Air mineral gratis",
+      "Layanan kamar 24 jam",
+      "Akses ke kolam renang dan pantai",
+      "Penggunaan fasilitas gym"
+    ],
+    "roomFeatures": {
+      "view": "Pemandangan Laut",
+      "floor": "Lantai 5 hingga 8",
+      "smokingAllowed": false,
+      "accessible": true,
+      "connecting": true
+    },
+    "availability": {
+      "checkIn": "2026-02-15",
+      "checkOut": "2026-02-18",
+      "nights": 3,
+      "isAvailable": true,
+      "availableCount": 3
+    }
+  },
+  "meta": {
+    "timestamp": "2026-01-19T10:31:15.000Z",
+    "requestId": "room-detail-550e8400-e29b-41d4-a716-446655440005"
+  }
+}

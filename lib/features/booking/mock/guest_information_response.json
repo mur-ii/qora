@@ -1,0 +1,42 @@
+{
+  "success": true,
+  "message": "Informasi tamu berhasil disimpan",
+  "data": {
+    "bookingId": "temp-booking-550e8400",
+    "primaryGuest": {
+      "title": "Mr",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@example.com",
+      "phone": "+62-812-3456-7890",
+      "countryCode": "+62"
+    },
+    "additionalGuests": [],
+    "specialRequests": {
+      "bedPreference": "Tempat tidur King",
+      "floorPreference": "Lantai tinggi",
+      "smokingRoom": false,
+      "earlyCheckIn": false,
+      "lateCheckOut": false,
+      "additionalNotes": "Mohon siapkan kamar dengan pemandangan laut. Merayakan ulang tahun pernikahan."
+    },
+    "arrivalTime": {
+      "estimatedArrival": "15:00",
+      "flightNumber": null
+    },
+    "contactForConfirmation": {
+      "sameAsPrimaryGuest": true,
+      "email": "john.doe@example.com",
+      "phone": "+62-812-3456-7890"
+    },
+    "marketingConsent": {
+      "emailUpdates": true,
+      "smsUpdates": false,
+      "specialOffers": true
+    }
+  },
+  "meta": {
+    "timestamp": "2026-01-19T10:31:45.000Z",
+    "requestId": "guest-info-550e8400-e29b-41d4-a716-446655440007"
+  }
+}

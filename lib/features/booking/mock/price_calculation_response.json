@@ -1,0 +1,72 @@
+{
+  "success": true,
+  "message": "Harga berhasil dihitung",
+  "data": {
+    "bookingId": "temp-booking-550e8400",
+    "hotelId": "hotel-002",
+    "hotelName": "Sunset Beach Resort",
+    "roomId": "room-002",
+    "roomName": "Kamar Deluxe",
+    "checkIn": "2026-02-15",
+    "checkOut": "2026-02-18",
+    "nights": 3,
+    "guests": 2,
+    "rooms": 1,
+    "priceBreakdown": {
+      "roomRate": {
+        "pricePerNight": 2400000,
+        "nights": 3,
+        "subtotal": 7200000
+      },
+      "taxes": [
+        {
+          "name": "Pajak Pemerintah",
+          "percentage": 10,
+          "amount": 720000
+        },
+        {
+          "name": "Biaya Layanan",
+          "percentage": 11,
+          "amount": 792000
+        }
+      ],
+      "fees": [
+        {
+          "name": "Biaya Pariwisata",
+          "amount": 50000,
+          "type": "wajib"
+        }
+      ],
+      "discount": {
+        "code": null,
+        "amount": 0,
+        "description": null
+      }
+    },
+    "totalPrice": {
+      "subtotal": 7200000,
+      "totalTax": 1512000,
+      "totalFees": 50000,
+      "discount": 0,
+      "grandTotal": 8762000,
+      "currency": "IDR"
+    },
+    "paymentSummary": {
+      "dueNow": 2628600,
+      "dueAtProperty": 6133400,
+      "depositRequired": true,
+      "depositAmount": 2628600,
+      "depositPercentage": 30
+    },
+    "cancellationPolicy": {
+      "type": "flexible",
+      "refundable": true,
+      "deadline": "2026-02-14T14:00:00.000Z",
+      "penaltyAmount": 0
+    }
+  },
+  "meta": {
+    "timestamp": "2026-01-19T10:31:30.000Z",
+    "requestId": "price-calc-550e8400-e29b-41d4-a716-446655440006"
+  }
+}

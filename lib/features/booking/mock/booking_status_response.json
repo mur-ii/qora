@@ -1,0 +1,125 @@
+{
+  "success": true,
+  "message": "Status pemesanan berhasil diambil",
+  "data": {
+    "bookingId": "BKG-2026-00001234",
+    "confirmationNumber": "SBR-15FEB26-1234",
+    "bookingStatus": "confirmed",
+    "bookingDate": "2026-01-19T10:32:15.000Z",
+    "lastUpdated": "2026-01-19T10:32:15.000Z",
+    "hotel": {
+      "id": "hotel-002",
+      "name": "Sunset Beach Resort",
+      "address": "Jl. Pantai Kuta No. 88, Bali, Indonesia",
+      "imageUrl": "https://picsum.photos/seed/hotel002/400/300",
+      "phone": "+62-361-7654321",
+      "rating": 4.9
+    },
+    "room": {
+      "id": "room-002",
+      "name": "Kamar Deluxe",
+      "imageUrl": "https://picsum.photos/seed/room002/600/400",
+      "roomNumber": "508"
+    },
+    "bookingDetails": {
+      "checkIn": "2026-02-15",
+      "checkOut": "2026-02-18",
+      "checkInTime": "14:00",
+      "checkOutTime": "12:00",
+      "nights": 3,
+      "guests": 2,
+      "rooms": 1,
+      "daysUntilCheckIn": 27
+    },
+    "guestInfo": {
+      "fullName": "John Doe",
+      "email": "john.doe@example.com",
+      "phone": "+62-812-3456-7890"
+    },
+    "pricing": {
+      "grandTotal": 8762000,
+      "currency": "IDR",
+      "paidAmount": 2628600,
+      "remainingAmount": 6133400,
+      "paymentStatus": "partial_paid"
+    },
+    "paymentHistory": [
+      {
+        "transactionId": "TRX-2026-00005678",
+        "date": "2026-01-19T10:32:15.000Z",
+        "amount": 2628600,
+        "method": "credit_card",
+        "status": "success",
+        "description": "Pembayaran deposit (30%)"
+      }
+    ],
+    "cancellationPolicy": {
+      "type": "flexible",
+      "canCancel": true,
+      "refundable": true,
+      "deadline": "2026-02-14T14:00:00.000Z",
+      "hoursUntilDeadline": 624,
+      "refundAmount": 2628600,
+      "penaltyAmount": 0
+    },
+    "modificationPolicy": {
+      "canModify": true,
+      "modificationDeadline": "2026-02-14T14:00:00.000Z",
+      "modificationFee": 0
+    },
+    "timeline": [
+      {
+        "status": "booking_created",
+        "timestamp": "2026-01-19T10:32:00.000Z",
+        "description": "Pemesanan dibuat"
+      },
+      {
+        "status": "payment_received",
+        "timestamp": "2026-01-19T10:32:15.000Z",
+        "description": "Pembayaran deposit diterima"
+      },
+      {
+        "status": "booking_confirmed",
+        "timestamp": "2026-01-19T10:32:15.000Z",
+        "description": "Pemesanan dikonfirmasi oleh hotel"
+      },
+      {
+        "status": "upcoming",
+        "timestamp": null,
+        "description": "Check-in pada 15 Februari 2026"
+      }
+    ],
+    "actions": [
+      {
+        "id": "view_voucher",
+        "label": "Lihat Voucher",
+        "type": "primary",
+        "enabled": true
+      },
+      {
+        "id": "modify_booking",
+        "label": "Ubah Pemesanan",
+        "type": "secondary",
+        "enabled": true
+      },
+      {
+        "id": "cancel_booking",
+        "label": "Batalkan Pemesanan",
+        "type": "danger",
+        "enabled": true
+      },
+      {
+        "id": "contact_hotel",
+        "label": "Hubungi Hotel",
+        "type": "secondary",
+        "enabled": true
+      }
+    ],
+    "voucherUrl": "https://api.sunsetbeachresort.com/voucher/BKG-2026-00001234",
+    "qrCode": "https://api.sunsetbeachresort.com/qr/BKG-2026-00001234"
+  },
+  "meta": {
+    "timestamp": "2026-01-19T10:32:30.000Z",
+    "requestId": "booking-status-550e8400-e29b-41d4-a716-446655440010"
+  }
+}

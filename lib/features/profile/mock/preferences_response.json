@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "data": {
+    "language": "id",
+    "currency": "IDR",
+    "notificationsEnabled": true,
+    "emailNotifications": true,
+    "pushNotifications": true,
+    "smsNotifications": false,
+    "marketingEmails": true
+  }
+}

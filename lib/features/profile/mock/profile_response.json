@@ -1,0 +1,16 @@
+{
+  "success": true,
+  "data": {
+    "id": "user_12345",
+    "fullName": "Ahmad Rafli",
+    "email": "ahmad.rafli@example.com",
+    "username": "rafli_traveler",
+    "avatarUrl": "https://i.pravatar.cc/300?img=12",
+    "currentLevel": 12,
+    "currentXP": 2400,
+    "xpToNextLevel": 3000,
+    "phoneNumber": "+62 812-3456-7890",
+    "joinedDate": "2024-03-15T10:30:00Z",
+    "bio": "Love exploring new places and cultures 🌍✈️"
+  }
+}

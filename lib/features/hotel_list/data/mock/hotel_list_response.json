@@ -1,0 +1,76 @@
+{
+  "hotels": [
+    {
+      "id": "1",
+      "name": "Grand Luxury Hotel",
+      "location": "Jakarta, Indonesia",
+      "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+      "pricePerNight": 1500000,
+      "rating": 4.8,
+      "isPromo": true
+    },
+    {
+      "id": "2",
+      "name": "Sunset Beach Resort",
+      "location": "Bali, Indonesia",
+      "imageUrl": "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800",
+      "pricePerNight": 2200000,
+      "rating": 4.9,
+      "isPromo": false
+    },
+    {
+      "id": "3",
+      "name": "Mountain View Lodge",
+      "location": "Bandung, Indonesia",
+      "imageUrl": "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800",
+      "pricePerNight": 850000,
+      "rating": 4.5,
+      "isPromo": true
+    },
+    {
+      "id": "4",
+      "name": "Urban City Hotel",
+      "location": "Surabaya, Indonesia",
+      "imageUrl": "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800",
+      "pricePerNight": 950000,
+      "rating": 4.3,
+      "isPromo": false
+    },
+    {
+      "id": "5",
+      "name": "Paradise Island Resort",
+      "location": "Lombok, Indonesia",
+      "imageUrl": "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800",
+      "pricePerNight": 1800000,
+      "rating": 4.7,
+      "isPromo": true
+    },
+    {
+      "id": "6",
+      "name": "Heritage Boutique Hotel",
+      "location": "Yogyakarta, Indonesia",
+      "imageUrl": "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800",
+      "pricePerNight": 750000,
+      "rating": 4.6,
+      "isPromo": false
+    },
+    {
+      "id": "7",
+      "name": "Skyline Tower Hotel",
+      "location": "Jakarta, Indonesia",
+      "imageUrl": "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800",
+      "pricePerNight": 1200000,
+      "rating": 4.4,
+      "isPromo": false
+    },
+    {
+      "id": "8",
+      "name": "Tropical Garden Inn",
+      "location": "Bali, Indonesia",
+      "imageUrl": "https://images.unsplash.com/photo-1549294413-26f195200c16?w=800",
+      "pricePerNight": 1100000,
+      "rating": 4.8,
+      "isPromo": true
+    }
+  ]
+}

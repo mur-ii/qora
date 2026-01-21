@@ -1,0 +1,97 @@
+{
+  "success": true,
+  "message": "Ringkasan pemesanan berhasil diambil",
+  "data": {
+    "bookingId": "temp-booking-550e8400",
+    "bookingStatus": "pending_payment",
+    "hotel": {
+      "id": "hotel-002",
+      "name": "Sunset Beach Resort",
+      "address": "Jl. Pantai Kuta No. 88, Bali, Indonesia",
+      "rating": 4.9,
+      "imageUrl": "https://picsum.photos/seed/hotel002/400/300",
+      "phone": "+62-361-7654321",
+      "email": "info@sunsetbeachresort.com"
+    },
+    "room": {
+      "id": "room-002",
+      "name": "Kamar Deluxe",
+      "imageUrl": "https://picsum.photos/seed/room002/600/400",
+      "bedType": "1 Tempat Tidur King",
+      "maxGuests": 2
+    },
+    "bookingDetails": {
+      "checkIn": "2026-02-15",
+      "checkOut": "2026-02-18",
+      "checkInTime": "14:00",
+      "checkOutTime": "12:00",
+      "nights": 3,
+      "guests": 2,
+      "rooms": 1
+    },
+    "guestInfo": {
+      "primaryGuest": {
+        "title": "Mr",
+        "fullName": "John Doe",
+        "email": "john.doe@example.com",
+        "phone": "+62-812-3456-7890"
+      },
+      "specialRequests": "Mohon siapkan kamar dengan pemandangan laut. Merayakan ulang tahun pernikahan."
+    },
+    "pricing": {
+      "subtotal": 7200000,
+      "taxes": 1512000,
+      "fees": 50000,
+      "discount": 0,
+      "grandTotal": 8762000,
+      "currency": "IDR",
+      "dueNow": 2628600,
+      "dueAtProperty": 6133400
+    },
+    "cancellationPolicy": {
+      "type": "flexible",
+      "description": "Pembatalan gratis hingga 24 jam sebelum check-in",
+      "refundable": true,
+      "deadline": "2026-02-14T14:00:00.000Z"
+    },
+    "paymentMethods": [
+      {
+        "id": "pm-001",
+        "type": "credit_card",
+        "name": "Kartu Kredit",
+        "available": true,
+        "description": "Visa, Mastercard, American Express"
+      },
+      {
+        "id": "pm-002",
+        "type": "debit_card",
+        "name": "Kartu Debit",
+        "available": true,
+        "description": "Kartu ATM/Debit"
+      },
+      {
+        "id": "pm-003",
+        "type": "bank_transfer",
+        "name": "Transfer Bank",
+        "available": true,
+        "description": "Transfer bank langsung"
+      },
+      {
+        "id": "pm-004",
+        "type": "e_wallet",
+        "name": "E-Wallet",
+        "available": true,
+        "description": "GoPay, OVO, DANA"
+      }
+    ],
+    "termsAndConditions": {
+      "accepted": false,
+      "url": "https://www.sunsetbeachresort.com/terms",
+      "version": "1.0"
+    }
+  },
+  "meta": {
+    "timestamp": "2026-01-19T10:32:00.000Z",
+    "requestId": "booking-summary-550e8400-e29b-41d4-a716-446655440008"
+  }
+}
