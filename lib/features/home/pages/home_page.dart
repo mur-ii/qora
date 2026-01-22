@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../voice_assistant/presentation/widgets/voice_assistant_toggle_button.dart';
 import '../bloc/home_bloc.dart';
 import '../widgets/destination_section.dart';
 import '../widgets/promo_section.dart';
@@ -38,6 +39,8 @@ class HomeView extends StatelessWidget {
           style: AppTypography.logo.copyWith(color: AppColors.primary),
         ),
         actions: [
+          const VoiceAssistantIconButton(size: 24),
+          const SizedBox(width: 8),
           IconButton(
             onPressed: () {
               context.push('/notifications');
@@ -82,6 +85,12 @@ class HomeView extends StatelessWidget {
             ],
           ),
         ),
+      ),
+      floatingActionButton: const VoiceAssistantToggleButton(
+        size: 60,
+        showLabel: true,
+        activeLabel: '🎤 AI Active',
+        inactiveLabel: '🎤 Voice AI',
       ),
     );
   }

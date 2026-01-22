@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'core/config/env_config.dart';
 import 'core/di/auth_injection.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/voice_assistant/di/voice_assistant_injection.dart';
+import 'features/voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  await EnvConfig.load();
+
+  // Validate required environment variables
+  EnvConfig.validate();
+
+  // Initialize navigation service with router
+  final navigationService = VoiceAssistantInjection.getNavigationService();
+  navigationService.setRouter(appRouter);
 
   runApp(const MyApp());
 }
@@ -17,8 +30,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<AuthBloc>(
-      create: (context) => AuthInjection.getAuthBloc(),
+    final navigationService = VoiceAssistantInjection.getNavigationService();
+
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(
+          create: (context) => AuthInjection.getAuthBloc(),
+        ),
+        BlocProvider<VoiceAssistantBloc>(
+          create: (context) =>
+              VoiceAssistantInjection.provideVoiceAssistantBloc(
+                openAiApiKey: EnvConfig.openAiApiKey,
+                navigationService: navigationService,
+              ),
+        ),
+      ],
       child: MaterialApp.router(
         routerConfig: appRouter,
         title: 'Qora - Hotel Booking',
