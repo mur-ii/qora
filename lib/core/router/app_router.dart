@@ -91,12 +91,35 @@ final GoRouter appRouter = GoRouter(
       path: '/booking/summary',
       name: 'booking-summary',
       builder: (context, state) {
-        final hotelId = state.uri.queryParameters['hotelId']!;
-        final roomId = state.uri.queryParameters['roomId']!;
-        final checkIn = state.uri.queryParameters['checkIn']!;
-        final checkOut = state.uri.queryParameters['checkOut']!;
-        final guests = int.parse(state.uri.queryParameters['guests']!);
-        final rooms = int.parse(state.uri.queryParameters['rooms']!);
+        final booking = state.extra is BookingEntity
+            ? state.extra as BookingEntity
+            : null;
+        final hotelId =
+            state.uri.queryParameters['hotelId'] ?? booking?.hotel.id ?? '';
+        final roomId =
+            state.uri.queryParameters['roomId'] ?? booking?.room.id ?? '';
+        final checkIn =
+            state.uri.queryParameters['checkIn'] ??
+            booking?.bookingDetails.checkIn ??
+            '';
+        final checkOut =
+            state.uri.queryParameters['checkOut'] ??
+            booking?.bookingDetails.checkOut ??
+            '';
+        final guests =
+            int.tryParse(
+              state.uri.queryParameters['guests'] ??
+                  booking?.bookingDetails.guests.toString() ??
+                  '',
+            ) ??
+            1;
+        final rooms =
+            int.tryParse(
+              state.uri.queryParameters['rooms'] ??
+                  booking?.bookingDetails.rooms.toString() ??
+                  '',
+            ) ??
+            1;
 
         return BookingSummaryPage(
           hotelId: hotelId,
@@ -105,6 +128,7 @@ final GoRouter appRouter = GoRouter(
           checkOut: checkOut,
           guests: guests,
           rooms: rooms,
+          initialBooking: booking,
         );
       },
     ),

@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/datasources/booking_remote_datasource.dart';
 import '../../data/repositories/booking_repository_impl.dart';
+import '../../domain/entities/booking_entity.dart';
 import '../../domain/usecases/confirm_booking.dart';
 import '../../domain/usecases/get_booking_summary.dart';
 import '../../domain/usecases/submit_guest_info.dart';
@@ -21,6 +22,7 @@ class BookingSummaryPage extends StatelessWidget {
   final String checkOut;
   final int guests;
   final int rooms;
+  final BookingEntity? initialBooking;
 
   const BookingSummaryPage({
     super.key,
@@ -30,6 +32,7 @@ class BookingSummaryPage extends StatelessWidget {
     required this.checkOut,
     required this.guests,
     required this.rooms,
+    this.initialBooking,
   });
 
   @override
@@ -47,14 +50,16 @@ class BookingSummaryPage extends StatelessWidget {
           submitGuestInfo: submitGuestInfoUseCase,
           confirmBooking: confirmBookingUseCase,
         )..add(
-          LoadBookingSummaryEvent(
-            hotelId: hotelId,
-            roomId: roomId,
-            checkIn: checkIn,
-            checkOut: checkOut,
-            guests: guests,
-            rooms: rooms,
-          ),
+          initialBooking != null
+              ? UpdateBookingEvent(initialBooking!)
+              : LoadBookingSummaryEvent(
+                  hotelId: hotelId,
+                  roomId: roomId,
+                  checkIn: checkIn,
+                  checkOut: checkOut,
+                  guests: guests,
+                  rooms: rooms,
+                ),
         );
       },
       child: const _BookingSummaryPageContent(),
@@ -62,9 +67,16 @@ class BookingSummaryPage extends StatelessWidget {
   }
 }
 
-class _BookingSummaryPageContent extends StatelessWidget {
+class _BookingSummaryPageContent extends StatefulWidget {
   const _BookingSummaryPageContent();
 
+  @override
+  State<_BookingSummaryPageContent> createState() =>
+      _BookingSummaryPageContentState();
+}
+
+class _BookingSummaryPageContentState
+    extends State<_BookingSummaryPageContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,9 +110,13 @@ class _BookingSummaryPageContent extends StatelessWidget {
 
           if (state is BookingSummaryLoaded) {
             final booking = state.booking;
+            final currencySymbol =
+                booking.pricing.currency.toUpperCase() == 'IDR'
+                ? 'Rp '
+                : '${booking.pricing.currency.toUpperCase()} ';
             final currencyFormat = NumberFormat.currency(
               locale: 'id_ID',
-              symbol: 'Rp ',
+              symbol: currencySymbol,
               decimalDigits: 0,
             );
 
@@ -253,6 +269,63 @@ class _BookingSummaryPageContent extends StatelessWidget {
                                 '${booking.bookingDetails.rooms} kamar',
                                 isLast: true,
                               ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Guest Information Card
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Informasi Tamu',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Divider(height: 24),
+                              _buildDetailRow(
+                                'Nama',
+                                '${booking.guestInfo.primaryGuest.title} ${booking.guestInfo.primaryGuest.fullName}',
+                              ),
+                              _buildDetailRow(
+                                'Email',
+                                booking.guestInfo.primaryGuest.email,
+                              ),
+                              _buildDetailRow(
+                                'Telepon',
+                                booking.guestInfo.primaryGuest.phone,
+                                isLast:
+                                    booking.guestInfo.specialRequests == null ||
+                                    booking.guestInfo.specialRequests!
+                                        .trim()
+                                        .isEmpty,
+                              ),
+                              if (booking.guestInfo.specialRequests != null &&
+                                  booking.guestInfo.specialRequests!
+                                      .trim()
+                                      .isNotEmpty)
+                                _buildDetailRow(
+                                  'Permintaan Khusus',
+                                  booking.guestInfo.specialRequests!,
+                                  isLast: true,
+                                ),
                             ],
                           ),
                         ),
@@ -463,7 +536,7 @@ class _BookingSummaryPageContent extends StatelessWidget {
                           elevation: 0,
                         ),
                         child: const Text(
-                          'Lanjutkan',
+                          'Lanjutkan ke Data Tamu',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

@@ -252,6 +252,10 @@ class WebRTCService {
       return;
     }
 
+    final assistantPrompt = result is Map<String, dynamic>
+        ? result['assistant_prompt'] as String?
+        : null;
+
     final message = jsonEncode({
       'type': 'conversation.item.create',
       'item': {
@@ -263,6 +267,21 @@ class WebRTCService {
 
     _dataChannel!.send(RTCDataChannelMessage(message));
     print('Function result sent for call_id: $callId');
+
+    final responseMessage = jsonEncode({
+      'type': 'response.create',
+      'response': {
+        'modalities': ['text', 'audio'],
+        if (assistantPrompt != null && assistantPrompt.isNotEmpty)
+          'instructions': assistantPrompt
+        else
+          'instructions':
+              'Berikan respons singkat dalam Bahasa Indonesia berdasarkan hasil fungsi.',
+      },
+    });
+
+    _dataChannel!.send(RTCDataChannelMessage(responseMessage));
+    print('Response requested after function output');
   }
 
   /// Send custom event via data channel

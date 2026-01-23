@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
 import '../../data/datasources/hotel_detail_remote_datasource.dart';
 import '../../data/repositories/hotel_detail_repository_impl.dart';
 import '../../domain/usecases/get_hotel_detail.dart';
@@ -27,6 +29,59 @@ class HotelDetailPage extends StatefulWidget {
 
 class _HotelDetailPageState extends State<HotelDetailPage> {
   String? _selectedRoomId;
+  bool _hasAutoNavigatedToSummary = false;
+
+  void _navigateToBookingSummary({
+    required String hotelId,
+    required String roomId,
+    Map<String, dynamic>? voiceParams,
+  }) {
+    if (_hasAutoNavigatedToSummary) return;
+    _hasAutoNavigatedToSummary = true;
+
+    final now = DateTime.now();
+    final rawCheckIn =
+        voiceParams?['check_in']?.toString() ??
+        voiceParams?['checkIn']?.toString();
+    final rawCheckOut =
+        voiceParams?['check_out']?.toString() ??
+        voiceParams?['checkOut']?.toString();
+
+    final parsedCheckIn = DateTime.tryParse(rawCheckIn ?? '');
+    final parsedCheckOut = DateTime.tryParse(rawCheckOut ?? '');
+
+    final checkIn = parsedCheckIn ?? DateTime(now.year, now.month, now.day + 1);
+    var checkOut = parsedCheckOut ?? checkIn.add(const Duration(days: 1));
+    if (!checkOut.isAfter(checkIn)) {
+      checkOut = checkIn.add(const Duration(days: 1));
+    }
+
+    final guests =
+        (voiceParams?['guests'] as int?) ??
+        int.tryParse(voiceParams?['guests']?.toString() ?? '') ??
+        2;
+    final rooms =
+        (voiceParams?['rooms'] as int?) ??
+        int.tryParse(voiceParams?['rooms']?.toString() ?? '') ??
+        1;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.push(
+        Uri(
+          path: '/booking/summary',
+          queryParameters: {
+            'hotelId': hotelId,
+            'roomId': roomId,
+            'checkIn': checkIn.toIso8601String(),
+            'checkOut': checkOut.toIso8601String(),
+            'guests': guests.toString(),
+            'rooms': rooms.toString(),
+          },
+        ).toString(),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,13 +93,70 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
         return HotelDetailBloc(getHotelDetail: useCase)
           ..add(LoadHotelDetailEvent(widget.hotelId));
       },
-      child: _HotelDetailPageContent(
-        selectedRoomId: _selectedRoomId,
-        onRoomSelected: (roomId) {
-          setState(() {
-            _selectedRoomId = roomId;
-          });
+      child: BlocListener<VoiceAssistantBloc, VoiceAssistantState>(
+        listenWhen: (previous, current) =>
+            previous.agentState != current.agentState ||
+            previous.connectionStatus != current.connectionStatus,
+        listener: (context, voiceState) {
+          if (voiceState.connectionStatus != VoiceConnectionStatus.connected) {
+            return;
+          }
+
+          final hotelState = context.read<HotelDetailBloc>().state;
+          if (hotelState is! HotelDetailLoaded) return;
+
+          final appState = voiceState.agentState.appState;
+          final targetHotelId = appState['hotel_id']?.toString();
+          if (targetHotelId != null && targetHotelId != widget.hotelId) {
+            return;
+          }
+
+          String? targetRoomId = appState['room_id']?.toString();
+          if (targetRoomId == null) {
+            final roomType = appState['room_type']?.toString();
+            if (roomType != null && roomType.isNotEmpty) {
+              final matchedRoom = hotelState.hotel.roomTypes.firstWhere(
+                (room) =>
+                    room.name.toLowerCase().contains(roomType.toLowerCase()),
+                orElse: () => hotelState.hotel.roomTypes.first,
+              );
+              targetRoomId = matchedRoom.id;
+            }
+          }
+
+          if (targetRoomId != null && targetRoomId != _selectedRoomId) {
+            setState(() {
+              _selectedRoomId = targetRoomId;
+            });
+
+            _navigateToBookingSummary(
+              hotelId: hotelState.hotel.id,
+              roomId: targetRoomId,
+              voiceParams: appState,
+            );
+          }
         },
+        child: _HotelDetailPageContent(
+          selectedRoomId: _selectedRoomId,
+          onRoomSelected: (roomId) {
+            setState(() {
+              _selectedRoomId = roomId;
+            });
+
+            final voiceState = context.read<VoiceAssistantBloc>().state;
+            if (voiceState.connectionStatus ==
+                VoiceConnectionStatus.connected) {
+              final hotelState = context.read<HotelDetailBloc>().state;
+              if (hotelState is HotelDetailLoaded) {
+                _navigateToBookingSummary(
+                  hotelId: hotelState.hotel.id,
+                  roomId: roomId,
+                  voiceParams: voiceState.agentState.appState,
+                );
+              }
+            }
+          },
+        ),
       ),
     );
   }

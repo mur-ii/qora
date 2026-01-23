@@ -174,6 +174,22 @@ class VoiceAssistantBloc
       // Send result back to OpenAI
       await sendFunctionResultUseCase.call(result);
 
+      // Check if automatic disconnect is required (after booking confirmation)
+      final resultData = result.result;
+      if (resultData is Map<String, dynamic> &&
+          resultData['requires_disconnect'] == true) {
+        print(
+          'Booking confirmed - Auto-disconnect will trigger after AI response',
+        );
+        // Schedule disconnect after a short delay to allow AI to speak final message
+        Future.delayed(const Duration(seconds: 5), () {
+          if (!isClosed) {
+            print('Auto-disconnecting after booking confirmation');
+            add(const StopVoiceAssistant());
+          }
+        });
+      }
+
       // Update agent state
       emit(
         state.copyWith(

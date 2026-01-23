@@ -38,7 +38,33 @@ class NavigationService {
 
         case 'booking_summary':
           final queryParams = _buildQueryParams(params);
-          _router!.go('/booking/summary?$queryParams');
+          final booking = params?['booking'];
+          if (booking != null) {
+            _router!.go('/booking/summary?$queryParams', extra: booking);
+          } else {
+            _router!.go('/booking/summary?$queryParams');
+          }
+          break;
+
+        case 'booking_guest_info':
+          final booking = params?['booking'];
+          if (booking != null) {
+            _router!.go('/booking/guest-info', extra: booking);
+          }
+          break;
+
+        case 'booking_payment':
+          final booking = params?['booking'];
+          if (booking != null) {
+            _router!.go('/booking/payment', extra: booking);
+          }
+          break;
+
+        case 'booking_confirmation':
+          final booking = params?['booking'];
+          if (booking != null) {
+            _router!.go('/booking/confirmation', extra: booking);
+          }
           break;
 
         case 'search':
@@ -64,7 +90,30 @@ class NavigationService {
   String _buildQueryParams(Map<String, dynamic>? params) {
     if (params == null || params.isEmpty) return '';
 
-    return params.entries
+    final normalizedParams = <String, dynamic>{};
+    for (final entry in params.entries) {
+      if (entry.key == 'booking') {
+        continue;
+      }
+      switch (entry.key) {
+        case 'check_in':
+          normalizedParams['checkIn'] = entry.value;
+          break;
+        case 'check_out':
+          normalizedParams['checkOut'] = entry.value;
+          break;
+        case 'hotel_id':
+          normalizedParams['hotelId'] = entry.value;
+          break;
+        case 'room_id':
+          normalizedParams['roomId'] = entry.value;
+          break;
+        default:
+          normalizedParams[entry.key] = entry.value;
+      }
+    }
+
+    return normalizedParams.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value.toString())}')
         .join('&');
   }
