@@ -10,6 +10,7 @@ import '../domain/usecases/disconnect_usecase.dart';
 import '../domain/usecases/initialize_webrtc_usecase.dart';
 import '../domain/usecases/request_assistant_response_usecase.dart';
 import '../domain/usecases/send_function_result_usecase.dart';
+import '../domain/usecases/set_microphone_muted_usecase.dart';
 import '../presentation/bloc/voice_assistant_bloc.dart';
 
 class VoiceAssistantInjection {
@@ -50,6 +51,7 @@ class VoiceAssistantInjection {
     );
     final sendFunctionResultUseCase = SendFunctionResultUseCase(repository);
     final disconnectUseCase = DisconnectUseCase(repository);
+    final setMicrophoneMutedUseCase = SetMicrophoneMutedUseCase(repository);
 
     // BLoC
     _voiceAssistantBloc = VoiceAssistantBloc(
@@ -58,6 +60,7 @@ class VoiceAssistantInjection {
       requestAssistantResponseUseCase: requestAssistantResponseUseCase,
       sendFunctionResultUseCase: sendFunctionResultUseCase,
       disconnectUseCase: disconnectUseCase,
+      setMicrophoneMutedUseCase: setMicrophoneMutedUseCase,
       agenticAIService: agenticAIService,
     );
 

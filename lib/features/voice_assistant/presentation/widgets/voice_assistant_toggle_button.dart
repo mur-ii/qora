@@ -12,6 +12,8 @@ class VoiceAssistantToggleButton extends StatefulWidget {
   final Color? activeColor;
   final Color? inactiveColor;
   final bool showLabel;
+  final bool showStatus;
+  final bool showMuteToggle;
   final String? activeLabel;
   final String? inactiveLabel;
 
@@ -21,6 +23,8 @@ class VoiceAssistantToggleButton extends StatefulWidget {
     this.activeColor,
     this.inactiveColor,
     this.showLabel = false,
+    this.showStatus = true,
+    this.showMuteToggle = true,
     this.activeLabel = 'AI Active',
     this.inactiveLabel = 'Start AI',
   });
@@ -85,6 +89,35 @@ class _VoiceAssistantToggleButtonState
     }
   }
 
+  Color _statusColor(
+    BuildContext context, {
+    required bool isActive,
+    required bool isConnecting,
+    required bool isFailed,
+    required bool isMuted,
+  }) {
+    final theme = Theme.of(context);
+
+    if (isFailed) return theme.colorScheme.error;
+    if (isConnecting) return theme.colorScheme.tertiary;
+    if (isActive && isMuted) return Colors.orange.shade600;
+    if (isActive) return theme.colorScheme.primary;
+    return theme.colorScheme.outline;
+  }
+
+  String _statusText({
+    required bool isActive,
+    required bool isConnecting,
+    required bool isFailed,
+    required bool isMuted,
+  }) {
+    if (isFailed) return 'Failed';
+    if (isConnecting) return 'Connecting';
+    if (isActive && isMuted) return 'Muted';
+    if (isActive) return widget.activeLabel ?? 'Listening';
+    return widget.inactiveLabel ?? 'Idle';
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<VoiceAssistantBloc, VoiceAssistantState>(
@@ -94,62 +127,175 @@ class _VoiceAssistantToggleButtonState
         final isConnecting =
             state.connectionStatus == VoiceConnectionStatus.connecting;
         final isFailed = state.connectionStatus == VoiceConnectionStatus.failed;
+        final isMuted = state.isMuted;
 
-        final activeColor =
-            widget.activeColor ?? Theme.of(context).primaryColor;
-        final inactiveColor = widget.inactiveColor ?? Colors.grey[300]!;
+        final theme = Theme.of(context);
+        final activeColor = widget.activeColor ?? theme.colorScheme.primary;
+        final inactiveColor =
+            widget.inactiveColor ?? theme.colorScheme.surfaceContainerHighest;
+        final statusColor = _statusColor(
+          context,
+          isActive: isActive,
+          isConnecting: isConnecting,
+          isFailed: isFailed,
+          isMuted: isMuted,
+        );
+        final statusText = _statusText(
+          isActive: isActive,
+          isConnecting: isConnecting,
+          isFailed: isFailed,
+          isMuted: isMuted,
+        );
+        final canToggleMute = isActive && !isConnecting;
 
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Material(
-              elevation: isActive ? 8 : 4,
-              shape: const CircleBorder(),
-              color: isActive ? activeColor : inactiveColor,
-              child: InkWell(
-                onTap: isConnecting ? null : () => _handleToggle(state),
-                customBorder: const CircleBorder(),
-                child: Container(
-                  width: widget.size,
-                  height: widget.size,
-                  padding: const EdgeInsets.all(12),
-                  child: isConnecting
-                      ? CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 3,
-                        )
-                      : Icon(
-                          isActive ? Icons.mic : Icons.mic_none,
-                          color: Colors.white,
-                          size: widget.size * 0.5,
-                        ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    (isActive ? activeColor : inactiveColor).withOpacity(0.95),
+                    (isActive ? activeColor : inactiveColor).withOpacity(0.75),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: statusColor.withOpacity(isActive ? 0.45 : 0.2),
+                    blurRadius: isActive ? 18 : 10,
+                    spreadRadius: isActive ? 2 : 0,
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                shape: const CircleBorder(),
+                child: InkWell(
+                  onTap: isConnecting ? null : () => _handleToggle(state),
+                  customBorder: const CircleBorder(),
+                  child: SizedBox(
+                    width: widget.size,
+                    height: widget.size,
+                    child: Center(
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 250),
+                        child: isConnecting
+                            ? SizedBox(
+                                width: widget.size * 0.45,
+                                height: widget.size * 0.45,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : Icon(
+                                isActive
+                                    ? (isMuted ? Icons.mic_off : Icons.mic)
+                                    : Icons.mic_none,
+                                key: ValueKey(
+                                  '${isActive}_${isMuted}_$isConnecting',
+                                ),
+                                color: Colors.white,
+                                size: widget.size * 0.5,
+                              ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-            if (widget.showLabel) ...[
+            if (widget.showStatus) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: statusColor.withOpacity(0.6),
+                          blurRadius: 6,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: Text(
+                      statusText,
+                      key: ValueKey(statusText),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: statusColor,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                  if (widget.showMuteToggle) ...[
+                    const SizedBox(width: 8),
+                    InkResponse(
+                      onTap: canToggleMute
+                          ? () {
+                              context.read<VoiceAssistantBloc>().add(
+                                const ToggleVoiceAssistantMute(),
+                              );
+                            }
+                          : null,
+                      radius: 16,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: canToggleMute
+                              ? theme.colorScheme.surface
+                              : theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: theme.colorScheme.outline.withOpacity(0.4),
+                          ),
+                        ),
+                        child: Icon(
+                          isMuted ? Icons.volume_off : Icons.volume_up,
+                          size: 14,
+                          color: canToggleMute
+                              ? statusColor
+                              : theme.disabledColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ] else if (widget.showLabel) ...[
               const SizedBox(height: 8),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: Text(
-                  isActive
-                      ? widget.activeLabel!
-                      : (isFailed ? 'Failed' : widget.inactiveLabel!),
-                  key: ValueKey(isActive),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: isActive
-                        ? activeColor
-                        : (isFailed ? Colors.red : Colors.grey[600]),
+                  statusText,
+                  key: ValueKey(statusText),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: statusColor,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ],
             if (state.error != null) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 'Error',
-                style: TextStyle(fontSize: 10, color: Colors.red[700]),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
               ),
             ],
           ],
@@ -164,12 +310,14 @@ class VoiceAssistantIconButton extends StatelessWidget {
   final double size;
   final Color? activeColor;
   final Color? inactiveColor;
+  final bool showMuteToggle;
 
   const VoiceAssistantIconButton({
     super.key,
     this.size = 24,
     this.activeColor,
     this.inactiveColor,
+    this.showMuteToggle = true,
   });
 
   @override
@@ -180,34 +328,82 @@ class VoiceAssistantIconButton extends StatelessWidget {
             state.connectionStatus == VoiceConnectionStatus.connected;
         final isConnecting =
             state.connectionStatus == VoiceConnectionStatus.connecting;
+        final isMuted = state.isMuted;
+        final canToggleMute = isActive && !isConnecting;
+        final theme = Theme.of(context);
 
-        return IconButton(
-          onPressed: isConnecting
-              ? null
-              : () {
-                  if (isActive) {
-                    context.read<VoiceAssistantBloc>().add(
-                      const StopVoiceAssistant(),
-                    );
-                  } else {
-                    context.read<VoiceAssistantBloc>().add(
-                      const StartVoiceAssistant(),
-                    );
-                  }
-                },
-          icon: isConnecting
-              ? SizedBox(
-                  width: size,
-                  height: size,
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Icon(
-                  isActive ? Icons.mic : Icons.mic_none,
-                  color: isActive
-                      ? (activeColor ?? Theme.of(context).primaryColor)
-                      : (inactiveColor ?? Colors.grey),
-                  size: size,
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            IconButton(
+              onPressed: isConnecting
+                  ? null
+                  : () {
+                      if (isActive) {
+                        context.read<VoiceAssistantBloc>().add(
+                          const StopVoiceAssistant(),
+                        );
+                      } else {
+                        context.read<VoiceAssistantBloc>().add(
+                          const StartVoiceAssistant(),
+                        );
+                      }
+                    },
+              icon: isConnecting
+                  ? SizedBox(
+                      width: size,
+                      height: size,
+                      child: const CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(
+                      isActive
+                          ? (isMuted ? Icons.mic_off : Icons.mic)
+                          : Icons.mic_none,
+                      color: isActive
+                          ? (activeColor ?? theme.colorScheme.primary)
+                          : (inactiveColor ?? theme.colorScheme.outline),
+                      size: size,
+                    ),
+            ),
+            if (showMuteToggle)
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: InkResponse(
+                  onTap: canToggleMute
+                      ? () {
+                          context.read<VoiceAssistantBloc>().add(
+                            const ToggleVoiceAssistantMute(),
+                          );
+                        }
+                      : null,
+                  radius: 12,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: theme.colorScheme.outline.withOpacity(0.4),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.shadowColor.withOpacity(0.08),
+                          blurRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      isMuted ? Icons.volume_off : Icons.volume_up,
+                      size: 12,
+                      color: canToggleMute
+                          ? theme.colorScheme.primary
+                          : theme.disabledColor,
+                    ),
+                  ),
                 ),
+              ),
+          ],
         );
       },
     );

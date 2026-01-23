@@ -99,6 +99,11 @@ class VoiceAssistantRepositoryImpl implements VoiceAssistantRepository {
   }
 
   @override
+  Future<void> setMicrophoneMuted({required bool isMuted}) async {
+    await webRTCService.setMicrophoneMuted(isMuted: isMuted);
+  }
+
+  @override
   ConnectionStateEntity getConnectionState() {
     return webRTCService.connectionState;
   }

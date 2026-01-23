@@ -10,6 +10,7 @@ class VoiceAssistantState extends Equatable {
   final AgentStateEntity agentState;
   final String? error;
   final bool isProcessing;
+  final bool isMuted;
 
   const VoiceAssistantState({
     this.connectionStatus = VoiceConnectionStatus.disconnected,
@@ -17,6 +18,7 @@ class VoiceAssistantState extends Equatable {
     this.agentState = const AgentStateEntity(),
     this.error,
     this.isProcessing = false,
+    this.isMuted = false,
   });
 
   VoiceAssistantState copyWith({
@@ -25,6 +27,7 @@ class VoiceAssistantState extends Equatable {
     AgentStateEntity? agentState,
     String? error,
     bool? isProcessing,
+    bool? isMuted,
   }) {
     return VoiceAssistantState(
       connectionStatus: connectionStatus ?? this.connectionStatus,
@@ -32,6 +35,7 @@ class VoiceAssistantState extends Equatable {
       agentState: agentState ?? this.agentState,
       error: error,
       isProcessing: isProcessing ?? this.isProcessing,
+      isMuted: isMuted ?? this.isMuted,
     );
   }
 
@@ -42,6 +46,7 @@ class VoiceAssistantState extends Equatable {
     agentState,
     error,
     isProcessing,
+    isMuted,
   ];
 }
 

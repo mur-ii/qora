@@ -36,6 +36,9 @@ abstract class VoiceAssistantRepository {
   /// Disconnect and cleanup
   Future<void> disconnect();
 
+  /// Mute/unmute microphone input
+  Future<void> setMicrophoneMuted({required bool isMuted});
+
   /// Get current connection state
   ConnectionStateEntity getConnectionState();
 }

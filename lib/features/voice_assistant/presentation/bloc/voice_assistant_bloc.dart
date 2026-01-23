@@ -7,6 +7,7 @@ import '../../domain/usecases/disconnect_usecase.dart';
 import '../../domain/usecases/initialize_webrtc_usecase.dart';
 import '../../domain/usecases/request_assistant_response_usecase.dart';
 import '../../domain/usecases/send_function_result_usecase.dart';
+import '../../domain/usecases/set_microphone_muted_usecase.dart';
 import 'voice_assistant_event.dart';
 import 'voice_assistant_state.dart';
 
@@ -17,6 +18,7 @@ class VoiceAssistantBloc
   final RequestAssistantResponseUseCase requestAssistantResponseUseCase;
   final SendFunctionResultUseCase sendFunctionResultUseCase;
   final DisconnectUseCase disconnectUseCase;
+  final SetMicrophoneMutedUseCase setMicrophoneMutedUseCase;
   final AgenticAIService agenticAIService;
 
   VoiceAssistantBloc({
@@ -25,10 +27,14 @@ class VoiceAssistantBloc
     required this.requestAssistantResponseUseCase,
     required this.sendFunctionResultUseCase,
     required this.disconnectUseCase,
+    required this.setMicrophoneMutedUseCase,
     required this.agenticAIService,
   }) : super(const VoiceAssistantState()) {
     on<StartVoiceAssistant>(_onStartVoiceAssistant);
     on<StopVoiceAssistant>(_onStopVoiceAssistant);
+    on<MuteVoiceAssistant>(_onMuteVoiceAssistant);
+    on<UnmuteVoiceAssistant>(_onUnmuteVoiceAssistant);
+    on<ToggleVoiceAssistantMute>(_onToggleVoiceAssistantMute);
     on<TranscriptReceived>(_onTranscriptReceived);
     on<FunctionCallReceived>(_onFunctionCallReceived);
     on<AgentEventReceived>(_onAgentEventReceived);
@@ -126,6 +132,43 @@ class VoiceAssistantBloc
     } catch (e) {
       print('Error stopping voice assistant: $e');
       emit(state.copyWith(error: 'Failed to stop: $e'));
+    }
+  }
+
+  Future<void> _onMuteVoiceAssistant(
+    MuteVoiceAssistant event,
+    Emitter<VoiceAssistantState> emit,
+  ) async {
+    try {
+      await setMicrophoneMutedUseCase.call(isMuted: true);
+      emit(state.copyWith(isMuted: true));
+    } catch (e) {
+      emit(state.copyWith(error: 'Failed to mute: $e'));
+    }
+  }
+
+  Future<void> _onUnmuteVoiceAssistant(
+    UnmuteVoiceAssistant event,
+    Emitter<VoiceAssistantState> emit,
+  ) async {
+    try {
+      await setMicrophoneMutedUseCase.call(isMuted: false);
+      emit(state.copyWith(isMuted: false));
+    } catch (e) {
+      emit(state.copyWith(error: 'Failed to unmute: $e'));
+    }
+  }
+
+  Future<void> _onToggleVoiceAssistantMute(
+    ToggleVoiceAssistantMute event,
+    Emitter<VoiceAssistantState> emit,
+  ) async {
+    try {
+      final nextMuted = !state.isMuted;
+      await setMicrophoneMutedUseCase.call(isMuted: nextMuted);
+      emit(state.copyWith(isMuted: nextMuted));
+    } catch (e) {
+      emit(state.copyWith(error: 'Failed to toggle mute: $e'));
     }
   }
 
@@ -247,7 +290,14 @@ class VoiceAssistantBloc
         status = VoiceConnectionStatus.disconnected;
     }
 
-    emit(state.copyWith(connectionStatus: status));
+    emit(
+      state.copyWith(
+        connectionStatus: status,
+        isMuted: status == VoiceConnectionStatus.disconnected
+            ? false
+            : state.isMuted,
+      ),
+    );
     print('Connection state changed: ${event.state}');
   }
 

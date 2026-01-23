@@ -303,6 +303,20 @@ class WebRTCService {
     _onConnectionStateChange?.call(state);
   }
 
+  /// Mute/unmute microphone input
+  Future<void> setMicrophoneMuted({required bool isMuted}) async {
+    if (_localStream == null) {
+      print('Microphone stream not available');
+      return;
+    }
+
+    for (final track in _localStream!.getAudioTracks()) {
+      track.enabled = !isMuted;
+    }
+
+    print(isMuted ? 'Microphone muted' : 'Microphone unmuted');
+  }
+
   /// Disconnect and cleanup
   Future<void> disconnect() async {
     try {

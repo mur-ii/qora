@@ -330,64 +330,6 @@ class _BookingSummaryPageContentState
                           ),
                           const SizedBox(height: 16),
 
-                          // Guest Information Card
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 16),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Informasi Tamu',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const Divider(height: 24),
-                                _buildDetailRow(
-                                  'Nama',
-                                  '${booking.guestInfo.primaryGuest.title} ${booking.guestInfo.primaryGuest.fullName}',
-                                ),
-                                _buildDetailRow(
-                                  'Email',
-                                  booking.guestInfo.primaryGuest.email,
-                                ),
-                                _buildDetailRow(
-                                  'Telepon',
-                                  booking.guestInfo.primaryGuest.phone,
-                                  isLast:
-                                      booking.guestInfo.specialRequests ==
-                                          null ||
-                                      booking.guestInfo.specialRequests!
-                                          .trim()
-                                          .isEmpty,
-                                ),
-                                if (booking.guestInfo.specialRequests != null &&
-                                    booking.guestInfo.specialRequests!
-                                        .trim()
-                                        .isNotEmpty)
-                                  _buildDetailRow(
-                                    'Permintaan Khusus',
-                                    booking.guestInfo.specialRequests!,
-                                    isLast: true,
-                                  ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
                           // Price Breakdown Card
                           Container(
                             margin: const EdgeInsets.symmetric(horizontal: 16),
