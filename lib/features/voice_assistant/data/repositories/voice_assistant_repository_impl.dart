@@ -74,6 +74,17 @@ class VoiceAssistantRepositoryImpl implements VoiceAssistantRepository {
   }
 
   @override
+  Future<void> requestAssistantResponse(String instructions) async {
+    await webRTCService.sendEvent({
+      'type': 'response.create',
+      'response': {
+        'modalities': ['text', 'audio'],
+        'instructions': instructions,
+      },
+    });
+  }
+
+  @override
   Future<void> updateAgentState(AgentStateEntity state) async {
     // Send agent state update via data channel
     await webRTCService.sendEvent({

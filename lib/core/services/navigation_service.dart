@@ -49,7 +49,7 @@ class NavigationService {
         case 'booking_guest_info':
           final booking = params?['booking'];
           if (booking != null) {
-            _router!.go('/booking/guest-info', extra: booking);
+            _router!.go('/booking/payment', extra: booking);
           }
           break;
 

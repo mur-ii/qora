@@ -27,6 +27,9 @@ abstract class VoiceAssistantRepository {
   /// Send function result back to OpenAI
   Future<void> sendFunctionResult(FunctionResultEntity result);
 
+  /// Ask assistant to respond with a custom prompt
+  Future<void> requestAssistantResponse(String instructions);
+
   /// Update agent state
   Future<void> updateAgentState(AgentStateEntity state);
 

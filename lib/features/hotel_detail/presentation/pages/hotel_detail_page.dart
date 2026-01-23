@@ -29,59 +29,6 @@ class HotelDetailPage extends StatefulWidget {
 
 class _HotelDetailPageState extends State<HotelDetailPage> {
   String? _selectedRoomId;
-  bool _hasAutoNavigatedToSummary = false;
-
-  void _navigateToBookingSummary({
-    required String hotelId,
-    required String roomId,
-    Map<String, dynamic>? voiceParams,
-  }) {
-    if (_hasAutoNavigatedToSummary) return;
-    _hasAutoNavigatedToSummary = true;
-
-    final now = DateTime.now();
-    final rawCheckIn =
-        voiceParams?['check_in']?.toString() ??
-        voiceParams?['checkIn']?.toString();
-    final rawCheckOut =
-        voiceParams?['check_out']?.toString() ??
-        voiceParams?['checkOut']?.toString();
-
-    final parsedCheckIn = DateTime.tryParse(rawCheckIn ?? '');
-    final parsedCheckOut = DateTime.tryParse(rawCheckOut ?? '');
-
-    final checkIn = parsedCheckIn ?? DateTime(now.year, now.month, now.day + 1);
-    var checkOut = parsedCheckOut ?? checkIn.add(const Duration(days: 1));
-    if (!checkOut.isAfter(checkIn)) {
-      checkOut = checkIn.add(const Duration(days: 1));
-    }
-
-    final guests =
-        (voiceParams?['guests'] as int?) ??
-        int.tryParse(voiceParams?['guests']?.toString() ?? '') ??
-        2;
-    final rooms =
-        (voiceParams?['rooms'] as int?) ??
-        int.tryParse(voiceParams?['rooms']?.toString() ?? '') ??
-        1;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      context.push(
-        Uri(
-          path: '/booking/summary',
-          queryParameters: {
-            'hotelId': hotelId,
-            'roomId': roomId,
-            'checkIn': checkIn.toIso8601String(),
-            'checkOut': checkOut.toIso8601String(),
-            'guests': guests.toString(),
-            'rooms': rooms.toString(),
-          },
-        ).toString(),
-      );
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -128,12 +75,6 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
             setState(() {
               _selectedRoomId = targetRoomId;
             });
-
-            _navigateToBookingSummary(
-              hotelId: hotelState.hotel.id,
-              roomId: targetRoomId,
-              voiceParams: appState,
-            );
           }
         },
         child: _HotelDetailPageContent(
@@ -142,19 +83,6 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
             setState(() {
               _selectedRoomId = roomId;
             });
-
-            final voiceState = context.read<VoiceAssistantBloc>().state;
-            if (voiceState.connectionStatus ==
-                VoiceConnectionStatus.connected) {
-              final hotelState = context.read<HotelDetailBloc>().state;
-              if (hotelState is HotelDetailLoaded) {
-                _navigateToBookingSummary(
-                  hotelId: hotelState.hotel.id,
-                  roomId: roomId,
-                  voiceParams: voiceState.agentState.appState,
-                );
-              }
-            }
           },
         ),
       ),

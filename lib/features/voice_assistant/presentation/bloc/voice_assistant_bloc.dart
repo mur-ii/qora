@@ -5,6 +5,7 @@ import '../../domain/entities/function_call_entity.dart';
 import '../../domain/usecases/create_session_usecase.dart';
 import '../../domain/usecases/disconnect_usecase.dart';
 import '../../domain/usecases/initialize_webrtc_usecase.dart';
+import '../../domain/usecases/request_assistant_response_usecase.dart';
 import '../../domain/usecases/send_function_result_usecase.dart';
 import 'voice_assistant_event.dart';
 import 'voice_assistant_state.dart';
@@ -13,6 +14,7 @@ class VoiceAssistantBloc
     extends Bloc<VoiceAssistantEvent, VoiceAssistantState> {
   final CreateSessionUseCase createSessionUseCase;
   final InitializeWebRTCUseCase initializeWebRTCUseCase;
+  final RequestAssistantResponseUseCase requestAssistantResponseUseCase;
   final SendFunctionResultUseCase sendFunctionResultUseCase;
   final DisconnectUseCase disconnectUseCase;
   final AgenticAIService agenticAIService;
@@ -20,6 +22,7 @@ class VoiceAssistantBloc
   VoiceAssistantBloc({
     required this.createSessionUseCase,
     required this.initializeWebRTCUseCase,
+    required this.requestAssistantResponseUseCase,
     required this.sendFunctionResultUseCase,
     required this.disconnectUseCase,
     required this.agenticAIService,
@@ -30,6 +33,7 @@ class VoiceAssistantBloc
     on<FunctionCallReceived>(_onFunctionCallReceived);
     on<AgentEventReceived>(_onAgentEventReceived);
     on<ConnectionStateChanged>(_onConnectionStateChanged);
+    on<RequestAssistantResponse>(_onRequestAssistantResponse);
   }
 
   Future<void> _onStartVoiceAssistant(
@@ -245,5 +249,16 @@ class VoiceAssistantBloc
 
     emit(state.copyWith(connectionStatus: status));
     print('Connection state changed: ${event.state}');
+  }
+
+  Future<void> _onRequestAssistantResponse(
+    RequestAssistantResponse event,
+    Emitter<VoiceAssistantState> emit,
+  ) async {
+    try {
+      await requestAssistantResponseUseCase.call(event.instructions);
+    } catch (e) {
+      print('Error requesting assistant response: $e');
+    }
   }
 }

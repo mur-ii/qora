@@ -8,6 +8,7 @@ import '../data/services/agentic_ai_service.dart';
 import '../domain/usecases/create_session_usecase.dart';
 import '../domain/usecases/disconnect_usecase.dart';
 import '../domain/usecases/initialize_webrtc_usecase.dart';
+import '../domain/usecases/request_assistant_response_usecase.dart';
 import '../domain/usecases/send_function_result_usecase.dart';
 import '../presentation/bloc/voice_assistant_bloc.dart';
 
@@ -44,6 +45,9 @@ class VoiceAssistantInjection {
     // Use cases
     final createSessionUseCase = CreateSessionUseCase(repository);
     final initializeWebRTCUseCase = InitializeWebRTCUseCase(repository);
+    final requestAssistantResponseUseCase = RequestAssistantResponseUseCase(
+      repository,
+    );
     final sendFunctionResultUseCase = SendFunctionResultUseCase(repository);
     final disconnectUseCase = DisconnectUseCase(repository);
 
@@ -51,6 +55,7 @@ class VoiceAssistantInjection {
     _voiceAssistantBloc = VoiceAssistantBloc(
       createSessionUseCase: createSessionUseCase,
       initializeWebRTCUseCase: initializeWebRTCUseCase,
+      requestAssistantResponseUseCase: requestAssistantResponseUseCase,
       sendFunctionResultUseCase: sendFunctionResultUseCase,
       disconnectUseCase: disconnectUseCase,
       agenticAIService: agenticAIService,

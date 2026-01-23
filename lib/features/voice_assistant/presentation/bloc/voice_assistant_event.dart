@@ -69,3 +69,13 @@ class ConnectionStateChanged extends VoiceAssistantEvent {
   @override
   List<Object?> get props => [state];
 }
+
+/// Request assistant to speak a prompt
+class RequestAssistantResponse extends VoiceAssistantEvent {
+  final String instructions;
+
+  const RequestAssistantResponse({required this.instructions});
+
+  @override
+  List<Object?> get props => [instructions];
+}
