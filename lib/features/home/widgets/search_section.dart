@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/app_toast.dart';
 import '../bloc/home_bloc.dart';
 
 class SearchSection extends StatelessWidget {
@@ -463,11 +464,9 @@ class _SearchButton extends StatelessWidget {
     return BlocListener<HomeBloc, HomeState>(
       listener: (context, state) {
         if (state.status == HomeStatus.failure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.errorMessage ?? 'Terjadi kesalahan'),
-              backgroundColor: Colors.red,
-            ),
+          AppToast.showError(
+            context,
+            state.errorMessage ?? 'Terjadi kesalahan',
           );
           // Reset status after showing error
           context.read<HomeBloc>().add(const HomeStatusReset());

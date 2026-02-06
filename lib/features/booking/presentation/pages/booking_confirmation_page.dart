@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../../domain/entities/booking_entity.dart';
 
 class BookingConfirmationPage extends StatelessWidget {
@@ -385,10 +386,9 @@ class BookingConfirmationPage extends StatelessWidget {
                     child: OutlinedButton(
                       onPressed: () {
                         // TODO: Share or download voucher
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Fitur akan segera tersedia'),
-                          ),
+                        AppToast.showInfo(
+                          context,
+                          'Fitur akan segera tersedia',
                         );
                       },
                       style: OutlinedButton.styleFrom(

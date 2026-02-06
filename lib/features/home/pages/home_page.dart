@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/app_toast.dart';
 import '../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import '../../voice_assistant/presentation/bloc/voice_assistant_event.dart';
 import '../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
@@ -176,35 +177,30 @@ class _HomeViewState extends State<HomeView> {
       body: BlocListener<HomeBloc, HomeState>(
         listener: (context, state) {
           if (state.status == HomeStatus.failure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.errorMessage ?? 'Terjadi kesalahan'),
-                backgroundColor: AppColors.error,
-              ),
+            AppToast.showError(
+              context,
+              state.errorMessage ?? 'Terjadi kesalahan',
             );
           } else if (state.status == HomeStatus.success) {
             // TODO: Navigate to search results
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Mencari hotel...'),
-                backgroundColor: AppColors.primary,
-              ),
-            );
+            AppToast.showInfo(context, 'Mencari hotel...');
           }
         },
         child: _voiceModeEnabled
             ? DraggableVoiceAssistantOverlay(
                 estimatedButtonSize: const Size(64, 64),
                 button: Material(
-                  color: AppColors.surface,
-                  shape: const CircleBorder(),
+                  color: AppColors.primaryLight,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 2,
                   child: Container(
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.border),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.primary),
                     ),
                     child: const Center(
                       child: VoiceAssistantIconButton(

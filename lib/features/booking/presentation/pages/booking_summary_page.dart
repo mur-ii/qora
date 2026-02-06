@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_event.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
@@ -139,12 +140,7 @@ class _BookingSummaryPageContentState
         body: BlocConsumer<BookingBloc, BookingState>(
           listener: (context, state) {
             if (state is BookingError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              AppToast.showError(context, state.message);
             }
           },
           builder: (context, state) {

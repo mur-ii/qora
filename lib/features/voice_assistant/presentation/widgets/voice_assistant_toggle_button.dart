@@ -1,10 +1,10 @@
-import 'dart:math' as math;
-
+import 'package:draggable_float_widget/draggable_float_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../bloc/voice_assistant_bloc.dart';
 import '../bloc/voice_assistant_event.dart';
 import '../bloc/voice_assistant_state.dart';
@@ -62,13 +62,9 @@ class _VoiceAssistantToggleButtonState
 
     if (!status.isGranted) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Microphone permission is required for voice assistant',
-            ),
-            duration: Duration(seconds: 3),
-          ),
+        AppToast.showError(
+          context,
+          'Microphone permission is required for voice assistant',
         );
       }
     }
@@ -297,7 +293,7 @@ class _VoiceAssistantToggleButtonState
   }
 }
 
-class DraggableVoiceAssistantOverlay extends StatefulWidget {
+class DraggableVoiceAssistantOverlay extends StatelessWidget {
   final Widget child;
   final Widget button;
   final EdgeInsets padding;
@@ -312,122 +308,34 @@ class DraggableVoiceAssistantOverlay extends StatefulWidget {
   });
 
   @override
-  State<DraggableVoiceAssistantOverlay> createState() =>
-      _DraggableVoiceAssistantOverlayState();
-}
-
-class _DraggableVoiceAssistantOverlayState
-    extends State<DraggableVoiceAssistantOverlay> {
-  final ValueNotifier<Offset> _position = ValueNotifier(Offset.zero);
-  final GlobalKey _buttonKey = GlobalKey();
-  Size _buttonSize = Size.zero;
-  bool _positionInitialized = false;
-
-  @override
-  void dispose() {
-    _position.dispose();
-    super.dispose();
-  }
-
-  void _syncButtonSize(Size areaSize, EdgeInsets safePadding) {
-    final renderBox =
-        _buttonKey.currentContext?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-
-    final newSize = renderBox.size;
-    if (newSize == _buttonSize) return;
-
-    _buttonSize = newSize;
-    _position.value = _clampPosition(_position.value, areaSize, safePadding);
-  }
-
-  void _initializePosition(Size areaSize, EdgeInsets safePadding) {
-    if (_positionInitialized) return;
-
-    final fallbackSize = _buttonSize == Size.zero
-        ? widget.estimatedButtonSize
-        : _buttonSize;
-    final initial = Offset(
-      areaSize.width - fallbackSize.width - safePadding.right,
-      areaSize.height - fallbackSize.height - safePadding.bottom,
-    );
-    _position.value = _clampPosition(initial, areaSize, safePadding);
-    _positionInitialized = true;
-  }
-
-  Offset _clampPosition(
-    Offset position,
-    Size areaSize,
-    EdgeInsets safePadding,
-  ) {
-    final size = _buttonSize == Size.zero
-        ? widget.estimatedButtonSize
-        : _buttonSize;
-    final maxX = math.max(
-      safePadding.left,
-      areaSize.width - size.width - safePadding.right,
-    );
-    final maxY = math.max(
-      safePadding.top,
-      areaSize.height - size.height - safePadding.bottom,
-    );
-    final minX = safePadding.left;
-    final minY = safePadding.top;
-
-    return Offset(position.dx.clamp(minX, maxX), position.dy.clamp(minY, maxY));
-  }
-
-  @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
-    final safePadding = widget.padding.copyWith(
-      left: widget.padding.left + media.padding.left,
-      top: widget.padding.top + media.padding.top,
-      right: widget.padding.right + media.padding.right,
-      bottom:
-          widget.padding.bottom +
-          media.padding.bottom +
-          media.viewInsets.bottom,
+    final safePadding = padding.copyWith(
+      left: padding.left + media.padding.left,
+      top: padding.top + media.padding.top,
+      right: padding.right + media.padding.right,
+      bottom: padding.bottom + media.padding.bottom + media.viewInsets.bottom,
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final areaSize = Size(constraints.maxWidth, constraints.maxHeight);
-        _initializePosition(areaSize, safePadding);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          _syncButtonSize(areaSize, safePadding);
-        });
-
-        return Stack(
-          children: [
-            widget.child,
-            ValueListenableBuilder<Offset>(
-              valueListenable: _position,
-              builder: (context, offset, child) {
-                final clamped = _clampPosition(offset, areaSize, safePadding);
-
-                return Positioned(
-                  left: clamped.dx,
-                  top: clamped.dy,
-                  child: GestureDetector(
-                    onPanUpdate: (details) {
-                      final next = offset + details.delta;
-                      _position.value = _clampPosition(
-                        next,
-                        areaSize,
-                        safePadding,
-                      );
-                    },
-                    child: RepaintBoundary(key: _buttonKey, child: child),
-                  ),
-                );
-              },
-              child: widget.button,
-            ),
-          ],
-        );
-      },
+    return Stack(
+      children: [
+        child,
+        DraggableFloatWidget(
+          width: estimatedButtonSize.width,
+          height: estimatedButtonSize.height,
+          config: DraggableFloatWidgetBaseConfig(
+            isFullScreen: false,
+            initPositionXInLeft: false,
+            initPositionYInTop: true,
+            initPositionYMarginBorder: safePadding.top,
+            borderLeft: safePadding.left,
+            borderRight: safePadding.right,
+            borderTop: safePadding.top,
+            borderBottom: safePadding.bottom,
+          ),
+          child: button,
+        ),
+      ],
     );
   }
 }

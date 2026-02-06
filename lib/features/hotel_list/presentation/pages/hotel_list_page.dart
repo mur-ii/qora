@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/app_toast.dart';
 import '../../data/datasources/hotel_list_remote_datasource.dart';
 import '../../data/repositories/hotel_list_repository_impl.dart';
 import '../../domain/usecases/get_hotel_list.dart';
@@ -114,9 +115,7 @@ class _HotelListPageContent extends StatelessWidget {
                     label: 'Peta',
                     onTap: () {
                       // TODO: Implement map view
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Peta akan segera hadir')),
-                      );
+                      AppToast.showInfo(context, 'Peta akan segera hadir');
                     },
                   ),
                 ),
