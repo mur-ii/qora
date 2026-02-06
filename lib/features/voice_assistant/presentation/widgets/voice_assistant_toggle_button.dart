@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../bloc/voice_assistant_bloc.dart';
 import '../bloc/voice_assistant_event.dart';
 import '../bloc/voice_assistant_state.dart';
@@ -71,21 +74,28 @@ class _VoiceAssistantToggleButtonState
     }
   }
 
-  void _handleToggle(VoiceAssistantState state) async {
-    if (!_permissionGranted) {
-      await _requestPermissions();
-      if (!_permissionGranted || !mounted) return;
+  Future<void> _handleModeChange(
+    bool enableVoice,
+    VoiceAssistantState state,
+  ) async {
+    if (enableVoice) {
+      if (!_permissionGranted) {
+        await _requestPermissions();
+        if (!_permissionGranted || !mounted) return;
+      }
     }
 
     if (!mounted) return;
 
-    if (state.connectionStatus == VoiceConnectionStatus.connected) {
-      // Stop voice assistant
-      context.read<VoiceAssistantBloc>().add(const StopVoiceAssistant());
-    } else if (state.connectionStatus == VoiceConnectionStatus.disconnected ||
-        state.connectionStatus == VoiceConnectionStatus.failed) {
-      // Start voice assistant
-      context.read<VoiceAssistantBloc>().add(const StartVoiceAssistant());
+    if (enableVoice) {
+      if (state.connectionStatus == VoiceConnectionStatus.disconnected ||
+          state.connectionStatus == VoiceConnectionStatus.failed) {
+        context.read<VoiceAssistantBloc>().add(const StartVoiceAssistant());
+      }
+    } else {
+      if (state.connectionStatus == VoiceConnectionStatus.connected) {
+        context.read<VoiceAssistantBloc>().add(const StopVoiceAssistant());
+      }
     }
   }
 
@@ -130,9 +140,8 @@ class _VoiceAssistantToggleButtonState
         final isMuted = state.isMuted;
 
         final theme = Theme.of(context);
-        final activeColor = widget.activeColor ?? theme.colorScheme.primary;
-        final inactiveColor =
-            widget.inactiveColor ?? theme.colorScheme.surfaceContainerHighest;
+        final activeColor = widget.activeColor ?? AppColors.primary;
+        final inactiveColor = widget.inactiveColor ?? AppColors.border;
         final statusColor = _statusColor(
           context,
           isActive: isActive,
@@ -148,132 +157,115 @@ class _VoiceAssistantToggleButtonState
         );
         final canToggleMute = isActive && !isConnecting;
 
+        final manualLabel = widget.inactiveLabel ?? 'Manual';
+        final voiceLabel = widget.activeLabel ?? 'Voice AI';
+
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
+              duration: const Duration(milliseconds: 200),
               curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    (isActive ? activeColor : inactiveColor).withOpacity(0.95),
-                    (isActive ? activeColor : inactiveColor).withOpacity(0.75),
-                  ],
-                ),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: AppColors.border),
                 boxShadow: [
                   BoxShadow(
-                    color: statusColor.withOpacity(isActive ? 0.45 : 0.2),
-                    blurRadius: isActive ? 18 : 10,
-                    spreadRadius: isActive ? 2 : 0,
+                    color: AppColors.shadowLight,
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-              child: Material(
-                color: Colors.transparent,
-                shape: const CircleBorder(),
-                child: InkWell(
-                  onTap: isConnecting ? null : () => _handleToggle(state),
-                  customBorder: const CircleBorder(),
-                  child: SizedBox(
-                    width: widget.size,
-                    height: widget.size,
-                    child: Center(
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        child: isConnecting
-                            ? SizedBox(
-                                width: widget.size * 0.45,
-                                height: widget.size * 0.45,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 3,
-                                ),
-                              )
-                            : Icon(
-                                isActive
-                                    ? (isMuted ? Icons.mic_off : Icons.mic)
-                                    : Icons.mic_none,
-                                key: ValueKey(
-                                  '${isActive}_${isMuted}_$isConnecting',
-                                ),
-                                color: Colors.white,
-                                size: widget.size * 0.5,
-                              ),
-                      ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    manualLabel,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: isActive
+                          ? AppColors.textSecondary
+                          : AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
                     ),
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Switch.adaptive(
+                    value: isActive,
+                    onChanged: isConnecting
+                        ? null
+                        : (value) => _handleModeChange(value, state),
+                    activeColor: activeColor,
+                    activeTrackColor: AppColors.primaryLight,
+                    inactiveThumbColor: AppColors.surface,
+                    inactiveTrackColor: inactiveColor,
+                  ),
+                  const SizedBox(width: 10),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        voiceLabel,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: isActive
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      if (widget.showMuteToggle) ...[
+                        const SizedBox(width: 8),
+                        InkResponse(
+                          onTap: canToggleMute
+                              ? () {
+                                  context.read<VoiceAssistantBloc>().add(
+                                    const ToggleVoiceAssistantMute(),
+                                  );
+                                }
+                              : null,
+                          radius: 16,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: canToggleMute
+                                  ? AppColors.surface
+                                  : AppColors.surfaceVariant,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.border),
+                            ),
+                            child: Icon(
+                              isMuted ? Icons.volume_off : Icons.volume_up,
+                              size: 14,
+                              color: canToggleMute
+                                  ? activeColor
+                                  : AppColors.textTertiary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
               ),
             ),
             if (widget.showStatus) ...[
-              const SizedBox(height: 10),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: statusColor,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: statusColor.withOpacity(0.6),
-                          blurRadius: 6,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
+              const SizedBox(height: 8),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: Text(
+                  statusText,
+                  key: ValueKey(statusText),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: statusColor,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
                   ),
-                  const SizedBox(width: 8),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    child: Text(
-                      statusText,
-                      key: ValueKey(statusText),
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: statusColor,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ),
-                  if (widget.showMuteToggle) ...[
-                    const SizedBox(width: 8),
-                    InkResponse(
-                      onTap: canToggleMute
-                          ? () {
-                              context.read<VoiceAssistantBloc>().add(
-                                const ToggleVoiceAssistantMute(),
-                              );
-                            }
-                          : null,
-                      radius: 16,
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: canToggleMute
-                              ? theme.colorScheme.surface
-                              : theme.colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: theme.colorScheme.outline.withOpacity(0.4),
-                          ),
-                        ),
-                        child: Icon(
-                          isMuted ? Icons.volume_off : Icons.volume_up,
-                          size: 14,
-                          color: canToggleMute
-                              ? statusColor
-                              : theme.disabledColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ] else if (widget.showLabel) ...[
               const SizedBox(height: 8),
@@ -298,6 +290,141 @@ class _VoiceAssistantToggleButtonState
                 ),
               ),
             ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class DraggableVoiceAssistantOverlay extends StatefulWidget {
+  final Widget child;
+  final Widget button;
+  final EdgeInsets padding;
+  final Size estimatedButtonSize;
+
+  const DraggableVoiceAssistantOverlay({
+    super.key,
+    required this.child,
+    required this.button,
+    this.padding = const EdgeInsets.all(16),
+    this.estimatedButtonSize = const Size(72, 96),
+  });
+
+  @override
+  State<DraggableVoiceAssistantOverlay> createState() =>
+      _DraggableVoiceAssistantOverlayState();
+}
+
+class _DraggableVoiceAssistantOverlayState
+    extends State<DraggableVoiceAssistantOverlay> {
+  final ValueNotifier<Offset> _position = ValueNotifier(Offset.zero);
+  final GlobalKey _buttonKey = GlobalKey();
+  Size _buttonSize = Size.zero;
+  bool _positionInitialized = false;
+
+  @override
+  void dispose() {
+    _position.dispose();
+    super.dispose();
+  }
+
+  void _syncButtonSize(Size areaSize, EdgeInsets safePadding) {
+    final renderBox =
+        _buttonKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    final newSize = renderBox.size;
+    if (newSize == _buttonSize) return;
+
+    _buttonSize = newSize;
+    _position.value = _clampPosition(_position.value, areaSize, safePadding);
+  }
+
+  void _initializePosition(Size areaSize, EdgeInsets safePadding) {
+    if (_positionInitialized) return;
+
+    final fallbackSize = _buttonSize == Size.zero
+        ? widget.estimatedButtonSize
+        : _buttonSize;
+    final initial = Offset(
+      areaSize.width - fallbackSize.width - safePadding.right,
+      areaSize.height - fallbackSize.height - safePadding.bottom,
+    );
+    _position.value = _clampPosition(initial, areaSize, safePadding);
+    _positionInitialized = true;
+  }
+
+  Offset _clampPosition(
+    Offset position,
+    Size areaSize,
+    EdgeInsets safePadding,
+  ) {
+    final size = _buttonSize == Size.zero
+        ? widget.estimatedButtonSize
+        : _buttonSize;
+    final maxX = math.max(
+      safePadding.left,
+      areaSize.width - size.width - safePadding.right,
+    );
+    final maxY = math.max(
+      safePadding.top,
+      areaSize.height - size.height - safePadding.bottom,
+    );
+    final minX = safePadding.left;
+    final minY = safePadding.top;
+
+    return Offset(position.dx.clamp(minX, maxX), position.dy.clamp(minY, maxY));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final safePadding = widget.padding.copyWith(
+      left: widget.padding.left + media.padding.left,
+      top: widget.padding.top + media.padding.top,
+      right: widget.padding.right + media.padding.right,
+      bottom:
+          widget.padding.bottom +
+          media.padding.bottom +
+          media.viewInsets.bottom,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final areaSize = Size(constraints.maxWidth, constraints.maxHeight);
+        _initializePosition(areaSize, safePadding);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _syncButtonSize(areaSize, safePadding);
+        });
+
+        return Stack(
+          children: [
+            widget.child,
+            ValueListenableBuilder<Offset>(
+              valueListenable: _position,
+              builder: (context, offset, child) {
+                final clamped = _clampPosition(offset, areaSize, safePadding);
+
+                return Positioned(
+                  left: clamped.dx,
+                  top: clamped.dy,
+                  child: GestureDetector(
+                    onPanUpdate: (details) {
+                      final next = offset + details.delta;
+                      _position.value = _clampPosition(
+                        next,
+                        areaSize,
+                        safePadding,
+                      );
+                    },
+                    child: RepaintBoundary(key: _buttonKey, child: child),
+                  ),
+                );
+              },
+              child: widget.button,
+            ),
           ],
         );
       },
