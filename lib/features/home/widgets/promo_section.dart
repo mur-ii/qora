@@ -40,7 +40,7 @@ class PromoSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 180,
+          height: 170,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -49,12 +49,7 @@ class PromoSection extends StatelessWidget {
             cacheExtent: 600, // Preload cards for smooth scrolling
             itemBuilder: (context, index) {
               final promo = _promos[index];
-              return PromoCard(
-                key: ValueKey(promo['title']),
-                title: promo['title']!,
-                subtitle: promo['subtitle']!,
-                color: promo['color'] as Color,
-              );
+              return PromoCard(key: ValueKey(promo), imagePath: promo);
             },
           ),
         ),
@@ -63,25 +58,9 @@ class PromoSection extends StatelessWidget {
   }
 }
 
-final List<Map<String, dynamic>> _promos = [
-  {
-    'title': 'Diskon 50%',
-    'subtitle': 'Untuk pengguna baru! Nikmati diskon hingga 50%',
-    'color': AppColors.primary,
-  },
-  {
-    'title': 'Gratis Sarapan',
-    'subtitle': 'Booking hotel pilihan dan dapatkan sarapan gratis',
-    'color': const Color(0xFFFF6B6B),
-  },
-  {
-    'title': 'Cashback 100rb',
-    'subtitle': 'Minimal transaksi 500rb dapat cashback',
-    'color': const Color(0xFF4ECDC4),
-  },
-  {
-    'title': 'Weekend Sale',
-    'subtitle': 'Promo khusus weekend, diskon up to 40%',
-    'color': const Color(0xFFFFBE0B),
-  },
+final List<String> _promos = [
+  'assets/images/banner-promo-1.webp',
+  'assets/images/banner-promo-2.webp',
+  'assets/images/banner-promo-3.webp',
+  'assets/images/banner-promo-4.webp',
 ];

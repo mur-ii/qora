@@ -14,11 +14,17 @@ import '../../features/hotel_list/presentation/pages/hotel_list_page.dart';
 import '../../features/notifications/presentation/pages/notification_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
+import '../../features/splash/presentation/pages/splash_page.dart';
 import '../widgets/main_navigation_page.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/login',
+  initialLocation: '/splash',
   routes: [
+    GoRoute(
+      path: '/splash',
+      name: 'splash',
+      builder: (context, state) => const SplashPage(),
+    ),
     GoRoute(
       path: '/login',
       name: 'login',

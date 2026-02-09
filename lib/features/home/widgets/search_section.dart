@@ -15,15 +15,16 @@ class SearchSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.all(AppTheme.spacingMedium),
-      padding: const EdgeInsets.all(AppTheme.spacingLarge),
+      padding: const EdgeInsets.all(AppTheme.spacingMedium),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
             color: AppColors.shadowLight,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: AppTheme.elevationSmall,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -32,12 +33,12 @@ class SearchSection extends StatelessWidget {
         children: [
           Text(
             'Cari Hotel',
-            style: AppTypography.titleLarge.copyWith(
+            style: AppTypography.titleMedium.copyWith(
               fontWeight: FontWeight.w600,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           BlocSelector<HomeBloc, HomeState, String>(
             selector: (state) => state.location,
             builder: (context, location) {
@@ -103,6 +104,10 @@ class _LocationFieldState extends State<_LocationField> {
     return TextField(
       controller: _controller,
       readOnly: true,
+      style: AppTypography.bodyMedium.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w500,
+      ),
       onTap: () {
         context.push('/search-location').then((value) {
           if (value != null && value is String) {
@@ -110,20 +115,10 @@ class _LocationFieldState extends State<_LocationField> {
           }
         });
       },
-      decoration: InputDecoration(
-        labelText: 'Lokasi',
+      decoration: _buildInputDecoration(
         hintText: 'Pilih kota atau hotel',
         prefixIcon: const Icon(Icons.location_on_outlined),
         suffixIcon: const Icon(Icons.search),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
-        ),
       ),
     );
   }
@@ -166,20 +161,14 @@ class _DateRangeFieldState extends State<_DateRangeField> {
     return TextField(
       controller: _controller,
       readOnly: true,
+      style: AppTypography.bodyMedium.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w500,
+      ),
       onTap: () => _showDateRangePicker(context),
-      decoration: InputDecoration(
-        labelText: 'Tanggal',
+      decoration: _buildInputDecoration(
         hintText: 'Check-in - Check-out',
         prefixIcon: const Icon(Icons.calendar_today_outlined),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
-        ),
       ),
     );
   }
@@ -247,22 +236,14 @@ class _RoomGuestFieldState extends State<_RoomGuestField> {
     return TextField(
       controller: _controller,
       readOnly: true,
+      style: AppTypography.bodyMedium.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w500,
+      ),
       onTap: () => _showRoomGuestPicker(context),
-      decoration: InputDecoration(
-        labelText: 'Kamar & Tamu',
+      decoration: _buildInputDecoration(
         hintText: 'Pilih jumlah kamar dan tamu',
         prefixIcon: const Icon(Icons.people_outline),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          borderSide: const BorderSide(color: AppColors.border),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
       ),
     );
   }
@@ -369,6 +350,39 @@ class _RoomGuestFieldState extends State<_RoomGuestField> {
       },
     );
   }
+}
+
+InputDecoration _buildInputDecoration({
+  required String hintText,
+  required Widget prefixIcon,
+  Widget? suffixIcon,
+}) {
+  return InputDecoration(
+    hintText: hintText,
+    hintStyle: AppTypography.bodyMedium.copyWith(
+      color: AppColors.textSecondary,
+    ),
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    filled: true,
+    fillColor: AppColors.surfaceVariant,
+    isDense: true,
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: AppTheme.spacingMedium,
+      vertical: AppTheme.spacingSmall,
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      borderSide: const BorderSide(color: AppColors.border),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+    ),
+  );
 }
 
 class _BookingCounterRow extends StatelessWidget {
@@ -503,22 +517,17 @@ class _SearchButton extends StatelessWidget {
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
+            padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             ),
-            elevation: 2,
+            elevation: 0,
           ),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.search, size: 24),
-              SizedBox(width: 8),
-              Text(
-                'Cari Hotel',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ],
+          child: Text(
+            'Cari Hotel',
+            style: AppTypography.labelLarge.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
