@@ -418,6 +418,7 @@ class _HotelListPageContent extends StatelessWidget {
   }
 
   void _showSortOptions(BuildContext context) {
+    final hotelListBloc = context.read<HotelListBloc>();
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -441,9 +442,7 @@ class _HotelListPageContent extends StatelessWidget {
               title: 'Harga: Rendah ke Tinggi',
               icon: Icons.arrow_upward,
               onTap: () {
-                context.read<HotelListBloc>().add(
-                  const FilterHotelListEvent('lowest_price'),
-                );
+                hotelListBloc.add(const FilterHotelListEvent('lowest_price'));
                 Navigator.pop(context);
               },
             ),
@@ -458,9 +457,7 @@ class _HotelListPageContent extends StatelessWidget {
               title: 'Rating: Tinggi ke Rendah',
               icon: Icons.star,
               onTap: () {
-                context.read<HotelListBloc>().add(
-                  const FilterHotelListEvent('highest_rating'),
-                );
+                hotelListBloc.add(const FilterHotelListEvent('highest_rating'));
                 Navigator.pop(context);
               },
             ),
@@ -468,9 +465,7 @@ class _HotelListPageContent extends StatelessWidget {
               title: 'Populer',
               icon: Icons.trending_up,
               onTap: () {
-                context.read<HotelListBloc>().add(
-                  const FilterHotelListEvent('popular'),
-                );
+                hotelListBloc.add(const FilterHotelListEvent('popular'));
                 Navigator.pop(context);
               },
             ),
