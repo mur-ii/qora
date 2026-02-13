@@ -64,13 +64,18 @@ final GoRouter appRouter = GoRouter(
         final checkOut = state.uri.queryParameters['checkOut'];
         final rooms = state.uri.queryParameters['rooms'];
         final guests = state.uri.queryParameters['guests'];
+        final searchKey = state.uri.queryParameters['searchKey'];
 
         return HotelListPage(
+          key: ValueKey(
+            'hotel-list-${location ?? ''}-${checkIn ?? ''}-${checkOut ?? ''}-${rooms ?? ''}-${guests ?? ''}-${searchKey ?? ''}',
+          ),
           location: location,
           checkIn: checkIn,
           checkOut: checkOut,
           rooms: rooms,
           guests: guests,
+          searchKey: searchKey,
         );
       },
     ),

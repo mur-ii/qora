@@ -38,25 +38,54 @@ class SearchSection extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
           ),
+          const SizedBox(height: 6),
+          BlocSelector<HomeBloc, HomeState, bool>(
+            selector: (state) => state.updatedByVoice,
+            builder: (context, updatedByVoice) {
+              if (!updatedByVoice) return const SizedBox.shrink();
+
+              return Row(
+                children: [
+                  Icon(
+                    Icons.record_voice_over_outlined,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Diperbarui oleh Voice AI',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
           const SizedBox(height: 12),
           BlocSelector<HomeBloc, HomeState, String>(
             selector: (state) => state.location,
             builder: (context, location) {
-              return _LocationField(location: location);
+              return _VoiceHighlight(child: _LocationField(location: location));
             },
           ),
           const SizedBox(height: 12),
           BlocSelector<HomeBloc, HomeState, String>(
             selector: (state) => state.formattedDateRange,
             builder: (context, dateRange) {
-              return _DateRangeField(dateRange: dateRange);
+              return _VoiceHighlight(
+                child: _DateRangeField(dateRange: dateRange),
+              );
             },
           ),
           const SizedBox(height: 12),
           BlocSelector<HomeBloc, HomeState, String>(
             selector: (state) => state.formattedRoomAndGuest,
             builder: (context, roomAndGuest) {
-              return _RoomGuestField(roomAndGuest: roomAndGuest);
+              return _VoiceHighlight(
+                child: _RoomGuestField(roomAndGuest: roomAndGuest),
+              );
             },
           ),
           const SizedBox(height: 20),
@@ -120,6 +149,51 @@ class _LocationFieldState extends State<_LocationField> {
         prefixIcon: const Icon(Icons.location_on_outlined),
         suffixIcon: const Icon(Icons.search),
       ),
+    );
+  }
+}
+
+class _VoiceHighlight extends StatelessWidget {
+  const _VoiceHighlight({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<HomeBloc, HomeState, DateTime?>(
+      selector: (state) => state.voiceUpdatedAt,
+      builder: (context, voiceUpdatedAt) {
+        if (voiceUpdatedAt == null) return child;
+
+        final highlightColor = AppColors.primary.withOpacity(0.12);
+
+        return TweenAnimationBuilder<double>(
+          key: ValueKey(voiceUpdatedAt.millisecondsSinceEpoch),
+          tween: Tween<double>(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 1200),
+          builder: (context, progress, _) {
+            final double phase = progress <= 0.4
+                ? (progress / 0.4)
+                : (1 - (progress - 0.4) / 0.6);
+            final Color? color = Color.lerp(
+              Colors.transparent,
+              highlightColor,
+              phase.clamp(0, 1),
+            );
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: ColoredBox(color: color ?? Colors.transparent),
+                  ),
+                  child,
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -489,23 +563,19 @@ class _SearchButton extends StatelessWidget {
           final checkIn = state.checkInDate!.toIso8601String();
           final checkOut = state.checkOutDate!.toIso8601String();
 
-          context
-              .push(
-                Uri(
-                  path: '/hotel-list',
-                  queryParameters: {
-                    'location': state.location,
-                    'checkIn': checkIn,
-                    'checkOut': checkOut,
-                    'rooms': state.roomCount.toString(),
-                    'guests': state.guestCount.toString(),
-                  },
-                ).toString(),
-              )
-              .then((_) {
-                // Reset status after returning from hotel list page
-                context.read<HomeBloc>().add(const HomeStatusReset());
-              });
+          context.go(
+            Uri(
+              path: '/hotel-list',
+              queryParameters: {
+                'location': state.location,
+                'checkIn': checkIn,
+                'checkOut': checkOut,
+                'rooms': state.roomCount.toString(),
+                'guests': state.guestCount.toString(),
+              },
+            ).toString(),
+          );
+          context.read<HomeBloc>().add(const HomeStatusReset());
         }
       },
       child: SizedBox(

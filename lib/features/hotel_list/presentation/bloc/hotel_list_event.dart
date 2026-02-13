@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import 'hotel_list_state.dart';
+
 abstract class HotelListEvent extends Equatable {
   const HotelListEvent();
 
@@ -23,4 +25,17 @@ class FilterHotelListEvent extends HotelListEvent {
 
   @override
   List<Object?> get props => [filter];
+}
+
+class ApplyHotelFiltersEvent extends HotelListEvent {
+  final HotelListFilters filters;
+
+  const ApplyHotelFiltersEvent(this.filters);
+
+  @override
+  List<Object?> get props => [filters];
+}
+
+class ResetHotelFiltersEvent extends HotelListEvent {
+  const ResetHotelFiltersEvent();
 }

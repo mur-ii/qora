@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
@@ -13,12 +14,13 @@ import '../bloc/hotel_list_event.dart';
 import '../bloc/hotel_list_state.dart';
 import '../widgets/hotel_card.dart';
 
-class HotelListPage extends StatelessWidget {
+class HotelListPage extends StatefulWidget {
   final String? location;
   final String? checkIn;
   final String? checkOut;
   final String? rooms;
   final String? guests;
+  final String? searchKey;
 
   const HotelListPage({
     super.key,
@@ -27,24 +29,59 @@ class HotelListPage extends StatelessWidget {
     this.checkOut,
     this.rooms,
     this.guests,
+    this.searchKey,
   });
 
   @override
+  State<HotelListPage> createState() => _HotelListPageState();
+}
+
+class _HotelListPageState extends State<HotelListPage> {
+  late final HotelListBloc _hotelListBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    final dataSource = HotelListRemoteDataSourceImpl();
+    final repository = HotelListRepositoryImpl(dataSource);
+    final useCase = GetHotelList(repository);
+    _hotelListBloc = HotelListBloc(getHotelList: useCase)
+      ..add(LoadHotelListEvent(location: widget.location));
+  }
+
+  @override
+  void didUpdateWidget(covariant HotelListPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final hasSearchChanged =
+        oldWidget.location != widget.location ||
+        oldWidget.checkIn != widget.checkIn ||
+        oldWidget.checkOut != widget.checkOut ||
+        oldWidget.rooms != widget.rooms ||
+        oldWidget.guests != widget.guests ||
+        oldWidget.searchKey != widget.searchKey;
+
+    if (hasSearchChanged) {
+      _hotelListBloc.add(const ResetHotelFiltersEvent());
+      _hotelListBloc.add(LoadHotelListEvent(location: widget.location));
+    }
+  }
+
+  @override
+  void dispose() {
+    _hotelListBloc.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) {
-        final dataSource = HotelListRemoteDataSourceImpl();
-        final repository = HotelListRepositoryImpl(dataSource);
-        final useCase = GetHotelList(repository);
-        return HotelListBloc(getHotelList: useCase)
-          ..add(LoadHotelListEvent(location: location));
-      },
+    return BlocProvider.value(
+      value: _hotelListBloc,
       child: _HotelListPageContent(
-        location: location,
-        checkIn: checkIn,
-        checkOut: checkOut,
-        rooms: rooms,
-        guests: guests,
+        location: widget.location,
+        checkIn: widget.checkIn,
+        checkOut: widget.checkOut,
+        rooms: widget.rooms,
+        guests: widget.guests,
       ),
     );
   }
@@ -72,6 +109,19 @@ class _HotelListPageContent extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          tooltip: 'Kembali',
+          onPressed: () {
+            final router = GoRouter.of(context);
+            if (router.canPop()) {
+              router.pop();
+            } else {
+              router.go('/');
+            }
+          },
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -158,9 +208,7 @@ class _HotelListPageContent extends StatelessWidget {
               },
               builder: (context, state) {
                 if (state is HotelListLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  );
+                  return const _HotelListLoadingView();
                 }
 
                 if (state is HotelListError) {
@@ -266,6 +314,16 @@ class _HotelListPageContent extends StatelessWidget {
   }
 
   void _showFilterOptions(BuildContext context) {
+    final hotelListBloc = context.read<HotelListBloc>();
+    final currentState = hotelListBloc.state;
+    final currentFilters = currentState is HotelListLoaded
+        ? currentState.activeFilters
+        : const HotelListFilters();
+
+    String? selectedBudgetKey = currentFilters.budgetKey;
+    final Set<String> selectedTypes = {...currentFilters.types};
+    final Set<String> selectedAmenities = {...currentFilters.amenities};
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -296,7 +354,12 @@ class _HotelListPageContent extends StatelessWidget {
                     ),
                     TextButton(
                       onPressed: () {
-                        // Reset filters
+                        setState(() {
+                          selectedBudgetKey = null;
+                          selectedTypes.clear();
+                          selectedAmenities.clear();
+                        });
+                        hotelListBloc.add(const ResetHotelFiltersEvent());
                       },
                       child: const Text('Reset'),
                     ),
@@ -319,10 +382,50 @@ class _HotelListPageContent extends StatelessWidget {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            _FilterChip(label: '< Rp 200.000'),
-                            _FilterChip(label: 'Rp 200.000 - Rp 500.000'),
-                            _FilterChip(label: 'Rp 500.000 - Rp 1.000.000'),
-                            _FilterChip(label: '> Rp 1.000.000'),
+                            _FilterChip(
+                              label: '< Rp 200.000',
+                              isSelected: selectedBudgetKey == 'lt_200k',
+                              onSelected: (selected) {
+                                setState(() {
+                                  selectedBudgetKey = selected
+                                      ? 'lt_200k'
+                                      : null;
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Rp 200.000 - Rp 500.000',
+                              isSelected: selectedBudgetKey == '200_500k',
+                              onSelected: (selected) {
+                                setState(() {
+                                  selectedBudgetKey = selected
+                                      ? '200_500k'
+                                      : null;
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Rp 500.000 - Rp 1.000.000',
+                              isSelected: selectedBudgetKey == '500_1000k',
+                              onSelected: (selected) {
+                                setState(() {
+                                  selectedBudgetKey = selected
+                                      ? '500_1000k'
+                                      : null;
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: '> Rp 1.000.000',
+                              isSelected: selectedBudgetKey == 'gt_1000k',
+                              onSelected: (selected) {
+                                setState(() {
+                                  selectedBudgetKey = selected
+                                      ? 'gt_1000k'
+                                      : null;
+                                });
+                              },
+                            ),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -338,11 +441,71 @@ class _HotelListPageContent extends StatelessWidget {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            _FilterChip(label: 'Hotel'),
-                            _FilterChip(label: 'Apartemen'),
-                            _FilterChip(label: 'Guest House'),
-                            _FilterChip(label: 'Villa'),
-                            _FilterChip(label: 'Resort'),
+                            _FilterChip(
+                              label: 'Hotel',
+                              isSelected: selectedTypes.contains('hotel'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedTypes.add('hotel');
+                                  } else {
+                                    selectedTypes.remove('hotel');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Apartemen',
+                              isSelected: selectedTypes.contains('apartemen'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedTypes.add('apartemen');
+                                  } else {
+                                    selectedTypes.remove('apartemen');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Guest House',
+                              isSelected: selectedTypes.contains('guest_house'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedTypes.add('guest_house');
+                                  } else {
+                                    selectedTypes.remove('guest_house');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Villa',
+                              isSelected: selectedTypes.contains('villa'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedTypes.add('villa');
+                                  } else {
+                                    selectedTypes.remove('villa');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Resort',
+                              isSelected: selectedTypes.contains('resort'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedTypes.add('resort');
+                                  } else {
+                                    selectedTypes.remove('resort');
+                                  }
+                                });
+                              },
+                            ),
                           ],
                         ),
                         const SizedBox(height: 24),
@@ -358,13 +521,105 @@ class _HotelListPageContent extends StatelessWidget {
                           spacing: 8,
                           runSpacing: 8,
                           children: [
-                            _FilterChip(label: 'WiFi Gratis'),
-                            _FilterChip(label: 'AC'),
-                            _FilterChip(label: 'TV'),
-                            _FilterChip(label: 'Kamar Mandi Dalam'),
-                            _FilterChip(label: 'Breakfast'),
-                            _FilterChip(label: 'Kolam Renang'),
-                            _FilterChip(label: 'Parkir'),
+                            _FilterChip(
+                              label: 'WiFi Gratis',
+                              isSelected: selectedAmenities.contains('wifi'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('wifi');
+                                  } else {
+                                    selectedAmenities.remove('wifi');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'AC',
+                              isSelected: selectedAmenities.contains(
+                                'air conditioning',
+                              ),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('air conditioning');
+                                  } else {
+                                    selectedAmenities.remove(
+                                      'air conditioning',
+                                    );
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'TV',
+                              isSelected: selectedAmenities.contains('tv'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('tv');
+                                  } else {
+                                    selectedAmenities.remove('tv');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Kamar Mandi Dalam',
+                              isSelected: selectedAmenities.contains(
+                                'bathroom',
+                              ),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('bathroom');
+                                  } else {
+                                    selectedAmenities.remove('bathroom');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Breakfast',
+                              isSelected: selectedAmenities.contains(
+                                'restaurant',
+                              ),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('restaurant');
+                                  } else {
+                                    selectedAmenities.remove('restaurant');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Kolam Renang',
+                              isSelected: selectedAmenities.contains('pool'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('pool');
+                                  } else {
+                                    selectedAmenities.remove('pool');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Parkir',
+                              isSelected: selectedAmenities.contains('parking'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('parking');
+                                  } else {
+                                    selectedAmenities.remove('parking');
+                                  }
+                                });
+                              },
+                            ),
                           ],
                         ),
                       ],
@@ -376,8 +631,18 @@ class _HotelListPageContent extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
+                      final filters = HotelListFilters(
+                        budgetKey: selectedBudgetKey,
+                        types: selectedTypes,
+                        amenities: selectedAmenities,
+                      );
+
+                      if (filters.isEmpty) {
+                        hotelListBloc.add(const ResetHotelFiltersEvent());
+                      } else {
+                        hotelListBloc.add(ApplyHotelFiltersEvent(filters));
+                      }
                       Navigator.pop(context);
-                      // Apply filters
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
@@ -450,6 +715,7 @@ class _HotelListPageContent extends StatelessWidget {
               title: 'Harga: Tinggi ke Rendah',
               icon: Icons.arrow_downward,
               onTap: () {
+                hotelListBloc.add(const FilterHotelListEvent('highest_price'));
                 Navigator.pop(context);
               },
             ),
@@ -520,28 +786,23 @@ class _FilterButton extends StatelessWidget {
 }
 
 // Filter Chip Widget
-class _FilterChip extends StatefulWidget {
+class _FilterChip extends StatelessWidget {
   final String label;
+  final bool isSelected;
+  final ValueChanged<bool> onSelected;
 
-  const _FilterChip({required this.label});
-
-  @override
-  State<_FilterChip> createState() => _FilterChipState();
-}
-
-class _FilterChipState extends State<_FilterChip> {
-  bool isSelected = false;
+  const _FilterChip({
+    required this.label,
+    required this.isSelected,
+    required this.onSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
     return FilterChip(
-      label: Text(widget.label),
+      label: Text(label),
       selected: isSelected,
-      onSelected: (bool selected) {
-        setState(() {
-          isSelected = selected;
-        });
-      },
+      onSelected: onSelected,
       selectedColor: AppColors.primary.withOpacity(0.2),
       checkmarkColor: AppColors.primary,
       labelStyle: TextStyle(
@@ -586,6 +847,101 @@ class _SortOption extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _HotelListLoadingView extends StatelessWidget {
+  const _HotelListLoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const LinearProgressIndicator(
+          color: AppColors.primary,
+          backgroundColor: AppColors.surface,
+          minHeight: 2,
+        ),
+        Expanded(
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            itemCount: 6,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) => const _HotelCardSkeleton(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HotelCardSkeleton extends StatelessWidget {
+  const _HotelCardSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 150,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border, width: 1),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 120,
+            height: double.infinity,
+            decoration: const BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.horizontal(left: Radius.circular(16)),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _SkeletonBar(width: double.infinity, height: 16),
+                  const SizedBox(height: 10),
+                  _SkeletonBar(width: 140, height: 12),
+                  const SizedBox(height: 8),
+                  _SkeletonBar(width: 180, height: 12),
+                  const Spacer(),
+                  Row(
+                    children: const [
+                      _SkeletonBar(width: 72, height: 20),
+                      SizedBox(width: 8),
+                      _SkeletonBar(width: 88, height: 20),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonBar extends StatelessWidget {
+  final double width;
+  final double height;
+
+  const _SkeletonBar({required this.width, required this.height});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(8),
       ),
     );
   }

@@ -10,6 +10,8 @@ class HomeState extends Equatable {
     this.checkOutDate,
     this.roomCount = 1,
     this.guestCount = 1,
+    this.updatedByVoice = false,
+    this.voiceUpdatedAt,
     this.errorMessage,
   });
 
@@ -19,6 +21,8 @@ class HomeState extends Equatable {
   final DateTime? checkOutDate;
   final int roomCount;
   final int guestCount;
+  final bool updatedByVoice;
+  final DateTime? voiceUpdatedAt;
   final String? errorMessage;
 
   @override
@@ -29,6 +33,8 @@ class HomeState extends Equatable {
     checkOutDate,
     roomCount,
     guestCount,
+    updatedByVoice,
+    voiceUpdatedAt,
     errorMessage,
   ];
 
@@ -39,6 +45,8 @@ class HomeState extends Equatable {
     DateTime? checkOutDate,
     int? roomCount,
     int? guestCount,
+    bool? updatedByVoice,
+    DateTime? voiceUpdatedAt,
     String? errorMessage,
   }) {
     return HomeState(
@@ -48,6 +56,8 @@ class HomeState extends Equatable {
       checkOutDate: checkOutDate ?? this.checkOutDate,
       roomCount: roomCount ?? this.roomCount,
       guestCount: guestCount ?? this.guestCount,
+      updatedByVoice: updatedByVoice ?? this.updatedByVoice,
+      voiceUpdatedAt: voiceUpdatedAt ?? this.voiceUpdatedAt,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }

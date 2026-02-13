@@ -51,6 +51,31 @@ class HomeSearchSubmitted extends HomeEvent {
   const HomeSearchSubmitted();
 }
 
+class HomeVoiceConstraintsUpdated extends HomeEvent {
+  const HomeVoiceConstraintsUpdated({
+    this.location,
+    this.checkInDate,
+    this.checkOutDate,
+    this.roomCount,
+    this.guestCount,
+  });
+
+  final String? location;
+  final DateTime? checkInDate;
+  final DateTime? checkOutDate;
+  final int? roomCount;
+  final int? guestCount;
+
+  @override
+  List<Object?> get props => [
+    location,
+    checkInDate,
+    checkOutDate,
+    roomCount,
+    guestCount,
+  ];
+}
+
 class HomeStatusReset extends HomeEvent {
   const HomeStatusReset();
 }

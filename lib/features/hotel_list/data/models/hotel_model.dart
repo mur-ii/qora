@@ -9,6 +9,7 @@ class HotelModel extends HotelEntity {
     required super.pricePerNight,
     required super.rating,
     required super.isPromo,
+    required super.amenities,
   });
 
   factory HotelModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +21,11 @@ class HotelModel extends HotelEntity {
       pricePerNight: (json['pricePerNight'] as num).toDouble(),
       rating: (json['rating'] as num).toDouble(),
       isPromo: json['isPromo'] as bool,
+      amenities:
+          (json['amenities'] as List<dynamic>?)
+              ?.map((amenity) => amenity.toString())
+              .toList() ??
+          const [],
     );
   }
 
@@ -32,6 +38,7 @@ class HotelModel extends HotelEntity {
       'pricePerNight': pricePerNight,
       'rating': rating,
       'isPromo': isPromo,
+      'amenities': amenities,
     };
   }
 }

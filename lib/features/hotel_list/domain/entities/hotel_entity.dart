@@ -8,6 +8,7 @@ class HotelEntity extends Equatable {
   final double pricePerNight;
   final double rating;
   final bool isPromo;
+  final List<String> amenities;
 
   const HotelEntity({
     required this.id,
@@ -17,6 +18,7 @@ class HotelEntity extends Equatable {
     required this.pricePerNight,
     required this.rating,
     required this.isPromo,
+    required this.amenities,
   });
 
   @override
@@ -28,5 +30,6 @@ class HotelEntity extends Equatable {
     pricePerNight,
     rating,
     isPromo,
+    amenities,
   ];
 }

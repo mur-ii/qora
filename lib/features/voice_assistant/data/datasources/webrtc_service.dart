@@ -183,6 +183,10 @@ class WebRTCService {
           }
           break;
 
+        case 'response.function_call_arguments.delta':
+          _onAgentEvent?.call(data);
+          break;
+
         case 'response.audio_transcript.done':
           // AI's response transcript
           final transcript = data['transcript'] as String?;

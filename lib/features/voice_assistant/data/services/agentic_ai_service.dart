@@ -25,6 +25,16 @@ class AgenticAIService {
 
   AgentStateEntity get agentState => _agentState;
 
+  void previewUserConstraints(Map<String, dynamic> args) {
+    final normalized = Map<String, dynamic>.from(_applyDefaultScenario(args));
+    final constraints = _agentState.userConstraints;
+
+    normalized['rooms'] = args['rooms'] ?? constraints['rooms'] ?? 1;
+    normalized['guests'] = args['guests'] ?? constraints['guests'] ?? 2;
+
+    _updateAgentState(userConstraints: normalized);
+  }
+
   String _formatDate(DateTime date) {
     final year = date.year.toString().padLeft(4, '0');
     final month = date.month.toString().padLeft(2, '0');
@@ -496,6 +506,8 @@ class AgenticAIService {
 
   Future<Map<String, dynamic>> _searchHotels(Map<String, dynamic> args) async {
     final normalizedArgs = _applyDefaultScenario(args);
+    normalizedArgs['searchKey'] = DateTime.now().millisecondsSinceEpoch
+        .toString();
 
     _updateAgentState(
       currentStep: BookingStep.searching,

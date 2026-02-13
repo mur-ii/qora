@@ -53,6 +53,7 @@ dependencies:
   flutter_dotenv: ^5.2.1
   toastification: ^3.0.3
   draggable_float_widget: ^0.1.0
+  logger: ^2.6.2
 
 dev_dependencies:
   flutter_test:

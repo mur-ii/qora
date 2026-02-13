@@ -32,7 +32,7 @@ class NavigationService {
         case 'hotel_detail':
           final hotelId = params?['hotel_id'] as String?;
           if (hotelId != null) {
-            _router!.go('/hotel-detail/$hotelId');
+            _router!.push('/hotel-detail/$hotelId');
           }
           break;
 

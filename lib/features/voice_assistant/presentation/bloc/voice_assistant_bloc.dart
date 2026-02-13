@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/services/agentic_ai_service.dart';
@@ -20,6 +22,8 @@ class VoiceAssistantBloc
   final DisconnectUseCase disconnectUseCase;
   final SetMicrophoneMutedUseCase setMicrophoneMutedUseCase;
   final AgenticAIService agenticAIService;
+  final Map<String, StringBuffer> _functionArgBuffers = {};
+  final Map<String, String> _functionArgNames = {};
 
   VoiceAssistantBloc({
     required this.createSessionUseCase,
@@ -195,6 +199,19 @@ class VoiceAssistantBloc
     try {
       emit(state.copyWith(isProcessing: true));
 
+      _functionArgBuffers.remove(event.callId);
+      _functionArgNames.remove(event.callId);
+
+      if (event.name == 'search_hotels') {
+        agenticAIService.previewUserConstraints(event.arguments);
+        emit(
+          state.copyWith(
+            agentState: agenticAIService.agentState,
+            isProcessing: true,
+          ),
+        );
+      }
+
       // Add function call message
       final updatedMessages = List<ConversationMessage>.from(state.messages)
         ..add(
@@ -261,6 +278,38 @@ class VoiceAssistantBloc
 
     // Handle specific events
     final eventType = event.event['type'] as String?;
+
+    if (eventType == 'response.function_call_arguments.delta') {
+      final callId = event.event['call_id'] as String?;
+      final delta = event.event['delta'] as String?;
+      final name = event.event['name'] as String?;
+
+      if (callId == null || delta == null) return;
+
+      final buffer = _functionArgBuffers.putIfAbsent(
+        callId,
+        () => StringBuffer(),
+      );
+      buffer.write(delta);
+
+      if (name != null && name.isNotEmpty) {
+        _functionArgNames[callId] = name;
+      }
+
+      final currentName = _functionArgNames[callId];
+      if (currentName != 'search_hotels') return;
+
+      try {
+        final parsed = jsonDecode(buffer.toString());
+        if (parsed is Map<String, dynamic>) {
+          agenticAIService.previewUserConstraints(parsed);
+          emit(state.copyWith(agentState: agenticAIService.agentState));
+        }
+      } catch (_) {
+        // Ignore until JSON is complete.
+      }
+      return;
+    }
 
     if (eventType == 'response.audio_transcript.done') {
       final transcript = event.event['transcript'] as String?;
