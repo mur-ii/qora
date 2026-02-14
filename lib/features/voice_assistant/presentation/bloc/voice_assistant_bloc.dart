@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/utils/app_logger.dart';
 import '../../data/services/agentic_ai_service.dart';
 import '../../domain/entities/function_call_entity.dart';
 import '../../domain/usecases/create_session_usecase.dart';
@@ -59,7 +60,7 @@ class VoiceAssistantBloc
       );
 
       // Step 1: Create session
-      print('Creating OpenAI Realtime session...');
+      AppLogger.info('VoiceAssistant', 'Starting voice assistant session');
       final session = await createSessionUseCase.call(
         model: event.model ?? 'gpt-realtime-mini-2025-12-15',
         voice: event.voice ?? 'verse',
@@ -67,10 +68,7 @@ class VoiceAssistantBloc
         instructions: agenticAIService.getSystemInstructions(),
       );
 
-      print('Session created: ${session.id}');
-
       // Step 2: Initialize WebRTC
-      print('Initializing WebRTC...');
       await initializeWebRTCUseCase.call(
         clientSecret: session.clientSecret,
         onConnectionStateChange: (connectionState) {
@@ -93,7 +91,7 @@ class VoiceAssistantBloc
         },
       );
 
-      print('Voice assistant started successfully');
+      AppLogger.info('VoiceAssistant', 'Voice assistant started');
 
       // Add welcome message
       emit(
@@ -108,8 +106,13 @@ class VoiceAssistantBloc
           ],
         ),
       );
-    } catch (e) {
-      print('Error starting voice assistant: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'VoiceAssistant',
+        'Error starting voice assistant',
+        error: e,
+        stackTrace: stackTrace,
+      );
       emit(
         state.copyWith(
           connectionStatus: VoiceConnectionStatus.failed,
@@ -132,9 +135,14 @@ class VoiceAssistantBloc
         ),
       );
 
-      print('Voice assistant stopped');
-    } catch (e) {
-      print('Error stopping voice assistant: $e');
+      AppLogger.info('VoiceAssistant', 'Voice assistant stopped');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'VoiceAssistant',
+        'Error stopping voice assistant',
+        error: e,
+        stackTrace: stackTrace,
+      );
       emit(state.copyWith(error: 'Failed to stop: $e'));
     }
   }
@@ -226,7 +234,7 @@ class VoiceAssistantBloc
       emit(state.copyWith(messages: updatedMessages));
 
       // Execute function
-      print('Executing function: ${event.name}');
+      AppLogger.info('VoiceAssistant', 'Function call: ${event.name}');
       final functionCall = FunctionCallEntity(
         callId: event.callId,
         name: event.name,
@@ -242,13 +250,13 @@ class VoiceAssistantBloc
       final resultData = result.result;
       if (resultData is Map<String, dynamic> &&
           resultData['requires_disconnect'] == true) {
-        print(
-          'Booking confirmed - Auto-disconnect will trigger after AI response',
+        AppLogger.info(
+          'VoiceAssistant',
+          'Auto-disconnect scheduled after booking confirmation',
         );
         // Schedule disconnect after a short delay to allow AI to speak final message
         Future.delayed(const Duration(seconds: 5), () {
           if (!isClosed) {
-            print('Auto-disconnecting after booking confirmation');
             add(const StopVoiceAssistant());
           }
         });
@@ -261,10 +269,13 @@ class VoiceAssistantBloc
           isProcessing: false,
         ),
       );
-
-      print('Function executed successfully: ${event.name}');
-    } catch (e) {
-      print('Error executing function: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'VoiceAssistant',
+        'Error executing function',
+        error: e,
+        stackTrace: stackTrace,
+      );
       emit(state.copyWith(isProcessing: false, error: 'Function error: $e'));
     }
   }
@@ -273,9 +284,6 @@ class VoiceAssistantBloc
     AgentEventReceived event,
     Emitter<VoiceAssistantState> emit,
   ) async {
-    // Handle agent events (logging, state updates, etc.)
-    print('Agent event: ${event.event['type']}');
-
     // Handle specific events
     final eventType = event.event['type'] as String?;
 
@@ -347,7 +355,13 @@ class VoiceAssistantBloc
             : state.isMuted,
       ),
     );
-    print('Connection state changed: ${event.state}');
+    if (status == VoiceConnectionStatus.connected) {
+      AppLogger.info('VoiceAssistant', 'Connection state: connected');
+    } else if (status == VoiceConnectionStatus.failed) {
+      AppLogger.warn('VoiceAssistant', 'Connection state: failed');
+    } else if (status == VoiceConnectionStatus.disconnected) {
+      AppLogger.warn('VoiceAssistant', 'Connection state: disconnected');
+    }
   }
 
   Future<void> _onRequestAssistantResponse(
@@ -356,8 +370,13 @@ class VoiceAssistantBloc
   ) async {
     try {
       await requestAssistantResponseUseCase.call(event.instructions);
-    } catch (e) {
-      print('Error requesting assistant response: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'VoiceAssistant',
+        'Error requesting assistant response',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 }

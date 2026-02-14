@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import '../../../../core/utils/app_logger.dart';
 import '../../domain/entities/connection_state_entity.dart';
 import '../../domain/entities/function_call_entity.dart';
 
@@ -49,7 +50,15 @@ class WebRTCService {
 
       // Set up connection state listener
       _peerConnection!.onConnectionState = (state) {
-        print('WebRTC Connection State: $state');
+        if (state == RTCPeerConnectionState.RTCPeerConnectionStateConnected) {
+          AppLogger.info('WebRTC', 'Connection state: connected');
+        } else if (state ==
+            RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
+          AppLogger.warn('WebRTC', 'Connection state: failed');
+        } else if (state ==
+            RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
+          AppLogger.warn('WebRTC', 'Connection state: disconnected');
+        }
         switch (state) {
           case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
             _updateConnectionState(ConnectionStateEntity.connected);
@@ -67,12 +76,11 @@ class WebRTCService {
 
       // Set up ICE candidate handler
       _peerConnection!.onIceCandidate = (candidate) {
-        print('ICE Candidate: ${candidate.candidate}');
+        // Intentionally quiet: ICE candidates are noisy in logs.
       };
 
       // Set up remote stream handler
       _peerConnection!.onTrack = (event) {
-        print('Received remote track: ${event.track.kind}');
         if (event.track.kind == 'audio') {
           _playRemoteAudio(event.streams[0]);
         }
@@ -83,10 +91,13 @@ class WebRTCService {
 
       // Create data channel for events
       await _createDataChannel();
-
-      print('WebRTC initialized successfully');
-    } catch (e) {
-      print('Error initializing WebRTC: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'WebRTC',
+        'Error initializing WebRTC',
+        error: e,
+        stackTrace: stackTrace,
+      );
       _updateConnectionState(ConnectionStateEntity.failed);
       rethrow;
     }
@@ -109,10 +120,14 @@ class WebRTCService {
       // Add audio tracks to peer connection
       _localStream!.getAudioTracks().forEach((track) {
         _peerConnection!.addTrack(track, _localStream!);
-        print('Added audio track to peer connection');
       });
-    } catch (e) {
-      print('Error capturing audio: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'WebRTC',
+        'Error capturing audio',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
@@ -132,10 +147,12 @@ class WebRTCService {
     };
 
     _dataChannel!.onDataChannelState = (state) {
-      print('Data Channel State: $state');
+      if (state == RTCDataChannelState.RTCDataChannelOpen) {
+        AppLogger.info('WebRTC', 'Data channel: open');
+      } else if (state == RTCDataChannelState.RTCDataChannelClosed) {
+        AppLogger.warn('WebRTC', 'Data channel: closed');
+      }
     };
-
-    print('Data channel created: oai-events');
   }
 
   /// Handle messages from data channel
@@ -147,11 +164,9 @@ class WebRTCService {
       final eventType = data['type'] as String?;
 
       if (eventType == null) {
-        print('Warning: Received message without type field');
+        AppLogger.warn('WebRTC', 'Received message without type field');
         return;
       }
-
-      print('Received data channel event: $eventType');
 
       switch (eventType) {
         case 'conversation.item.input_audio_transcription.completed':
@@ -177,8 +192,13 @@ class WebRTCService {
                   arguments: arguments,
                 ),
               );
-            } catch (e) {
-              print('Error parsing function arguments: $e');
+            } catch (e, stackTrace) {
+              AppLogger.error(
+                'WebRTC',
+                'Error parsing function arguments',
+                error: e,
+                stackTrace: stackTrace,
+              );
             }
           }
           break;
@@ -196,7 +216,7 @@ class WebRTCService {
           break;
 
         case 'error':
-          print('OpenAI Error: ${data['error']}');
+          AppLogger.error('WebRTC', 'OpenAI error: ${data['error']}');
           _onAgentEvent?.call(data);
           break;
 
@@ -210,13 +230,15 @@ class WebRTCService {
           break;
 
         default:
-          // Log unknown events for debugging
-          print('Unhandled event type: $eventType');
           _onAgentEvent?.call(data);
       }
-    } catch (e) {
-      print('Error handling data channel message: $e');
-      print('Raw message: $message');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'WebRTC',
+        'Error handling data channel message',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -231,7 +253,6 @@ class WebRTCService {
   Future<void> setRemoteAnswer(String sdpAnswer) async {
     final answer = RTCSessionDescription(sdpAnswer, 'answer');
     await _peerConnection!.setRemoteDescription(answer);
-    print('Remote description set successfully');
   }
 
   /// Play remote audio stream with speakerphone enabled
@@ -239,9 +260,13 @@ class WebRTCService {
     try {
       // Enable speakerphone
       await Helper.setSpeakerphoneOn(true);
-      print('Speakerphone enabled, playing remote audio');
-    } catch (e) {
-      print('Error playing remote audio: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'WebRTC',
+        'Error playing remote audio',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 
@@ -252,7 +277,7 @@ class WebRTCService {
   }) async {
     if (_dataChannel == null ||
         _dataChannel!.state != RTCDataChannelState.RTCDataChannelOpen) {
-      print('Data channel not ready');
+      AppLogger.warn('WebRTC', 'Data channel not ready');
       return;
     }
 
@@ -270,7 +295,6 @@ class WebRTCService {
     });
 
     _dataChannel!.send(RTCDataChannelMessage(message));
-    print('Function result sent for call_id: $callId');
 
     final responseMessage = jsonEncode({
       'type': 'response.create',
@@ -285,20 +309,18 @@ class WebRTCService {
     });
 
     _dataChannel!.send(RTCDataChannelMessage(responseMessage));
-    print('Response requested after function output');
   }
 
   /// Send custom event via data channel
   Future<void> sendEvent(Map<String, dynamic> event) async {
     if (_dataChannel == null ||
         _dataChannel!.state != RTCDataChannelState.RTCDataChannelOpen) {
-      print('Data channel not ready');
+      AppLogger.warn('WebRTC', 'Data channel not ready');
       return;
     }
 
     final message = jsonEncode(event);
     _dataChannel!.send(RTCDataChannelMessage(message));
-    print('Event sent: ${event['type']}');
   }
 
   /// Update connection state
@@ -310,15 +332,13 @@ class WebRTCService {
   /// Mute/unmute microphone input
   Future<void> setMicrophoneMuted({required bool isMuted}) async {
     if (_localStream == null) {
-      print('Microphone stream not available');
+      AppLogger.warn('WebRTC', 'Microphone stream not available');
       return;
     }
 
     for (final track in _localStream!.getAudioTracks()) {
       track.enabled = !isMuted;
     }
-
-    print(isMuted ? 'Microphone muted' : 'Microphone unmuted');
   }
 
   /// Disconnect and cleanup
@@ -343,9 +363,14 @@ class WebRTCService {
       await Helper.setSpeakerphoneOn(false);
 
       _updateConnectionState(ConnectionStateEntity.disconnected);
-      print('WebRTC disconnected and cleaned up');
-    } catch (e) {
-      print('Error during disconnect: $e');
+      AppLogger.info('WebRTC', 'Disconnected and cleaned up');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'WebRTC',
+        'Error during disconnect',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
   }
 }

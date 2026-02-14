@@ -1,5 +1,7 @@
 import 'package:go_router/go_router.dart';
 
+import '../utils/app_logger.dart';
+
 /// Service to handle programmatic navigation from AI function calls
 class NavigationService {
   GoRouter? _router;
@@ -14,7 +16,7 @@ class NavigationService {
     Map<String, dynamic>? params,
   }) async {
     if (_router == null) {
-      print('Router not initialized');
+      AppLogger.error('Navigation', 'Router not initialized');
       return;
     }
 
@@ -76,12 +78,15 @@ class NavigationService {
           break;
 
         default:
-          print('Unknown screen: $screenName');
+          AppLogger.warn('Navigation', 'Unknown screen: $screenName');
       }
-
-      print('Navigated to: $screenName');
-    } catch (e) {
-      print('Navigation error: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'Navigation',
+        'Navigation error',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }

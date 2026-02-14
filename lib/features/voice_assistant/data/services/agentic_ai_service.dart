@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 import '../../../../core/services/navigation_service.dart';
+import '../../../../core/utils/app_logger.dart';
 import '../../../booking/domain/entities/booking_entity.dart';
 import '../../domain/entities/agent_state_entity.dart';
 import '../../domain/entities/function_call_entity.dart';
@@ -360,14 +361,6 @@ class AgenticAIService {
             'room_id': {'type': 'string'},
             'check_in': {'type': 'string'},
             'check_out': {'type': 'string'},
-            'guest_info': {
-              'type': 'object',
-              'properties': {
-                'name': {'type': 'string'},
-                'email': {'type': 'string'},
-                'phone': {'type': 'string'},
-              },
-            },
           },
           'required': [
             'hotel_id',
@@ -446,7 +439,7 @@ class AgenticAIService {
   Future<FunctionResultEntity> executeFunction(
     FunctionCallEntity functionCall,
   ) async {
-    print('Executing function: ${functionCall.name}');
+    AppLogger.info('AgenticAI', 'Executing function: ${functionCall.name}');
 
     try {
       dynamic result;
@@ -493,8 +486,13 @@ class AgenticAIService {
       }
 
       return FunctionResultEntity(callId: functionCall.callId, result: result);
-    } catch (e) {
-      print('Function execution error: $e');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'AgenticAI',
+        'Function execution error',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return FunctionResultEntity(
         callId: functionCall.callId,
         error: e.toString(),
@@ -1032,7 +1030,7 @@ Terima kasih telah menggunakan layanan kami. Semoga Anda menikmati pengalaman me
       currentScreen: currentScreen,
     );
 
-    print('Agent state updated: ${_agentState.currentStep.name}');
+    // Intentionally no-op: keep agent state updates quiet in production logs.
   }
 
   /// Get system instructions for the AI agent
