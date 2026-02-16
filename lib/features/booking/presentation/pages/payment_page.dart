@@ -73,6 +73,14 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
     },
   };
 
+  @override
+  void initState() {
+    super.initState();
+    context.read<PerformanceBloc>().add(
+      const StartStep(PerformanceStep.payment),
+    );
+  }
+
   void _processPayment() {
     context.read<PerformanceBloc>().add(const AddClick());
     context.read<BookingBloc>().add(
@@ -102,8 +110,16 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
         listener: (context, state) {
           if (state is BookingError) {
             AppToast.showError(context, state.message);
-            context.read<PerformanceBloc>().add(const AddError());
+            context
+                .read<PerformanceBloc>()
+                .add(const AddError(errorType: 'payment'));
           } else if (state is BookingConfirmed) {
+            context.read<PerformanceBloc>().add(
+              const EndStep(PerformanceStep.payment),
+            );
+            context.read<PerformanceBloc>().add(
+              const StartStep(PerformanceStep.confirmation),
+            );
             // Navigate to confirmation page
             context.go('/booking/confirmation', extra: state.booking);
           }

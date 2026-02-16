@@ -14,6 +14,7 @@ import '../../features/hotel_list/presentation/pages/hotel_list_page.dart';
 import '../../features/notifications/presentation/pages/notification_page.dart';
 import '../../features/performance/presentation/pages/performance_summary_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
+import '../../features/research/presentation/pages/research_log_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../widgets/main_navigation_page.dart';
@@ -176,6 +177,11 @@ final GoRouter appRouter = GoRouter(
       path: '/performance-summary',
       name: 'performance-summary',
       builder: (context, state) => const PerformanceSummaryPage(),
+    ),
+    GoRoute(
+      path: '/research-log',
+      name: 'research-log',
+      builder: (context, state) => const ResearchLogPage(),
     ),
   ],
   errorBuilder: (context, state) =>

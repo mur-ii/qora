@@ -409,11 +409,7 @@ class _BookingEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.hotel_outlined,
-              size: 64,
-              color: AppColors.textTertiary,
-            ),
+            Icon(Icons.hotel_outlined, size: 64, color: AppColors.textTertiary),
             const SizedBox(height: 16),
             Text(
               title,

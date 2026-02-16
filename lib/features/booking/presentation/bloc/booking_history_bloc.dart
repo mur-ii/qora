@@ -5,7 +5,8 @@ import '../../domain/repositories/booking_local_repository.dart';
 import 'booking_history_event.dart';
 import 'booking_history_state.dart';
 
-class BookingHistoryBloc extends Bloc<BookingHistoryEvent, BookingHistoryState> {
+class BookingHistoryBloc
+    extends Bloc<BookingHistoryEvent, BookingHistoryState> {
   final BookingLocalRepository repository;
 
   BookingHistoryBloc({required this.repository})

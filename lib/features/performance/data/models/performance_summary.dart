@@ -37,6 +37,16 @@ class PerformanceSummary extends Equatable {
   final bool bookingSuccess;
   @HiveField(12)
   final DateTime createdAt;
+  @HiveField(13)
+  final int searchDurationSeconds;
+  @HiveField(14)
+  final int selectionDurationSeconds;
+  @HiveField(15)
+  final int paymentDurationSeconds;
+  @HiveField(16)
+  final int confirmationDurationSeconds;
+  @HiveField(17)
+  final List<String> errorTypes;
 
   const PerformanceSummary({
     required this.sessionId,
@@ -52,6 +62,11 @@ class PerformanceSummary extends Equatable {
     required this.selectedHotelName,
     required this.bookingSuccess,
     required this.createdAt,
+    required this.searchDurationSeconds,
+    required this.selectionDurationSeconds,
+    required this.paymentDurationSeconds,
+    required this.confirmationDurationSeconds,
+    required this.errorTypes,
   });
 
   PerformanceSummary copyWith({
@@ -64,6 +79,11 @@ class PerformanceSummary extends Equatable {
     String? searchedLocation,
     String? selectedHotelName,
     bool? bookingSuccess,
+    int? searchDurationSeconds,
+    int? selectionDurationSeconds,
+    int? paymentDurationSeconds,
+    int? confirmationDurationSeconds,
+    List<String>? errorTypes,
   }) {
     return PerformanceSummary(
       sessionId: sessionId,
@@ -79,6 +99,15 @@ class PerformanceSummary extends Equatable {
       selectedHotelName: selectedHotelName ?? this.selectedHotelName,
       bookingSuccess: bookingSuccess ?? this.bookingSuccess,
       createdAt: createdAt,
+      searchDurationSeconds:
+          searchDurationSeconds ?? this.searchDurationSeconds,
+      selectionDurationSeconds:
+          selectionDurationSeconds ?? this.selectionDurationSeconds,
+      paymentDurationSeconds:
+          paymentDurationSeconds ?? this.paymentDurationSeconds,
+      confirmationDurationSeconds:
+          confirmationDurationSeconds ?? this.confirmationDurationSeconds,
+      errorTypes: errorTypes ?? this.errorTypes,
     );
   }
 
@@ -92,11 +121,16 @@ class PerformanceSummary extends Equatable {
       totalClicks.toString(),
       totalVoiceCommands.toString(),
       errorsCount.toString(),
+      errorTypes.join('|'),
       taskCompleted.toString(),
       searchedLocation,
       selectedHotelName ?? '',
       bookingSuccess.toString(),
       createdAt.toIso8601String(),
+      searchDurationSeconds.toString(),
+      selectionDurationSeconds.toString(),
+      paymentDurationSeconds.toString(),
+      confirmationDurationSeconds.toString(),
     ];
   }
 
@@ -110,10 +144,15 @@ class PerformanceSummary extends Equatable {
     totalClicks,
     totalVoiceCommands,
     errorsCount,
+    errorTypes,
     taskCompleted,
     searchedLocation,
     selectedHotelName,
     bookingSuccess,
     createdAt,
+    searchDurationSeconds,
+    selectionDurationSeconds,
+    paymentDurationSeconds,
+    confirmationDurationSeconds,
   ];
 }

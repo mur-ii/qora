@@ -43,13 +43,18 @@ class PerformanceSummaryAdapter extends TypeAdapter<PerformanceSummary> {
       selectedHotelName: fields[10] as String?,
       bookingSuccess: fields[11] as bool,
       createdAt: fields[12] as DateTime,
+      searchDurationSeconds: (fields[13] as int?) ?? 0,
+      selectionDurationSeconds: (fields[14] as int?) ?? 0,
+      paymentDurationSeconds: (fields[15] as int?) ?? 0,
+      confirmationDurationSeconds: (fields[16] as int?) ?? 0,
+      errorTypes: (fields[17] as List?)?.cast<String>() ?? <String>[],
     );
   }
 
   @override
   void write(BinaryWriter writer, PerformanceSummary obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(18)
       ..writeByte(0)
       ..write(obj.sessionId)
       ..writeByte(1)
@@ -75,6 +80,16 @@ class PerformanceSummaryAdapter extends TypeAdapter<PerformanceSummary> {
       ..writeByte(11)
       ..write(obj.bookingSuccess)
       ..writeByte(12)
-      ..write(obj.createdAt);
+      ..write(obj.createdAt)
+      ..writeByte(13)
+      ..write(obj.searchDurationSeconds)
+      ..writeByte(14)
+      ..write(obj.selectionDurationSeconds)
+      ..writeByte(15)
+      ..write(obj.paymentDurationSeconds)
+      ..writeByte(16)
+      ..write(obj.confirmationDurationSeconds)
+      ..writeByte(17)
+      ..write(obj.errorTypes);
   }
 }

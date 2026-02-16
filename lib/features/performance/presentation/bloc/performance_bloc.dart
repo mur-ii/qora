@@ -9,6 +9,7 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
   final PerformanceRepository repository;
 
   PerformanceSummary? _activeSession;
+  final Map<PerformanceStep, DateTime> _stepStarts = {};
 
   PerformanceBloc({required this.repository})
     : super(const PerformanceInitial()) {
@@ -16,6 +17,8 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     on<AddClick>(_onAddClick);
     on<AddVoiceCommand>(_onAddVoiceCommand);
     on<AddError>(_onAddError);
+    on<StartStep>(_onStartStep);
+    on<EndStep>(_onEndStep);
     on<CompleteTask>(_onCompleteTask);
     on<EndSession>(_onEndSession);
     on<LoadAllSessions>(_onLoadAllSessions);
@@ -38,6 +41,11 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
       selectedHotelName: null,
       bookingSuccess: false,
       createdAt: now,
+      searchDurationSeconds: 0,
+      selectionDurationSeconds: 0,
+      paymentDurationSeconds: 0,
+      confirmationDurationSeconds: 0,
+      errorTypes: const [],
     );
 
     _activeSession = session;
@@ -77,9 +85,68 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
       return;
     }
 
+    final updatedErrorTypes = List<String>.from(_activeSession!.errorTypes);
+    updatedErrorTypes.add(event.errorType ?? 'unknown');
+
     _activeSession = _activeSession!.copyWith(
       errorsCount: _activeSession!.errorsCount + 1,
+      errorTypes: updatedErrorTypes,
     );
+    emit(PerformanceSessionActive(_activeSession!));
+  }
+
+  void _onStartStep(StartStep event, Emitter<PerformanceState> emit) {
+    if (_activeSession == null) {
+      emit(const PerformanceError('No active session to update'));
+      return;
+    }
+
+    _stepStarts[event.step] = DateTime.now();
+    emit(PerformanceSessionActive(_activeSession!));
+  }
+
+  void _onEndStep(EndStep event, Emitter<PerformanceState> emit) {
+    if (_activeSession == null) {
+      emit(const PerformanceError('No active session to update'));
+      return;
+    }
+
+    final start = _stepStarts[event.step];
+    if (start == null) {
+      emit(const PerformanceError('Step was not started'));
+      return;
+    }
+
+    final duration = DateTime.now().difference(start).inSeconds;
+    _stepStarts.remove(event.step);
+
+    switch (event.step) {
+      case PerformanceStep.search:
+        _activeSession = _activeSession!.copyWith(
+          searchDurationSeconds:
+              _activeSession!.searchDurationSeconds + duration,
+        );
+        break;
+      case PerformanceStep.selection:
+        _activeSession = _activeSession!.copyWith(
+          selectionDurationSeconds:
+              _activeSession!.selectionDurationSeconds + duration,
+        );
+        break;
+      case PerformanceStep.payment:
+        _activeSession = _activeSession!.copyWith(
+          paymentDurationSeconds:
+              _activeSession!.paymentDurationSeconds + duration,
+        );
+        break;
+      case PerformanceStep.confirmation:
+        _activeSession = _activeSession!.copyWith(
+          confirmationDurationSeconds:
+              _activeSession!.confirmationDurationSeconds + duration,
+        );
+        break;
+    }
+
     emit(PerformanceSessionActive(_activeSession!));
   }
 

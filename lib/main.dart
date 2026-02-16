@@ -11,6 +11,8 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/booking/data/models/booking_record.dart';
 import 'features/performance/data/models/performance_summary.dart';
 import 'features/performance/presentation/bloc/performance_bloc.dart';
+import 'features/research/data/models/research_entry.dart';
+import 'features/research/data/models/participant_record.dart';
 import 'features/voice_assistant/di/voice_assistant_injection.dart';
 import 'features/voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 
@@ -33,8 +35,19 @@ void main() async {
   if (!Hive.isAdapterRegistered(bookingRecordTypeId)) {
     Hive.registerAdapter(BookingRecordAdapter());
   }
+  if (!Hive.isAdapterRegistered(researchPreferenceTypeId)) {
+    Hive.registerAdapter(ResearchPreferenceAdapter());
+  }
+  if (!Hive.isAdapterRegistered(researchEntryTypeId)) {
+    Hive.registerAdapter(ResearchEntryAdapter());
+  }
+  if (!Hive.isAdapterRegistered(participantRecordTypeId)) {
+    Hive.registerAdapter(ParticipantRecordAdapter());
+  }
   await Hive.openBox<PerformanceSummary>('performance_box');
   await Hive.openBox<BookingRecord>('booking_box');
+  await Hive.openBox<ResearchEntry>('research_box');
+  await Hive.openBox<ParticipantRecord>('participant_box');
 
   // Initialize navigation service with router
   final navigationService = VoiceAssistantInjection.getNavigationService();

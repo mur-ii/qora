@@ -129,6 +129,9 @@ class _BookingSummaryPageContentState
     context.read<PerformanceBloc>().add(
       StartSession(method: method, searchedLocation: booking.hotel.address),
     );
+    context
+        .read<PerformanceBloc>()
+        .add(const StartStep(PerformanceStep.selection));
   }
 
   @override
@@ -160,7 +163,9 @@ class _BookingSummaryPageContentState
           listener: (context, state) {
             if (state is BookingError) {
               AppToast.showError(context, state.message);
-              context.read<PerformanceBloc>().add(const AddError());
+              context
+                  .read<PerformanceBloc>()
+                  .add(const AddError(errorType: 'booking_summary'));
             }
           },
           builder: (context, state) {
@@ -546,6 +551,12 @@ class _BookingSummaryPageContentState
                           onPressed: () {
                             context.read<PerformanceBloc>().add(
                               const AddClick(),
+                            );
+                            context.read<PerformanceBloc>().add(
+                              const EndStep(PerformanceStep.selection),
+                            );
+                            context.read<PerformanceBloc>().add(
+                              const StartStep(PerformanceStep.payment),
                             );
                             // Navigate to payment page
                             context.push('/booking/payment', extra: booking);

@@ -9,6 +9,8 @@ abstract class PerformanceEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+enum PerformanceStep { search, selection, payment, confirmation }
+
 class StartSession extends PerformanceEvent {
   final InteractionMethod method;
   final String? searchedLocation;
@@ -28,7 +30,30 @@ class AddVoiceCommand extends PerformanceEvent {
 }
 
 class AddError extends PerformanceEvent {
-  const AddError();
+  final String? errorType;
+
+  const AddError({this.errorType});
+
+  @override
+  List<Object?> get props => [errorType];
+}
+
+class StartStep extends PerformanceEvent {
+  final PerformanceStep step;
+
+  const StartStep(this.step);
+
+  @override
+  List<Object?> get props => [step];
+}
+
+class EndStep extends PerformanceEvent {
+  final PerformanceStep step;
+
+  const EndStep(this.step);
+
+  @override
+  List<Object?> get props => [step];
 }
 
 class CompleteTask extends PerformanceEvent {
