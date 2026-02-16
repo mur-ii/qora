@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_toast.dart';
+import '../../../performance/presentation/bloc/performance_bloc.dart';
+import '../../../performance/presentation/bloc/performance_event.dart';
 import '../../data/datasources/booking_remote_datasource.dart';
 import '../../data/repositories/booking_repository_impl.dart';
 import '../../domain/entities/booking_entity.dart';
@@ -72,6 +74,7 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
   };
 
   void _processPayment() {
+    context.read<PerformanceBloc>().add(const AddClick());
     context.read<BookingBloc>().add(
       ConfirmBookingEvent(_selectedPaymentMethod),
     );
@@ -99,6 +102,7 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
         listener: (context, state) {
           if (state is BookingError) {
             AppToast.showError(context, state.message);
+            context.read<PerformanceBloc>().add(const AddError());
           } else if (state is BookingConfirmed) {
             // Navigate to confirmation page
             context.go('/booking/confirmation', extra: state.booking);

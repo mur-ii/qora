@@ -1,0 +1,57 @@
+import 'package:equatable/equatable.dart';
+
+import '../../data/models/performance_summary.dart';
+
+abstract class PerformanceEvent extends Equatable {
+  const PerformanceEvent();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class StartSession extends PerformanceEvent {
+  final InteractionMethod method;
+  final String? searchedLocation;
+
+  const StartSession({required this.method, this.searchedLocation});
+
+  @override
+  List<Object?> get props => [method, searchedLocation];
+}
+
+class AddClick extends PerformanceEvent {
+  const AddClick();
+}
+
+class AddVoiceCommand extends PerformanceEvent {
+  const AddVoiceCommand();
+}
+
+class AddError extends PerformanceEvent {
+  const AddError();
+}
+
+class CompleteTask extends PerformanceEvent {
+  final bool bookingSuccess;
+  final String? selectedHotelName;
+
+  const CompleteTask({
+    this.bookingSuccess = true,
+    this.selectedHotelName,
+  });
+
+  @override
+  List<Object?> get props => [bookingSuccess, selectedHotelName];
+}
+
+class EndSession extends PerformanceEvent {
+  const EndSession();
+}
+
+class LoadAllSessions extends PerformanceEvent {
+  const LoadAllSessions();
+}
+
+class ExportSessionsToCsv extends PerformanceEvent {
+  const ExportSessionsToCsv();
+}

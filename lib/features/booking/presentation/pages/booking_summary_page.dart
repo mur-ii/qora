@@ -6,6 +6,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_toast.dart';
+import '../../../performance/data/models/performance_summary.dart';
+import '../../../performance/presentation/bloc/performance_bloc.dart';
+import '../../../performance/presentation/bloc/performance_event.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_event.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
@@ -82,6 +85,7 @@ class _BookingSummaryPageContent extends StatefulWidget {
 class _BookingSummaryPageContentState
     extends State<_BookingSummaryPageContent> {
   bool _hasVoicePrompted = false;
+  bool _hasStartedSession = false;
 
   void _requestSummaryReview(BookingEntity booking) {
     if (_hasVoicePrompted) return;
@@ -109,6 +113,24 @@ class _BookingSummaryPageContentState
 
     context.read<VoiceAssistantBloc>().add(
       RequestAssistantResponse(instructions: prompt),
+    );
+  }
+
+  void _ensurePerformanceSession(BookingEntity booking) {
+    if (_hasStartedSession) return;
+    _hasStartedSession = true;
+
+    final voiceState = context.read<VoiceAssistantBloc>().state;
+    final method = voiceState.connectionStatus ==
+            VoiceConnectionStatus.connected
+        ? InteractionMethod.vui
+        : InteractionMethod.gui;
+
+    context.read<PerformanceBloc>().add(
+      StartSession(
+        method: method,
+        searchedLocation: booking.hotel.address,
+      ),
     );
   }
 
@@ -141,6 +163,7 @@ class _BookingSummaryPageContentState
           listener: (context, state) {
             if (state is BookingError) {
               AppToast.showError(context, state.message);
+              context.read<PerformanceBloc>().add(const AddError());
             }
           },
           builder: (context, state) {
@@ -150,6 +173,7 @@ class _BookingSummaryPageContentState
 
             if (state is BookingSummaryLoaded) {
               final booking = state.booking;
+              _ensurePerformanceSession(booking);
               final voiceState = context.read<VoiceAssistantBloc>().state;
               if (voiceState.connectionStatus ==
                   VoiceConnectionStatus.connected) {
@@ -523,6 +547,9 @@ class _BookingSummaryPageContentState
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
+                            context
+                                .read<PerformanceBloc>()
+                                .add(const AddClick());
                             // Navigate to payment page
                             context.push('/booking/payment', extra: booking);
                           },

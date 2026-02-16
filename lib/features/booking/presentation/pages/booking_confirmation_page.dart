@@ -1,16 +1,43 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_toast.dart';
+import '../../../performance/presentation/bloc/performance_bloc.dart';
+import '../../../performance/presentation/bloc/performance_event.dart';
 import '../../domain/entities/booking_entity.dart';
 
-class BookingConfirmationPage extends StatelessWidget {
+class BookingConfirmationPage extends StatefulWidget {
   final BookingEntity booking;
 
   const BookingConfirmationPage({super.key, required this.booking});
+
+  @override
+  State<BookingConfirmationPage> createState() =>
+      _BookingConfirmationPageState();
+}
+
+class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
+  bool _sessionEnded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_sessionEnded) return;
+      _sessionEnded = true;
+      context.read<PerformanceBloc>().add(
+        CompleteTask(
+          bookingSuccess: true,
+          selectedHotelName: widget.booking.hotel.name,
+        ),
+      );
+      context.read<PerformanceBloc>().add(const EndSession());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +101,8 @@ class BookingConfirmationPage extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              booking.confirmationNumber ?? booking.bookingId,
+                                widget.booking.confirmationNumber ??
+                                  widget.booking.bookingId,
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -109,7 +137,7 @@ class BookingConfirmationPage extends StatelessWidget {
                               top: Radius.circular(16),
                             ),
                             child: CachedNetworkImage(
-                              imageUrl: booking.hotel.imageUrl,
+                                    imageUrl: widget.booking.hotel.imageUrl,
                               height: 150,
                               width: double.infinity,
                               fit: BoxFit.cover,
@@ -121,7 +149,7 @@ class BookingConfirmationPage extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  booking.hotel.name,
+                                  widget.booking.hotel.name,
                                   style: const TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -138,7 +166,7 @@ class BookingConfirmationPage extends StatelessWidget {
                                     const SizedBox(width: 4),
                                     Expanded(
                                       child: Text(
-                                        booking.hotel.address,
+                                        widget.booking.hotel.address,
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: Colors.grey[700],
@@ -151,25 +179,25 @@ class BookingConfirmationPage extends StatelessWidget {
                                 _buildInfoRow(
                                   Icons.meeting_room,
                                   'Kamar',
-                                  booking.room.name,
+                                  widget.booking.room.name,
                                 ),
                                 const SizedBox(height: 12),
                                 _buildInfoRow(
                                   Icons.calendar_today,
                                   'Check-in',
-                                  '${_formatDate(booking.bookingDetails.checkIn)}, ${booking.bookingDetails.checkInTime}',
+                                  '${_formatDate(widget.booking.bookingDetails.checkIn)}, ${widget.booking.bookingDetails.checkInTime}',
                                 ),
                                 const SizedBox(height: 12),
                                 _buildInfoRow(
                                   Icons.calendar_today,
                                   'Check-out',
-                                  '${_formatDate(booking.bookingDetails.checkOut)}, ${booking.bookingDetails.checkOutTime}',
+                                  '${_formatDate(widget.booking.bookingDetails.checkOut)}, ${widget.booking.bookingDetails.checkOutTime}',
                                 ),
                                 const SizedBox(height: 12),
                                 _buildInfoRow(
                                   Icons.nights_stay,
                                   'Durasi',
-                                  '${booking.bookingDetails.nights} malam',
+                                  '${widget.booking.bookingDetails.nights} malam',
                                 ),
                               ],
                             ),
@@ -206,21 +234,25 @@ class BookingConfirmationPage extends StatelessWidget {
                           const Divider(height: 24),
                           _buildPriceRow(
                             'Total Pembayaran',
-                            currencyFormat.format(booking.pricing.grandTotal),
+                            currencyFormat.format(
+                              widget.booking.pricing.grandTotal,
+                            ),
                           ),
-                          if (booking.payment != null) ...[
+                          if (widget.booking.payment != null) ...[
                             const SizedBox(height: 8),
                             _buildPriceRow(
                               'Dibayar',
-                              currencyFormat.format(booking.payment!.amount),
+                              currencyFormat.format(
+                                widget.booking.payment!.amount,
+                              ),
                               color: Colors.green,
                             ),
                             const SizedBox(height: 8),
                             _buildPriceRow(
                               'Sisa di Hotel',
                               currencyFormat.format(
-                                booking.pricing.grandTotal -
-                                    booking.payment!.amount,
+                                widget.booking.pricing.grandTotal -
+                                    widget.booking.payment!.amount,
                               ),
                               color: Colors.orange,
                             ),
@@ -261,7 +293,7 @@ class BookingConfirmationPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           _buildBulletPoint(
-                            'Konfirmasi pemesanan telah dikirim ke email ${booking.guestInfo.primaryGuest.email}',
+                            'Konfirmasi pemesanan telah dikirim ke email ${widget.booking.guestInfo.primaryGuest.email}',
                           ),
                           _buildBulletPoint(
                             'Harap tunjukkan konfirmasi pemesanan dan ID yang valid saat check-in',
@@ -269,9 +301,9 @@ class BookingConfirmationPage extends StatelessWidget {
                           _buildBulletPoint(
                             'Check-in lebih awal tergantung ketersediaan kamar',
                           ),
-                          if (booking.pricing.dueAtProperty != null)
+                          if (widget.booking.pricing.dueAtProperty != null)
                             _buildBulletPoint(
-                              'Sisa pembayaran ${currencyFormat.format(booking.pricing.dueAtProperty)} akan diselesaikan di hotel',
+                              'Sisa pembayaran ${currencyFormat.format(widget.booking.pricing.dueAtProperty)} akan diselesaikan di hotel',
                             ),
                         ],
                       ),
@@ -312,7 +344,7 @@ class BookingConfirmationPage extends StatelessWidget {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                booking.hotel.phone,
+                                widget.booking.hotel.phone,
                                 style: const TextStyle(fontSize: 14),
                               ),
                             ],
@@ -327,7 +359,7 @@ class BookingConfirmationPage extends StatelessWidget {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                booking.hotel.email,
+                                widget.booking.hotel.email,
                                 style: const TextStyle(fontSize: 14),
                               ),
                             ],

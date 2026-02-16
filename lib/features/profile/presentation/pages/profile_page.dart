@@ -88,6 +88,8 @@ class _ProfilePageContent extends StatelessWidget {
                 children: [
                   ProfileSection(profile: state.profile),
                   const SizedBox(height: 16),
+                  const PerformanceSummaryIndicator(),
+                  const SizedBox(height: 16),
                   PaymentInformationSection(),
                   const SizedBox(height: 16),
                   const AccountManagementSection(),

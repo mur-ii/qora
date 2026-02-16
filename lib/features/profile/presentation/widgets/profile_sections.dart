@@ -7,6 +7,9 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../performance/presentation/bloc/performance_bloc.dart';
+import '../../../performance/presentation/bloc/performance_event.dart';
+import '../../../performance/presentation/bloc/performance_state.dart';
 import '../../domain/entities/profile_entity.dart';
 
 /// Section 1: Profile & Level
@@ -285,6 +288,195 @@ class PaymentInformationSection extends StatelessWidget {
   }
 }
 
+/// Section: Performance summary indicator
+class PerformanceSummaryIndicator extends StatefulWidget {
+  const PerformanceSummaryIndicator({super.key});
+
+  @override
+  State<PerformanceSummaryIndicator> createState() =>
+      _PerformanceSummaryIndicatorState();
+}
+
+class _PerformanceSummaryIndicatorState
+    extends State<PerformanceSummaryIndicator> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<PerformanceBloc>().add(const LoadAllSessions());
+  }
+
+  String _formatPercent(double value) {
+    return '${(value * 100).toStringAsFixed(1)}%';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'Performance Summary',
+      icon: Icons.analytics_outlined,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: BlocBuilder<PerformanceBloc, PerformanceState>(
+            builder: (context, state) {
+              if (state is PerformanceLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (state is PerformanceLoadedSessions) {
+                final analytics = state.analytics;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _PerformanceMetric(
+                            label: 'Total Sessions',
+                            value: analytics.totalSessions.toString(),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _PerformanceMetric(
+                            label: 'Avg Duration (s)',
+                            value: analytics.averageDurationSeconds
+                                .toStringAsFixed(1),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _PerformanceMetric(
+                            label: 'Booking Success',
+                            value: _formatPercent(
+                              analytics.bookingSuccessRate,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _PerformanceMetric(
+                            label: 'Error Rate',
+                            value: _formatPercent(analytics.errorRate),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _PerformanceMetric(
+                            label: 'GUI Sessions',
+                            value: analytics.guiSessions.toString(),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _PerformanceMetric(
+                            label: 'VUI Sessions',
+                            value: analytics.vuiSessions.toString(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () =>
+                            context.push('/performance-summary'),
+                        icon: const Icon(Icons.visibility_outlined, size: 18),
+                        label: const Text('View Details'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'No performance sessions recorded yet.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.push('/performance-summary'),
+                      icon: const Icon(Icons.visibility_outlined, size: 18),
+                      label: const Text('Open Summary'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PerformanceMetric extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _PerformanceMetric({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF6F7FB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE6E8EF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Section 3: Account Management
 class AccountManagementSection extends StatelessWidget {
   const AccountManagementSection({super.key});
@@ -369,6 +561,12 @@ class PreferencesSection extends StatelessWidget {
           title: 'Bahasa',
           subtitle: 'Indonesia',
           onTap: () {},
+        ),
+        _MenuItem(
+          icon: Icons.analytics_outlined,
+          title: 'Performance Summary',
+          subtitle: 'GUI vs VUI session history',
+          onTap: () => context.push('/performance-summary'),
         ),
         _MenuItemWithToggle(
           icon: Icons.notifications_outlined,
