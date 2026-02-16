@@ -197,12 +197,12 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     );
     final completedSessions = sessions.where((s) => s.taskCompleted).length;
     final errorSessions = sessions.where((s) => s.errorsCount > 0).length;
-    final guiSessions =
-        sessions.where((s) => s.interactionMethod == InteractionMethod.gui)
-            .length;
-    final vuiSessions =
-        sessions.where((s) => s.interactionMethod == InteractionMethod.vui)
-            .length;
+    final guiSessions = sessions
+        .where((s) => s.interactionMethod == InteractionMethod.gui)
+        .length;
+    final vuiSessions = sessions
+        .where((s) => s.interactionMethod == InteractionMethod.vui)
+        .length;
     final successfulBookings = sessions.where((s) => s.bookingSuccess).length;
 
     return PerformanceAnalytics(

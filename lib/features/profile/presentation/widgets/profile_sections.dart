@@ -352,9 +352,7 @@ class _PerformanceSummaryIndicatorState
                         Expanded(
                           child: _PerformanceMetric(
                             label: 'Booking Success',
-                            value: _formatPercent(
-                              analytics.bookingSuccessRate,
-                            ),
+                            value: _formatPercent(analytics.bookingSuccessRate),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -388,8 +386,7 @@ class _PerformanceSummaryIndicatorState
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        onPressed: () =>
-                            context.push('/performance-summary'),
+                        onPressed: () => context.push('/performance-summary'),
                         icon: const Icon(Icons.visibility_outlined, size: 18),
                         label: const Text('View Details'),
                         style: OutlinedButton.styleFrom(
@@ -408,10 +405,7 @@ class _PerformanceSummaryIndicatorState
                 children: [
                   const Text(
                     'No performance sessions recorded yet.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6B7280),
-                    ),
+                    style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -457,10 +451,7 @@ class _PerformanceMetric extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF6B7280),
-            ),
+            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
           ),
           const SizedBox(height: 6),
           Text(

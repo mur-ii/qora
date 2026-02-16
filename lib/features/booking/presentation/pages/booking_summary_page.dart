@@ -121,16 +121,13 @@ class _BookingSummaryPageContentState
     _hasStartedSession = true;
 
     final voiceState = context.read<VoiceAssistantBloc>().state;
-    final method = voiceState.connectionStatus ==
-            VoiceConnectionStatus.connected
+    final method =
+        voiceState.connectionStatus == VoiceConnectionStatus.connected
         ? InteractionMethod.vui
         : InteractionMethod.gui;
 
     context.read<PerformanceBloc>().add(
-      StartSession(
-        method: method,
-        searchedLocation: booking.hotel.address,
-      ),
+      StartSession(method: method, searchedLocation: booking.hotel.address),
     );
   }
 
@@ -547,9 +544,9 @@ class _BookingSummaryPageContentState
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                            context
-                                .read<PerformanceBloc>()
-                                .add(const AddClick());
+                            context.read<PerformanceBloc>().add(
+                              const AddClick(),
+                            );
                             // Navigate to payment page
                             context.push('/booking/payment', extra: booking);
                           },

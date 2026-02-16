@@ -35,10 +35,7 @@ class CompleteTask extends PerformanceEvent {
   final bool bookingSuccess;
   final String? selectedHotelName;
 
-  const CompleteTask({
-    this.bookingSuccess = true,
-    this.selectedHotelName,
-  });
+  const CompleteTask({this.bookingSuccess = true, this.selectedHotelName});
 
   @override
   List<Object?> get props => [bookingSuccess, selectedHotelName];

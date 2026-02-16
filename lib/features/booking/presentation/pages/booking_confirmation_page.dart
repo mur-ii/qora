@@ -2,10 +2,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_toast.dart';
+import '../../data/datasources/booking_local_datasource.dart';
+import '../../data/models/booking_record.dart';
+import '../../data/repositories/booking_local_repository_impl.dart';
 import '../../../performance/presentation/bloc/performance_bloc.dart';
 import '../../../performance/presentation/bloc/performance_event.dart';
 import '../../domain/entities/booking_entity.dart';
@@ -22,6 +26,7 @@ class BookingConfirmationPage extends StatefulWidget {
 
 class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
   bool _sessionEnded = false;
+  bool _bookingSaved = false;
 
   @override
   void initState() {
@@ -37,6 +42,38 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
       );
       context.read<PerformanceBloc>().add(const EndSession());
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _persistBooking();
+    });
+  }
+
+  Future<void> _persistBooking() async {
+    if (_bookingSaved) return;
+    _bookingSaved = true;
+
+    final checkIn =
+        DateTime.tryParse(widget.booking.bookingDetails.checkIn) ??
+        DateTime.now();
+    final checkOut =
+        DateTime.tryParse(widget.booking.bookingDetails.checkOut) ??
+        checkIn;
+    final record = BookingRecord(
+      bookingId: widget.booking.bookingId,
+      hotelName: widget.booking.hotel.name,
+      location: widget.booking.hotel.address,
+      roomName: widget.booking.room.name,
+      imageUrl: widget.booking.hotel.imageUrl,
+      checkIn: checkIn,
+      checkOut: checkOut,
+      bookingStatus: widget.booking.bookingStatus,
+      confirmationNumber: widget.booking.confirmationNumber,
+      createdAt: DateTime.now(),
+    );
+
+    final box = Hive.box<BookingRecord>('booking_box');
+    final dataSource = BookingLocalDataSource(box: box);
+    final repository = BookingLocalRepositoryImpl(localDataSource: dataSource);
+    await repository.saveBooking(record);
   }
 
   @override
@@ -101,7 +138,7 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                                widget.booking.confirmationNumber ??
+                              widget.booking.confirmationNumber ??
                                   widget.booking.bookingId,
                               style: const TextStyle(
                                 fontSize: 18,
@@ -137,7 +174,7 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
                               top: Radius.circular(16),
                             ),
                             child: CachedNetworkImage(
-                                    imageUrl: widget.booking.hotel.imageUrl,
+                              imageUrl: widget.booking.hotel.imageUrl,
                               height: 150,
                               width: double.infinity,
                               fit: BoxFit.cover,

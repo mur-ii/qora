@@ -14,8 +14,7 @@ class PerformanceSummaryPage extends StatefulWidget {
   const PerformanceSummaryPage({super.key});
 
   @override
-  State<PerformanceSummaryPage> createState() =>
-      _PerformanceSummaryPageState();
+  State<PerformanceSummaryPage> createState() => _PerformanceSummaryPageState();
 }
 
 class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
@@ -50,10 +49,7 @@ class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
           if (state is PerformanceError) {
             AppToast.showError(context, state.message);
           } else if (state is PerformanceExported) {
-            AppToast.showSuccess(
-              context,
-              'CSV exported to ${state.filePath}',
-            );
+            AppToast.showSuccess(context, 'CSV exported to ${state.filePath}');
           }
         },
         builder: (context, state) {
@@ -232,10 +228,7 @@ class _SessionCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: _statusColor().withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
