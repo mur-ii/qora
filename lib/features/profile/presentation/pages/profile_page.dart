@@ -39,10 +39,10 @@ class _ProfilePageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: AppColors.backgroundVariant,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.backgroundVariant,
         title: Text(
           'Profil',
           style: AppTypography.titleLarge.copyWith(
@@ -82,22 +82,20 @@ class _ProfilePageContent extends StatelessWidget {
 
           if (state is ProfileLoaded) {
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ProfileSection(profile: state.profile),
-                  const SizedBox(height: 16),
-                  const PerformanceSummaryIndicator(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   PaymentInformationSection(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   const AccountManagementSection(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   const PreferencesSection(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   const HelpSupportSection(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 8),
                 ],
               ),
             );

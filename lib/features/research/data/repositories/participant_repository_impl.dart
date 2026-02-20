@@ -50,4 +50,9 @@ class ParticipantRepositoryImpl implements ParticipantRepository {
     await file.writeAsString(csvData);
     return file.path;
   }
+
+  @override
+  Future<void> clearParticipants() async {
+    await localDataSource.clearParticipants();
+  }
 }

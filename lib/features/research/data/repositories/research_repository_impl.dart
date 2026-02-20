@@ -54,4 +54,9 @@ class ResearchRepositoryImpl implements ResearchRepository {
     await file.writeAsString(csvData);
     return file.path;
   }
+
+  @override
+  Future<void> clearEntries() async {
+    await localDataSource.clearEntries();
+  }
 }

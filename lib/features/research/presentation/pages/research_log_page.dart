@@ -42,8 +42,7 @@ class ResearchLogPage extends StatelessWidget {
             final repository = ParticipantRepositoryImpl(
               localDataSource: dataSource,
             );
-            return ParticipantCubit(repository: repository)
-              ..loadParticipants();
+            return ParticipantCubit(repository: repository)..loadParticipants();
           },
         ),
       ],
@@ -54,6 +53,34 @@ class ResearchLogPage extends StatelessWidget {
 
 class _ResearchLogView extends StatelessWidget {
   const _ResearchLogView();
+
+  Future<bool> _confirmClear(
+    BuildContext context, {
+    required String title,
+    required String message,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,11 +98,40 @@ class _ResearchLogView extends StatelessWidget {
           ),
           actions: [
             PopupMenuButton<String>(
-              onSelected: (value) {
+              onSelected: (value) async {
                 if (value == 'entries') {
                   context.read<ResearchCubit>().exportEntries();
-                } else if (value == 'participants') {
+                  return;
+                }
+
+                if (value == 'participants') {
                   context.read<ParticipantCubit>().exportParticipants();
+                  return;
+                }
+
+                if (value == 'clear_entries') {
+                  final confirmed = await _confirmClear(
+                    context,
+                    title: 'Hapus Semua Entries',
+                    message:
+                        'Semua data entries akan dihapus dan tidak bisa dikembalikan.',
+                  );
+                  if (confirmed && context.mounted) {
+                    context.read<ResearchCubit>().clearEntries();
+                  }
+                  return;
+                }
+
+                if (value == 'clear_participants') {
+                  final confirmed = await _confirmClear(
+                    context,
+                    title: 'Reset Data Partisipan',
+                    message:
+                        'Data partisipan akan di-reset ke kondisi awal (seed).',
+                  );
+                  if (confirmed && context.mounted) {
+                    context.read<ParticipantCubit>().clearParticipants();
+                  }
                 }
               },
               itemBuilder: (context) => const [
@@ -86,6 +142,15 @@ class _ResearchLogView extends StatelessWidget {
                 PopupMenuItem(
                   value: 'participants',
                   child: Text('Export Participants CSV'),
+                ),
+                PopupMenuDivider(),
+                PopupMenuItem(
+                  value: 'clear_entries',
+                  child: Text('Delete All Entries'),
+                ),
+                PopupMenuItem(
+                  value: 'clear_participants',
+                  child: Text('Reset Participants'),
                 ),
               ],
             ),
@@ -121,6 +186,8 @@ class _ResearchLogView extends StatelessWidget {
                     context,
                     'CSV exported to ${state.filePath}',
                   );
+                } else if (state is ResearchCleared) {
+                  AppToast.showSuccess(context, 'Research entries cleared');
                 }
               },
             ),
@@ -132,6 +199,11 @@ class _ResearchLogView extends StatelessWidget {
                   AppToast.showSuccess(
                     context,
                     'CSV exported to ${state.filePath}',
+                  );
+                } else if (state is ParticipantCleared) {
+                  AppToast.showSuccess(
+                    context,
+                    'Participants reset to default',
                   );
                 }
               },
@@ -333,6 +405,10 @@ class _ResearchEntryFormState extends State<_ResearchEntryForm> {
               validator: (value) =>
                   value == null ? 'Please select a session' : null,
             ),
+            if (_selectedSession != null) ...[
+              const SizedBox(height: 12),
+              _buildAutoMetricsCard(_selectedSession!),
+            ],
             const SizedBox(height: 12),
             _buildDropdown(
               label: 'Method',
@@ -479,7 +555,7 @@ class _ResearchEntryFormState extends State<_ResearchEntryForm> {
     String? Function(T?)? validator,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(labelText: label),
       validator: validator,
       items: items
@@ -493,6 +569,72 @@ class _ResearchEntryFormState extends State<_ResearchEntryForm> {
           )
           .toList(),
       onChanged: onChanged,
+    );
+  }
+
+  Widget _buildAutoMetricsCard(PerformanceSummary session) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spacingMedium),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Auto Metrics',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildMetricRow(
+            label: 'User Input Time',
+            value: '${session.userInputTimeSeconds}s',
+          ),
+          _buildMetricRow(
+            label: 'Correction Count',
+            value: session.correctionCount.toString(),
+          ),
+          _buildMetricRow(
+            label: 'Interaction Effort',
+            value: session.interactionEffortCount.toString(),
+          ),
+          _buildMetricRow(
+            label: 'Task Completed',
+            value: session.taskCompleted ? 'Yes' : 'No',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricRow({required String label, required String value}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -561,6 +703,8 @@ class _ResearchEntryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('dd MMM yyyy HH:mm');
+    final sessionBox = Hive.box<PerformanceSummary>('performance_box');
+    final session = sessionBox.get(entry.sessionId);
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacingMedium),
@@ -626,6 +770,26 @@ class _ResearchEntryCard extends StatelessWidget {
               ),
               _MetricChip(label: 'Trust', value: entry.trustScore.toString()),
               _MetricChip(label: 'Pref', value: entry.preference.name),
+              if (session != null)
+                _MetricChip(
+                  label: 'Input',
+                  value: '${session.userInputTimeSeconds}s',
+                ),
+              if (session != null)
+                _MetricChip(
+                  label: 'Corr',
+                  value: session.correctionCount.toString(),
+                ),
+              if (session != null)
+                _MetricChip(
+                  label: 'Effort',
+                  value: session.interactionEffortCount.toString(),
+                ),
+              if (session != null)
+                _MetricChip(
+                  label: 'Complete',
+                  value: session.taskCompleted ? 'Yes' : 'No',
+                ),
             ],
           ),
           const SizedBox(height: 8),
@@ -710,7 +874,10 @@ class _ParticipantCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Age: ${participant.age == 0 ? 'N/A' : participant.age.toString()} • Gender: ${participant.gender}',
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 6),
             Wrap(
@@ -730,7 +897,10 @@ class _ParticipantCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               participant.notes.isEmpty ? 'No notes' : participant.notes,
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -818,15 +988,13 @@ class _ParticipantFormState extends State<_ParticipantForm> {
             _buildParticipantSlider(
               label: 'Tech Familiarity (1-5)',
               value: _techFamiliarity,
-              onChanged: (value) =>
-                  setState(() => _techFamiliarity = value),
+              onChanged: (value) => setState(() => _techFamiliarity = value),
             ),
             const SizedBox(height: 12),
             _buildParticipantSlider(
               label: 'Voice Familiarity (1-5)',
               value: _voiceFamiliarity,
-              onChanged: (value) =>
-                  setState(() => _voiceFamiliarity = value),
+              onChanged: (value) => setState(() => _voiceFamiliarity = value),
             ),
             const SizedBox(height: 12),
             SwitchListTile(
@@ -834,7 +1002,7 @@ class _ParticipantFormState extends State<_ParticipantForm> {
               onChanged: (value) => setState(() => _guiFirst = value),
               title: const Text('GUI First'),
               subtitle: const Text('Counterbalancing order'),
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
             ),
             const SizedBox(height: 12),
             TextFormField(

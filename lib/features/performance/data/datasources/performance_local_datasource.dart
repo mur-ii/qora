@@ -14,4 +14,8 @@ class PerformanceLocalDataSource {
   List<PerformanceSummary> getAllSessions() {
     return box.values.toList(growable: false);
   }
+
+  Future<void> clearSessions() async {
+    await box.clear();
+  }
 }

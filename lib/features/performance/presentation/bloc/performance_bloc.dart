@@ -15,17 +15,32 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     : super(const PerformanceInitial()) {
     on<StartSession>(_onStartSession);
     on<AddClick>(_onAddClick);
+    on<AddScroll>(_onAddScroll);
     on<AddVoiceCommand>(_onAddVoiceCommand);
+    on<AddCorrection>(_onAddCorrection);
     on<AddError>(_onAddError);
     on<StartStep>(_onStartStep);
     on<EndStep>(_onEndStep);
     on<CompleteTask>(_onCompleteTask);
     on<EndSession>(_onEndSession);
+    on<UpdateSearchedLocation>(_onUpdateSearchedLocation);
     on<LoadAllSessions>(_onLoadAllSessions);
     on<ExportSessionsToCsv>(_onExportSessionsToCsv);
+    on<ClearSessions>(_onClearSessions);
   }
 
   void _onStartSession(StartSession event, Emitter<PerformanceState> emit) {
+    if (_activeSession != null) {
+      if (event.searchedLocation != null &&
+          event.searchedLocation!.isNotEmpty) {
+        _activeSession = _activeSession!.copyWith(
+          searchedLocation: event.searchedLocation,
+        );
+      }
+      emit(PerformanceSessionActive(_activeSession!));
+      return;
+    }
+
     final now = DateTime.now();
     final session = PerformanceSummary(
       sessionId: now.microsecondsSinceEpoch.toString(),
@@ -64,6 +79,18 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     emit(PerformanceSessionActive(_activeSession!));
   }
 
+  void _onAddScroll(AddScroll event, Emitter<PerformanceState> emit) {
+    if (_activeSession == null) {
+      emit(const PerformanceError('No active session to update'));
+      return;
+    }
+
+    _activeSession = _activeSession!.copyWith(
+      totalClicks: _activeSession!.totalClicks + 1,
+    );
+    emit(PerformanceSessionActive(_activeSession!));
+  }
+
   void _onAddVoiceCommand(
     AddVoiceCommand event,
     Emitter<PerformanceState> emit,
@@ -76,6 +103,21 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     _activeSession = _activeSession!.copyWith(
       totalVoiceCommands: _activeSession!.totalVoiceCommands + 1,
     );
+    emit(PerformanceSessionActive(_activeSession!));
+  }
+
+  void _onAddCorrection(AddCorrection event, Emitter<PerformanceState> emit) {
+    if (_activeSession == null) {
+      emit(const PerformanceError('No active session to update'));
+      return;
+    }
+
+    final updatedErrorTypes = List<String>.from(_activeSession!.errorTypes);
+    updatedErrorTypes.add(
+      'correction_${_activeSession!.interactionMethod.name}',
+    );
+
+    _activeSession = _activeSession!.copyWith(errorTypes: updatedErrorTypes);
     emit(PerformanceSessionActive(_activeSession!));
   }
 
@@ -240,6 +282,45 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     }
   }
 
+  Future<void> _onClearSessions(
+    ClearSessions event,
+    Emitter<PerformanceState> emit,
+  ) async {
+    emit(const PerformanceLoading());
+
+    try {
+      await repository.clearSessions();
+      _activeSession = null;
+      _stepStarts.clear();
+      emit(const PerformanceCleared());
+
+      final sessions = await repository.getAllSessions();
+      emit(
+        PerformanceLoadedSessions(
+          sessions: sessions,
+          analytics: _computeAnalytics(sessions),
+        ),
+      );
+    } catch (e) {
+      emit(PerformanceError(e.toString()));
+    }
+  }
+
+  void _onUpdateSearchedLocation(
+    UpdateSearchedLocation event,
+    Emitter<PerformanceState> emit,
+  ) {
+    if (_activeSession == null) {
+      emit(const PerformanceError('No active session to update'));
+      return;
+    }
+
+    _activeSession = _activeSession!.copyWith(
+      searchedLocation: event.searchedLocation,
+    );
+    emit(PerformanceSessionActive(_activeSession!));
+  }
+
   PerformanceAnalytics _computeAnalytics(List<PerformanceSummary> sessions) {
     if (sessions.isEmpty) {
       return const PerformanceAnalytics(
@@ -251,6 +332,9 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
         guiSessions: 0,
         vuiSessions: 0,
         bookingSuccessRate: 0,
+        averageUserInputSeconds: 0,
+        averageCorrectionCount: 0,
+        averageInteractionEffort: 0,
       );
     }
 
@@ -271,6 +355,18 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
         .where((s) => s.interactionMethod == InteractionMethod.vui)
         .length;
     final successfulBookings = sessions.where((s) => s.bookingSuccess).length;
+    final totalUserInputSeconds = sessions.fold<int>(
+      0,
+      (sum, session) => sum + session.userInputTimeSeconds,
+    );
+    final totalCorrectionCount = sessions.fold<int>(
+      0,
+      (sum, session) => sum + session.correctionCount,
+    );
+    final totalInteractionEffort = sessions.fold<int>(
+      0,
+      (sum, session) => sum + session.interactionEffortCount,
+    );
 
     return PerformanceAnalytics(
       totalSessions: sessions.length,
@@ -281,6 +377,9 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
       guiSessions: guiSessions,
       vuiSessions: vuiSessions,
       bookingSuccessRate: successfulBookings / sessions.length,
+      averageUserInputSeconds: totalUserInputSeconds / sessions.length,
+      averageCorrectionCount: totalCorrectionCount / sessions.length,
+      averageInteractionEffort: totalInteractionEffort / sessions.length,
     );
   }
 }

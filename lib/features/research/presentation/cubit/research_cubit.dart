@@ -44,4 +44,17 @@ class ResearchCubit extends Cubit<ResearchState> {
       emit(ResearchError(e.toString()));
     }
   }
+
+  Future<void> clearEntries() async {
+    emit(const ResearchLoading());
+
+    try {
+      await repository.clearEntries();
+      emit(const ResearchCleared());
+      final entries = await repository.getAllEntries();
+      emit(ResearchLoaded(entries));
+    } catch (e) {
+      emit(ResearchError(e.toString()));
+    }
+  }
 }

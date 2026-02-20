@@ -47,6 +47,9 @@ class PerformanceRepositoryImpl implements PerformanceRepository {
         'selectionDurationSeconds',
         'paymentDurationSeconds',
         'confirmationDurationSeconds',
+        'userInputTimeSeconds',
+        'correctionCount',
+        'interactionEffort',
       ],
       ...sessions.map((session) => session.toCsvRow()),
     ];
@@ -59,5 +62,10 @@ class PerformanceRepositoryImpl implements PerformanceRepository {
     final file = File(filePath);
     await file.writeAsString(csvData);
     return file.path;
+  }
+
+  @override
+  Future<void> clearSessions() async {
+    await localDataSource.clearSessions();
   }
 }

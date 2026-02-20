@@ -25,8 +25,16 @@ class AddClick extends PerformanceEvent {
   const AddClick();
 }
 
+class AddScroll extends PerformanceEvent {
+  const AddScroll();
+}
+
 class AddVoiceCommand extends PerformanceEvent {
   const AddVoiceCommand();
+}
+
+class AddCorrection extends PerformanceEvent {
+  const AddCorrection();
 }
 
 class AddError extends PerformanceEvent {
@@ -70,10 +78,23 @@ class EndSession extends PerformanceEvent {
   const EndSession();
 }
 
+class UpdateSearchedLocation extends PerformanceEvent {
+  final String searchedLocation;
+
+  const UpdateSearchedLocation(this.searchedLocation);
+
+  @override
+  List<Object?> get props => [searchedLocation];
+}
+
 class LoadAllSessions extends PerformanceEvent {
   const LoadAllSessions();
 }
 
 class ExportSessionsToCsv extends PerformanceEvent {
   const ExportSessionsToCsv();
+}
+
+class ClearSessions extends PerformanceEvent {
+  const ClearSessions();
 }

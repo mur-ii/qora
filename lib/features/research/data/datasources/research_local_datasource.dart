@@ -14,4 +14,8 @@ class ResearchLocalDataSource {
   List<ResearchEntry> getAllEntries() {
     return box.values.toList(growable: false);
   }
+
+  Future<void> clearEntries() async {
+    await box.clear();
+  }
 }

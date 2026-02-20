@@ -5,11 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
-import '../../../performance/presentation/bloc/performance_bloc.dart';
-import '../../../performance/presentation/bloc/performance_event.dart';
-import '../../../performance/presentation/bloc/performance_state.dart';
 import '../../domain/entities/profile_entity.dart';
 
 /// Section 1: Profile & Level
@@ -20,138 +18,113 @@ class ProfileSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final levelColor = _getLevelColor(profile.currentLevel);
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: AppColors.shadowLight,
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar with level ring
-          Stack(
-            alignment: Alignment.center,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(
-                width: 100,
-                height: 100,
-                child: CircularProgressIndicator(
-                  value: profile.levelProgress,
-                  strokeWidth: 5,
-                  backgroundColor: Colors.grey[200],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    _getLevelColor(profile.currentLevel),
-                  ),
-                ),
-              ),
-              Container(
-                width: 82,
-                height: 82,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 4),
-                ),
-                child: ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: profile.avatarUrl,
-                    fit: BoxFit.cover,
-                    memCacheHeight: 164,
-                    memCacheWidth: 164,
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 2,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        _getLevelColor(profile.currentLevel),
-                        _getLevelColor(
-                          profile.currentLevel,
-                        ).withValues(alpha: 0.8),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: Text(
-                    'Lv ${profile.currentLevel}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  SizedBox(
+                    width: 76,
+                    height: 76,
+                    child: CircularProgressIndicator(
+                      value: profile.levelProgress,
+                      strokeWidth: 4,
+                      backgroundColor: AppColors.surfaceVariant,
+                      valueColor: AlwaysStoppedAnimation<Color>(levelColor),
                     ),
                   ),
+                  Container(
+                    width: 62,
+                    height: 62,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                    ),
+                    child: ClipOval(
+                      child: CachedNetworkImage(
+                        imageUrl: profile.avatarUrl,
+                        fit: BoxFit.cover,
+                        memCacheHeight: 124,
+                        memCacheWidth: 124,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.fullName,
+                      style: AppTypography.titleLarge.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      profile.email,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: levelColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: levelColor.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.workspace_premium_rounded,
+                            size: 16,
+                            color: levelColor,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Lv ${profile.currentLevel} • ${profile.levelTitle}',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: levelColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Name
-          Text(
-            profile.fullName,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF1A1A1A),
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          // Email
-          Text(
-            profile.email,
-            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Level badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  _getLevelColor(profile.currentLevel).withValues(alpha: 0.15),
-                  _getLevelColor(profile.currentLevel).withValues(alpha: 0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.workspace_premium_rounded,
-                  size: 18,
-                  color: _getLevelColor(profile.currentLevel),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  profile.levelTitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _getLevelColor(profile.currentLevel),
-                  ),
-                ),
-              ],
-            ),
           ),
 
           const SizedBox(height: 20),
@@ -165,18 +138,16 @@ class ProfileSection extends StatelessWidget {
                 children: [
                   Text(
                     'Progress ke Level ${profile.currentLevel + 1}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF1A1A1A),
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     '${((profile.levelProgress) * 100).toStringAsFixed(0)}%',
-                    style: TextStyle(
-                      fontSize: 13,
+                    style: AppTypography.labelLarge.copyWith(
+                      color: levelColor,
                       fontWeight: FontWeight.w600,
-                      color: _getLevelColor(profile.currentLevel),
                     ),
                   ),
                 ],
@@ -186,11 +157,9 @@ class ProfileSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
                 child: LinearProgressIndicator(
                   value: profile.levelProgress,
-                  minHeight: 8,
-                  backgroundColor: Colors.grey[200],
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    _getLevelColor(profile.currentLevel),
-                  ),
+                  minHeight: 6,
+                  backgroundColor: AppColors.surfaceVariant,
+                  valueColor: AlwaysStoppedAnimation<Color>(levelColor),
                 ),
               ),
               const SizedBox(height: 6),
@@ -199,11 +168,15 @@ class ProfileSection extends StatelessWidget {
                 children: [
                   Text(
                     '${NumberFormat('#,###').format(profile.currentXP)} XP',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   Text(
                     '${NumberFormat('#,###').format(profile.xpToNextLevel)} XP',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -212,20 +185,20 @@ class ProfileSection extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // Edit Profile button
           SizedBox(
             width: double.infinity,
-            child: OutlinedButton(
+            child: ElevatedButton(
               onPressed: () {
                 // Navigate to edit profile
               },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: BorderSide(color: AppColors.primary, width: 1.5),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
+                elevation: 0,
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -284,186 +257,6 @@ class PaymentInformationSection extends StatelessWidget {
           showBadge: false,
         ),
       ],
-    );
-  }
-}
-
-/// Section: Performance summary indicator
-class PerformanceSummaryIndicator extends StatefulWidget {
-  const PerformanceSummaryIndicator({super.key});
-
-  @override
-  State<PerformanceSummaryIndicator> createState() =>
-      _PerformanceSummaryIndicatorState();
-}
-
-class _PerformanceSummaryIndicatorState
-    extends State<PerformanceSummaryIndicator> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<PerformanceBloc>().add(const LoadAllSessions());
-  }
-
-  String _formatPercent(double value) {
-    return '${(value * 100).toStringAsFixed(1)}%';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      title: 'Performance Summary',
-      icon: Icons.analytics_outlined,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-          child: BlocBuilder<PerformanceBloc, PerformanceState>(
-            builder: (context, state) {
-              if (state is PerformanceLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (state is PerformanceLoadedSessions) {
-                final analytics = state.analytics;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _PerformanceMetric(
-                            label: 'Total Sessions',
-                            value: analytics.totalSessions.toString(),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _PerformanceMetric(
-                            label: 'Avg Duration (s)',
-                            value: analytics.averageDurationSeconds
-                                .toStringAsFixed(1),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _PerformanceMetric(
-                            label: 'Booking Success',
-                            value: _formatPercent(analytics.bookingSuccessRate),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _PerformanceMetric(
-                            label: 'Error Rate',
-                            value: _formatPercent(analytics.errorRate),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _PerformanceMetric(
-                            label: 'GUI Sessions',
-                            value: analytics.guiSessions.toString(),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _PerformanceMetric(
-                            label: 'VUI Sessions',
-                            value: analytics.vuiSessions.toString(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => context.push('/performance-summary'),
-                        icon: const Icon(Icons.visibility_outlined, size: 18),
-                        label: const Text('View Details'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.primary,
-                          side: const BorderSide(color: AppColors.primary),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'No performance sessions recorded yet.',
-                    style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => context.push('/performance-summary'),
-                      icon: const Icon(Icons.visibility_outlined, size: 18),
-                      label: const Text('Open Summary'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                        side: const BorderSide(color: AppColors.primary),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PerformanceMetric extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _PerformanceMetric({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF6F7FB),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE6E8EF)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF111827),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -643,15 +436,25 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final divider = const Divider(height: 1, color: AppColors.divider);
+    final sectionItems = <Widget>[];
+    for (var i = 0; i < children.length; i++) {
+      sectionItems.add(children[i]);
+      if (i != children.length - 1) {
+        sectionItems.add(divider);
+      }
+    }
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.border),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+            color: AppColors.shadowLight,
+            blurRadius: 14,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -659,31 +462,30 @@ class _SectionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, size: 20, color: AppColors.primary),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 17,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A1A1A),
                   ),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1),
-          ...children,
+          const Divider(height: 1, color: AppColors.divider),
+          ...sectionItems,
         ],
       ),
     );
@@ -714,34 +516,63 @@ class _MenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         child: Row(
           children: [
-            Icon(icon, size: 22, color: iconColor ?? Colors.grey[700]),
-            const SizedBox(width: 14),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: iconColor ?? AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF1A1A1A),
+                    style: AppTypography.bodyLarge.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
             ),
+            if (showBadge)
+              Container(
+                width: 8,
+                height: 8,
+                margin: const EdgeInsets.only(right: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
             if (showChevron)
-              Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: AppColors.textTertiary,
+              ),
           ],
         ),
       ),
@@ -768,27 +599,37 @@ class _MenuItemWithToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Row(
         children: [
-          Icon(icon, size: 22, color: Colors.grey[700]),
-          const SizedBox(width: 14),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Icon(icon, size: 20, color: AppColors.textSecondary),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF1A1A1A),
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),

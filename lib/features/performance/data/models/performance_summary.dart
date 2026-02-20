@@ -69,6 +69,15 @@ class PerformanceSummary extends Equatable {
     required this.errorTypes,
   });
 
+  int get userInputTimeSeconds => searchDurationSeconds;
+
+  int get correctionCount =>
+      errorTypes.where((entry) => entry.startsWith('correction')).length;
+
+  int get interactionEffortCount => interactionMethod == InteractionMethod.gui
+      ? totalClicks
+      : totalVoiceCommands;
+
   PerformanceSummary copyWith({
     DateTime? endTime,
     int? durationInSeconds,
@@ -131,6 +140,9 @@ class PerformanceSummary extends Equatable {
       selectionDurationSeconds.toString(),
       paymentDurationSeconds.toString(),
       confirmationDurationSeconds.toString(),
+      userInputTimeSeconds.toString(),
+      correctionCount.toString(),
+      interactionEffortCount.toString(),
     ];
   }
 

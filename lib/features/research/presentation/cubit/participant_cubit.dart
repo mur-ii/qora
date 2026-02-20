@@ -54,6 +54,18 @@ class ParticipantCubit extends Cubit<ParticipantState> {
     }
   }
 
+  Future<void> clearParticipants() async {
+    emit(const ParticipantLoading());
+
+    try {
+      await repository.clearParticipants();
+      emit(const ParticipantCleared());
+      await loadParticipants();
+    } catch (e) {
+      emit(ParticipantError(e.toString()));
+    }
+  }
+
   List<ParticipantRecord> _seedParticipants(DateTime now) {
     final participants = <ParticipantRecord>[];
     for (var i = 1; i <= 30; i++) {

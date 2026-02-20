@@ -11,6 +11,9 @@ class PerformanceAnalytics extends Equatable {
   final int guiSessions;
   final int vuiSessions;
   final double bookingSuccessRate;
+  final double averageUserInputSeconds;
+  final double averageCorrectionCount;
+  final double averageInteractionEffort;
 
   const PerformanceAnalytics({
     required this.totalSessions,
@@ -21,6 +24,9 @@ class PerformanceAnalytics extends Equatable {
     required this.guiSessions,
     required this.vuiSessions,
     required this.bookingSuccessRate,
+    required this.averageUserInputSeconds,
+    required this.averageCorrectionCount,
+    required this.averageInteractionEffort,
   });
 
   @override
@@ -33,6 +39,9 @@ class PerformanceAnalytics extends Equatable {
     guiSessions,
     vuiSessions,
     bookingSuccessRate,
+    averageUserInputSeconds,
+    averageCorrectionCount,
+    averageInteractionEffort,
   ];
 }
 
@@ -89,6 +98,10 @@ class PerformanceExported extends PerformanceState {
 
   @override
   List<Object?> get props => [filePath];
+}
+
+class PerformanceCleared extends PerformanceState {
+  const PerformanceCleared();
 }
 
 class PerformanceError extends PerformanceState {

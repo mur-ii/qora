@@ -35,6 +35,10 @@ class ParticipantExported extends ParticipantState {
   List<Object?> get props => [filePath];
 }
 
+class ParticipantCleared extends ParticipantState {
+  const ParticipantCleared();
+}
+
 class ParticipantError extends ParticipantState {
   final String message;
 

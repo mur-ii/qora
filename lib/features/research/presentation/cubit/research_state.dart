@@ -35,6 +35,10 @@ class ResearchExported extends ResearchState {
   List<Object?> get props => [filePath];
 }
 
+class ResearchCleared extends ResearchState {
+  const ResearchCleared();
+}
+
 class ResearchError extends ResearchState {
   final String message;
 

@@ -129,9 +129,12 @@ class _BookingSummaryPageContentState
     context.read<PerformanceBloc>().add(
       StartSession(method: method, searchedLocation: booking.hotel.address),
     );
-    context
-        .read<PerformanceBloc>()
-        .add(const StartStep(PerformanceStep.selection));
+    context.read<PerformanceBloc>().add(
+      UpdateSearchedLocation(booking.hotel.address),
+    );
+    context.read<PerformanceBloc>().add(
+      const StartStep(PerformanceStep.selection),
+    );
   }
 
   @override
@@ -163,9 +166,9 @@ class _BookingSummaryPageContentState
           listener: (context, state) {
             if (state is BookingError) {
               AppToast.showError(context, state.message);
-              context
-                  .read<PerformanceBloc>()
-                  .add(const AddError(errorType: 'booking_summary'));
+              context.read<PerformanceBloc>().add(
+                const AddError(errorType: 'booking_summary'),
+              );
             }
           },
           builder: (context, state) {

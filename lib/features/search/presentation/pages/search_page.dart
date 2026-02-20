@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../performance/data/models/performance_summary.dart';
+import '../../../performance/presentation/bloc/performance_bloc.dart';
+import '../../../performance/presentation/bloc/performance_event.dart';
 import '../../data/datasources/search_remote_datasource.dart';
 import '../../data/repositories/search_repository_impl.dart';
 import '../../domain/usecases/search_hotels.dart';
@@ -39,11 +42,36 @@ class _SearchPageContent extends StatefulWidget {
 
 class _SearchPageContentState extends State<_SearchPageContent> {
   final TextEditingController _searchController = TextEditingController();
+  bool _sessionStarted = false;
+  bool _searchStepStarted = false;
+  String _lastSearchValue = '';
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _ensureSessionStarted() {
+    if (_sessionStarted) return;
+    _sessionStarted = true;
+    context.read<PerformanceBloc>().add(
+      const StartSession(method: InteractionMethod.gui),
+    );
+  }
+
+  void _startSearchInputIfNeeded() {
+    if (_searchStepStarted) return;
+    _searchStepStarted = true;
+    context.read<PerformanceBloc>().add(
+      const StartStep(PerformanceStep.search),
+    );
+  }
+
+  void _endSearchInputIfNeeded() {
+    if (!_searchStepStarted) return;
+    _searchStepStarted = false;
+    context.read<PerformanceBloc>().add(const EndStep(PerformanceStep.search));
   }
 
   void _performSearch(String query) {
@@ -59,6 +87,12 @@ class _SearchPageContentState extends State<_SearchPageContent> {
   }
 
   void _selectLocation(String locationOrHotelName) {
+    _ensureSessionStarted();
+    context.read<PerformanceBloc>().add(const AddClick());
+    context.read<PerformanceBloc>().add(
+      UpdateSearchedLocation(locationOrHotelName),
+    );
+    _endSearchInputIfNeeded();
     // Return selected value to home page
     context.pop(locationOrHotelName);
   }
@@ -96,6 +130,10 @@ class _SearchPageContentState extends State<_SearchPageContent> {
             child: TextField(
               controller: _searchController,
               autofocus: true,
+              onTap: () {
+                _ensureSessionStarted();
+                _startSearchInputIfNeeded();
+              },
               decoration: InputDecoration(
                 hintText: 'Cari kota atau nama hotel...',
                 prefixIcon: const Icon(Icons.search),
@@ -103,7 +141,10 @@ class _SearchPageContentState extends State<_SearchPageContent> {
                     ? IconButton(
                         icon: const Icon(Icons.clear),
                         onPressed: () {
+                          _ensureSessionStarted();
+                          context.read<PerformanceBloc>().add(const AddClick());
                           _searchController.clear();
+                          _lastSearchValue = '';
                           _performSearch('');
                           setState(() {});
                         },
@@ -132,6 +173,13 @@ class _SearchPageContentState extends State<_SearchPageContent> {
                 ),
               ),
               onChanged: (value) {
+                _ensureSessionStarted();
+                _startSearchInputIfNeeded();
+                if (_lastSearchValue.isNotEmpty &&
+                    value.length < _lastSearchValue.length) {
+                  context.read<PerformanceBloc>().add(const AddCorrection());
+                }
+                _lastSearchValue = value;
                 _performSearch(value);
                 setState(() {});
               },
@@ -210,41 +258,48 @@ class _SearchPageContentState extends State<_SearchPageContent> {
 
                   final sortedSuggestions = suggestions.toList()..sort();
 
-                  return ListView.builder(
-                    itemCount: sortedSuggestions.length,
-                    itemBuilder: (context, index) {
-                      final suggestion = sortedSuggestions[index];
-                      final isLocation = state.hotels.any(
-                        (hotel) => hotel.location == suggestion,
-                      );
-
-                      return ListTile(
-                        leading: Icon(
-                          isLocation ? Icons.location_on : Icons.hotel,
-                          color: AppColors.primary,
-                        ),
-                        title: Text(
-                          suggestion,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        subtitle: Text(
-                          isLocation ? 'Lokasi' : 'Hotel',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        onTap: () => _selectLocation(suggestion),
-                        trailing: const Icon(
-                          Icons.arrow_forward_ios,
-                          size: 16,
-                          color: AppColors.textTertiary,
-                        ),
-                      );
+                  return NotificationListener<ScrollEndNotification>(
+                    onNotification: (notification) {
+                      _ensureSessionStarted();
+                      context.read<PerformanceBloc>().add(const AddScroll());
+                      return false;
                     },
+                    child: ListView.builder(
+                      itemCount: sortedSuggestions.length,
+                      itemBuilder: (context, index) {
+                        final suggestion = sortedSuggestions[index];
+                        final isLocation = state.hotels.any(
+                          (hotel) => hotel.location == suggestion,
+                        );
+
+                        return ListTile(
+                          leading: Icon(
+                            isLocation ? Icons.location_on : Icons.hotel,
+                            color: AppColors.primary,
+                          ),
+                          title: Text(
+                            suggestion,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          subtitle: Text(
+                            isLocation ? 'Lokasi' : 'Hotel',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          onTap: () => _selectLocation(suggestion),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: AppColors.textTertiary,
+                          ),
+                        );
+                      },
+                    ),
                   );
                 }
 

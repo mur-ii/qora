@@ -4,4 +4,5 @@ abstract class ResearchRepository {
   Future<void> saveEntry(ResearchEntry entry);
   Future<List<ResearchEntry>> getAllEntries();
   Future<String> exportEntriesToCsv();
+  Future<void> clearEntries();
 }

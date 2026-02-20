@@ -28,6 +28,34 @@ class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
     context.read<PerformanceBloc>().add(const LoadAllSessions());
   }
 
+  Future<void> _confirmClearSessions() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Hapus Semua Data'),
+          content: const Text(
+            'Semua data performance akan dihapus dan tidak bisa dikembalikan.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true && mounted) {
+      context.read<PerformanceBloc>().add(const ClearSessions());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -35,6 +63,11 @@ class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
       appBar: AppBar(
         title: const Text('Performance Summary'),
         actions: [
+          IconButton(
+            onPressed: _confirmClearSessions,
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Clear data',
+          ),
           IconButton(
             onPressed: () {
               context.read<PerformanceBloc>().add(const ExportSessionsToCsv());
@@ -50,6 +83,8 @@ class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
             AppToast.showError(context, state.message);
           } else if (state is PerformanceExported) {
             AppToast.showSuccess(context, 'CSV exported to ${state.filePath}');
+          } else if (state is PerformanceCleared) {
+            AppToast.showSuccess(context, 'Performance data cleared');
           }
         },
         builder: (context, state) {
@@ -63,7 +98,7 @@ class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
               child: ListView(
                 padding: const EdgeInsets.all(AppTheme.spacingMedium),
                 children: [
-                  _SummaryStats(analytics: state.analytics),
+                  _SummaryHeader(analytics: state.analytics),
                   const SizedBox(height: AppTheme.spacingLarge),
                   Text(
                     'Session History',
@@ -95,10 +130,10 @@ class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
   }
 }
 
-class _SummaryStats extends StatelessWidget {
+class _SummaryHeader extends StatelessWidget {
   final PerformanceAnalytics analytics;
 
-  const _SummaryStats({required this.analytics});
+  const _SummaryHeader({required this.analytics});
 
   String _formatPercent(double value) {
     return '${(value * 100).toStringAsFixed(1)}%';
@@ -109,8 +144,86 @@ class _SummaryStats extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Container(
+          padding: const EdgeInsets.all(AppTheme.spacingLarge),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Overview',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Ringkasan performa GUI dan VUI dari sesi pemesanan.',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: AppTheme.spacingMedium),
+              GridView.count(
+                crossAxisCount: 2,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisSpacing: AppTheme.spacingMedium,
+                mainAxisSpacing: AppTheme.spacingMedium,
+                childAspectRatio: 1.7,
+                children: [
+                  PerformanceStatCard(
+                    title: 'Total Sessions',
+                    value: analytics.totalSessions.toString(),
+                  ),
+                  PerformanceStatCard(
+                    title: 'Avg Duration',
+                    value:
+                        '${analytics.averageDurationSeconds.toStringAsFixed(1)}s',
+                    accentColor: AppColors.secondary,
+                  ),
+                  PerformanceStatCard(
+                    title: 'Completion Rate',
+                    value: _formatPercent(analytics.completionRate),
+                    accentColor: AppColors.info,
+                  ),
+                  PerformanceStatCard(
+                    title: 'Booking Success',
+                    value: _formatPercent(analytics.bookingSuccessRate),
+                    accentColor: AppColors.success,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spacingMedium),
+              Row(
+                children: [
+                  Expanded(
+                    child: PerformanceStatCard(
+                      title: 'GUI Sessions',
+                      value: analytics.guiSessions.toString(),
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spacingMedium),
+                  Expanded(
+                    child: PerformanceStatCard(
+                      title: 'VUI Sessions',
+                      value: analytics.vuiSessions.toString(),
+                      accentColor: AppColors.secondary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppTheme.spacingLarge),
         Text(
-          'Summary Statistics',
+          'Behavior Metrics',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -123,55 +236,27 @@ class _SummaryStats extends StatelessWidget {
           physics: const NeverScrollableScrollPhysics(),
           crossAxisSpacing: AppTheme.spacingMedium,
           mainAxisSpacing: AppTheme.spacingMedium,
-          childAspectRatio: 1.6,
+          childAspectRatio: 1.7,
           children: [
             PerformanceStatCard(
-              title: 'Total Sessions',
-              value: analytics.totalSessions.toString(),
-            ),
-            PerformanceStatCard(
-              title: 'Avg Duration (s)',
-              value: analytics.averageDurationSeconds.toStringAsFixed(1),
+              title: 'Avg Input Time',
+              value: '${analytics.averageUserInputSeconds.toStringAsFixed(1)}s',
               accentColor: AppColors.secondary,
             ),
             PerformanceStatCard(
-              title: 'Total Errors',
-              value: analytics.totalErrors.toString(),
-              accentColor: AppColors.error,
-            ),
-            PerformanceStatCard(
-              title: 'Booking Success Rate',
-              value: _formatPercent(analytics.bookingSuccessRate),
-              accentColor: AppColors.success,
-            ),
-            PerformanceStatCard(
-              title: 'Completion Rate',
-              value: _formatPercent(analytics.completionRate),
+              title: 'Avg Corrections',
+              value: analytics.averageCorrectionCount.toStringAsFixed(1),
               accentColor: AppColors.info,
+            ),
+            PerformanceStatCard(
+              title: 'Avg Effort',
+              value: analytics.averageInteractionEffort.toStringAsFixed(1),
+              accentColor: AppColors.primary,
             ),
             PerformanceStatCard(
               title: 'Error Rate',
               value: _formatPercent(analytics.errorRate),
               accentColor: AppColors.warning,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppTheme.spacingMedium),
-        Row(
-          children: [
-            Expanded(
-              child: PerformanceStatCard(
-                title: 'GUI Sessions',
-                value: analytics.guiSessions.toString(),
-              ),
-            ),
-            const SizedBox(width: AppTheme.spacingMedium),
-            Expanded(
-              child: PerformanceStatCard(
-                title: 'VUI Sessions',
-                value: analytics.vuiSessions.toString(),
-                accentColor: AppColors.secondary,
-              ),
             ),
           ],
         ),
@@ -203,15 +288,9 @@ class _SessionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppTheme.spacingSmall),
       padding: const EdgeInsets.all(AppTheme.spacingMedium),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,23 +343,34 @@ class _SessionCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: [
               _InfoChip(
                 icon: Icons.timer_outlined,
                 label: '${session.durationInSeconds}s',
               ),
-              const SizedBox(width: 8),
+              _InfoChip(
+                icon: Icons.keyboard_outlined,
+                label: '${session.userInputTimeSeconds}s',
+              ),
               _InfoChip(
                 icon: Icons.touch_app_outlined,
                 label: session.totalClicks.toString(),
               ),
-              const SizedBox(width: 8),
               _InfoChip(
                 icon: Icons.mic_outlined,
                 label: session.totalVoiceCommands.toString(),
               ),
-              const SizedBox(width: 8),
+              _InfoChip(
+                icon: Icons.rule_outlined,
+                label: session.interactionEffortCount.toString(),
+              ),
+              _InfoChip(
+                icon: Icons.backspace_outlined,
+                label: session.correctionCount.toString(),
+              ),
               _InfoChip(
                 icon: Icons.error_outline,
                 label: session.errorsCount.toString(),

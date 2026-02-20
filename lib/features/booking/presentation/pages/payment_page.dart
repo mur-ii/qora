@@ -110,9 +110,9 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
         listener: (context, state) {
           if (state is BookingError) {
             AppToast.showError(context, state.message);
-            context
-                .read<PerformanceBloc>()
-                .add(const AddError(errorType: 'payment'));
+            context.read<PerformanceBloc>().add(
+              const AddError(errorType: 'payment'),
+            );
           } else if (state is BookingConfirmed) {
             context.read<PerformanceBloc>().add(
               const EndStep(PerformanceStep.payment),

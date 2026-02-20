@@ -14,4 +14,8 @@ class ParticipantLocalDataSource {
   List<ParticipantRecord> getAllParticipants() {
     return box.values.toList(growable: false);
   }
+
+  Future<void> clearParticipants() async {
+    await box.clear();
+  }
 }
