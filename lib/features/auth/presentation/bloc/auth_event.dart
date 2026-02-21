@@ -9,6 +9,12 @@ class LoginWithEmailEvent extends AuthEvent {
 
 class LoginWithGoogleEvent extends AuthEvent {}
 
+class LoginWithNameEvent extends AuthEvent {
+  final String fullName;
+
+  LoginWithNameEvent({required this.fullName});
+}
+
 class RegisterEvent extends AuthEvent {
   final String email;
   final String password;

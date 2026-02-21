@@ -13,6 +13,8 @@ enum InteractionMethod { gui, vui }
 class PerformanceSummary extends Equatable {
   @HiveField(0)
   final String sessionId;
+  @HiveField(18)
+  final String? testerSessionId;
   @HiveField(1)
   final DateTime startTime;
   @HiveField(2)
@@ -50,6 +52,7 @@ class PerformanceSummary extends Equatable {
 
   const PerformanceSummary({
     required this.sessionId,
+    this.testerSessionId,
     required this.startTime,
     required this.endTime,
     required this.durationInSeconds,
@@ -79,6 +82,7 @@ class PerformanceSummary extends Equatable {
       : totalVoiceCommands;
 
   PerformanceSummary copyWith({
+    String? testerSessionId,
     DateTime? endTime,
     int? durationInSeconds,
     int? totalClicks,
@@ -96,6 +100,7 @@ class PerformanceSummary extends Equatable {
   }) {
     return PerformanceSummary(
       sessionId: sessionId,
+      testerSessionId: testerSessionId ?? this.testerSessionId,
       startTime: startTime,
       endTime: endTime ?? this.endTime,
       durationInSeconds: durationInSeconds ?? this.durationInSeconds,
@@ -123,6 +128,7 @@ class PerformanceSummary extends Equatable {
   List<String> toCsvRow() {
     return [
       sessionId,
+      testerSessionId ?? '',
       startTime.toIso8601String(),
       endTime.toIso8601String(),
       durationInSeconds.toString(),
@@ -149,6 +155,7 @@ class PerformanceSummary extends Equatable {
   @override
   List<Object?> get props => [
     sessionId,
+    testerSessionId,
     startTime,
     endTime,
     durationInSeconds,

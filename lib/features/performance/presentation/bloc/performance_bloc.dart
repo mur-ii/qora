@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../research_log/domain/repositories/login_session_repository.dart';
 import '../../data/models/performance_summary.dart';
 import '../../domain/repositories/performance_repository.dart';
 import 'performance_event.dart';
@@ -7,12 +8,15 @@ import 'performance_state.dart';
 
 class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
   final PerformanceRepository repository;
+  final LoginSessionRepository loginSessionRepository;
 
   PerformanceSummary? _activeSession;
   final Map<PerformanceStep, DateTime> _stepStarts = {};
 
-  PerformanceBloc({required this.repository})
-    : super(const PerformanceInitial()) {
+  PerformanceBloc({
+    required this.repository,
+    required this.loginSessionRepository,
+  }) : super(const PerformanceInitial()) {
     on<StartSession>(_onStartSession);
     on<AddClick>(_onAddClick);
     on<AddScroll>(_onAddScroll);
@@ -42,8 +46,10 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     }
 
     final now = DateTime.now();
+    final testerSessionId = loginSessionRepository.getActiveSessionId();
     final session = PerformanceSummary(
       sessionId: now.microsecondsSinceEpoch.toString(),
+      testerSessionId: testerSessionId,
       startTime: now,
       endTime: now,
       durationInSeconds: 0,

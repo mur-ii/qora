@@ -31,6 +31,7 @@ class PerformanceSummaryAdapter extends TypeAdapter<PerformanceSummary> {
     }
     return PerformanceSummary(
       sessionId: fields[0] as String,
+      testerSessionId: fields[18] as String?,
       startTime: fields[1] as DateTime,
       endTime: fields[2] as DateTime,
       durationInSeconds: fields[3] as int,
@@ -54,9 +55,11 @@ class PerformanceSummaryAdapter extends TypeAdapter<PerformanceSummary> {
   @override
   void write(BinaryWriter writer, PerformanceSummary obj) {
     writer
-      ..writeByte(18)
+      ..writeByte(19)
       ..writeByte(0)
       ..write(obj.sessionId)
+      ..writeByte(18)
+      ..write(obj.testerSessionId)
       ..writeByte(1)
       ..write(obj.startTime)
       ..writeByte(2)

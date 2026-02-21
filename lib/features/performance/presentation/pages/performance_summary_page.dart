@@ -35,7 +35,7 @@ class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
         return AlertDialog(
           title: const Text('Hapus Semua Data'),
           content: const Text(
-            'Semua data performance akan dihapus dan tidak bisa dikembalikan.',
+            'Semua data performa akan dihapus dan tidak bisa dikembalikan.',
           ),
           actions: [
             TextButton(
@@ -61,19 +61,19 @@ class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Performance Summary'),
+        title: const Text('Ringkasan Performa'),
         actions: [
           IconButton(
             onPressed: _confirmClearSessions,
             icon: const Icon(Icons.delete_outline),
-            tooltip: 'Clear data',
+            tooltip: 'Hapus data',
           ),
           IconButton(
             onPressed: () {
               context.read<PerformanceBloc>().add(const ExportSessionsToCsv());
             },
             icon: const Icon(Icons.download_outlined),
-            tooltip: 'Export to CSV',
+            tooltip: 'Ekspor ke CSV',
           ),
         ],
       ),
@@ -82,9 +82,12 @@ class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
           if (state is PerformanceError) {
             AppToast.showError(context, state.message);
           } else if (state is PerformanceExported) {
-            AppToast.showSuccess(context, 'CSV exported to ${state.filePath}');
+            AppToast.showSuccess(
+              context,
+              'CSV berhasil diekspor ke ${state.filePath}',
+            );
           } else if (state is PerformanceCleared) {
-            AppToast.showSuccess(context, 'Performance data cleared');
+            AppToast.showSuccess(context, 'Data performa berhasil dihapus');
           }
         },
         builder: (context, state) {
@@ -101,7 +104,7 @@ class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
                   _SummaryHeader(analytics: state.analytics),
                   const SizedBox(height: AppTheme.spacingLarge),
                   Text(
-                    'Session History',
+                    'Riwayat Sesi',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
@@ -120,7 +123,7 @@ class _PerformanceSummaryPageState extends State<PerformanceSummaryPage> {
           }
 
           if (state is PerformanceError) {
-            return const Center(child: Text('Failed to load performance data'));
+            return const Center(child: Text('Gagal memuat data performa'));
           }
 
           return const Center(child: CircularProgressIndicator());
@@ -155,7 +158,7 @@ class _SummaryHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Overview',
+                'Ringkasan',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -178,22 +181,22 @@ class _SummaryHeader extends StatelessWidget {
                 childAspectRatio: 1.7,
                 children: [
                   PerformanceStatCard(
-                    title: 'Total Sessions',
+                    title: 'Total Sesi',
                     value: analytics.totalSessions.toString(),
                   ),
                   PerformanceStatCard(
-                    title: 'Avg Duration',
+                    title: 'Rata-rata Durasi',
                     value:
                         '${analytics.averageDurationSeconds.toStringAsFixed(1)}s',
                     accentColor: AppColors.secondary,
                   ),
                   PerformanceStatCard(
-                    title: 'Completion Rate',
+                    title: 'Tingkat Penyelesaian',
                     value: _formatPercent(analytics.completionRate),
                     accentColor: AppColors.info,
                   ),
                   PerformanceStatCard(
-                    title: 'Booking Success',
+                    title: 'Keberhasilan Pesan',
                     value: _formatPercent(analytics.bookingSuccessRate),
                     accentColor: AppColors.success,
                   ),
@@ -204,14 +207,14 @@ class _SummaryHeader extends StatelessWidget {
                 children: [
                   Expanded(
                     child: PerformanceStatCard(
-                      title: 'GUI Sessions',
+                      title: 'Sesi GUI',
                       value: analytics.guiSessions.toString(),
                     ),
                   ),
                   const SizedBox(width: AppTheme.spacingMedium),
                   Expanded(
                     child: PerformanceStatCard(
-                      title: 'VUI Sessions',
+                      title: 'Sesi VUI',
                       value: analytics.vuiSessions.toString(),
                       accentColor: AppColors.secondary,
                     ),
@@ -223,7 +226,7 @@ class _SummaryHeader extends StatelessWidget {
         ),
         const SizedBox(height: AppTheme.spacingLarge),
         Text(
-          'Behavior Metrics',
+          'Metrik Perilaku',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -239,22 +242,22 @@ class _SummaryHeader extends StatelessWidget {
           childAspectRatio: 1.7,
           children: [
             PerformanceStatCard(
-              title: 'Avg Input Time',
+              title: 'Rata-rata Waktu Input',
               value: '${analytics.averageUserInputSeconds.toStringAsFixed(1)}s',
               accentColor: AppColors.secondary,
             ),
             PerformanceStatCard(
-              title: 'Avg Corrections',
+              title: 'Rata-rata Koreksi',
               value: analytics.averageCorrectionCount.toStringAsFixed(1),
               accentColor: AppColors.info,
             ),
             PerformanceStatCard(
-              title: 'Avg Effort',
+              title: 'Rata-rata Usaha',
               value: analytics.averageInteractionEffort.toStringAsFixed(1),
               accentColor: AppColors.primary,
             ),
             PerformanceStatCard(
-              title: 'Error Rate',
+              title: 'Tingkat Error',
               value: _formatPercent(analytics.errorRate),
               accentColor: AppColors.warning,
             ),
@@ -277,107 +280,125 @@ class _SessionCard extends StatelessWidget {
   }
 
   String _statusLabel() {
-    if (session.bookingSuccess) return 'Success';
-    if (session.taskCompleted) return 'Completed';
-    return 'Failed';
+    if (session.bookingSuccess) return 'Berhasil';
+    if (session.taskCompleted) return 'Selesai';
+    return 'Gagal';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: AppTheme.spacingSmall),
-      padding: const EdgeInsets.all(AppTheme.spacingMedium),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
+      color: AppColors.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: AppColors.border),
+        side: BorderSide(color: AppColors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                session.interactionMethod.name.toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _statusColor().withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  _statusLabel(),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: _statusColor(),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spacingMedium),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  session.interactionMethod.name.toUpperCase(),
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.6,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            session.selectedHotelName ?? 'No hotel selected',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _statusColor().withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _statusLabel(),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: _statusColor(),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            session.searchedLocation.isEmpty
-                ? 'No location recorded'
-                : session.searchedLocation,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
+            const SizedBox(height: 10),
+            Text(
+              session.selectedHotelName ?? 'Belum ada hotel dipilih',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _InfoChip(
-                icon: Icons.timer_outlined,
-                label: '${session.durationInSeconds}s',
-              ),
-              _InfoChip(
-                icon: Icons.keyboard_outlined,
-                label: '${session.userInputTimeSeconds}s',
-              ),
-              _InfoChip(
-                icon: Icons.touch_app_outlined,
-                label: session.totalClicks.toString(),
-              ),
-              _InfoChip(
-                icon: Icons.mic_outlined,
-                label: session.totalVoiceCommands.toString(),
-              ),
-              _InfoChip(
-                icon: Icons.rule_outlined,
-                label: session.interactionEffortCount.toString(),
-              ),
-              _InfoChip(
-                icon: Icons.backspace_outlined,
-                label: session.correctionCount.toString(),
-              ),
-              _InfoChip(
-                icon: Icons.error_outline,
-                label: session.errorsCount.toString(),
-              ),
-            ],
-          ),
-        ],
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 14,
+                  color: AppColors.textTertiary,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    session.searchedLocation.isEmpty
+                        ? 'Lokasi belum tercatat'
+                        : session.searchedLocation,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Divider(height: 1, color: AppColors.border),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _InfoChip(
+                  icon: Icons.timer_outlined,
+                  label: 'Durasi ${session.durationInSeconds}s',
+                ),
+                _InfoChip(
+                  icon: Icons.keyboard_outlined,
+                  label: 'Input ${session.userInputTimeSeconds}s',
+                ),
+                _InfoChip(
+                  icon: Icons.touch_app_outlined,
+                  label: 'Klik ${session.totalClicks}',
+                ),
+                _InfoChip(
+                  icon: Icons.mic_outlined,
+                  label: 'Suara ${session.totalVoiceCommands}',
+                ),
+                _InfoChip(
+                  icon: Icons.rule_outlined,
+                  label: 'Usaha ${session.interactionEffortCount}',
+                ),
+                _InfoChip(
+                  icon: Icons.backspace_outlined,
+                  label: 'Koreksi ${session.correctionCount}',
+                ),
+                _InfoChip(
+                  icon: Icons.error_outline,
+                  label: 'Error ${session.errorsCount}',
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -392,12 +413,14 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.surfaceVariant,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: AppColors.textSecondary),
           const SizedBox(width: 4),
@@ -440,7 +463,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'No sessions recorded yet',
+            'Belum ada sesi tercatat',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               color: AppColors.textPrimary,
               fontWeight: FontWeight.w600,
@@ -448,7 +471,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Start a booking flow to capture performance data.',
+            'Mulai alur pemesanan untuk merekam data performa.',
             textAlign: TextAlign.center,
             style: TextStyle(color: AppColors.textSecondary),
           ),

@@ -30,6 +30,7 @@ class PerformanceRepositoryImpl implements PerformanceRepository {
     final rows = <List<String>>[
       [
         'sessionId',
+        'testerSessionId',
         'startTime',
         'endTime',
         'durationInSeconds',

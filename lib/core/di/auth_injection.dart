@@ -1,3 +1,5 @@
+import 'package:hive/hive.dart';
+
 import '../../features/auth/data/datasources/auth_mock_service.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
@@ -7,6 +9,9 @@ import '../../features/auth/domain/usecases/login_with_google.dart';
 import '../../features/auth/domain/usecases/logout.dart';
 import '../../features/auth/domain/usecases/register.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
+import '../../features/research_log/data/datasources/login_session_local_datasource.dart';
+import '../../features/research_log/data/models/login_session.dart';
+import '../../features/research_log/data/repositories/login_session_repository_impl.dart';
 
 class AuthInjection {
   static AuthBloc? _authBloc;
@@ -25,6 +30,16 @@ class AuthInjection {
       remoteDataSource: authRemoteDataSource,
     );
 
+    final loginSessionBox = Hive.box<LoginSession>('login_session_box');
+    final metaBox = Hive.box<String>('app_meta');
+    final loginSessionDataSource = LoginSessionLocalDataSource(
+      box: loginSessionBox,
+    );
+    final loginSessionRepository = LoginSessionRepositoryImpl(
+      localDataSource: loginSessionDataSource,
+      metaBox: metaBox,
+    );
+
     // Use cases
     final loginWithEmail = LoginWithEmail(authRepository);
     final loginWithGoogle = LoginWithGoogle(authRepository);
@@ -39,6 +54,7 @@ class AuthInjection {
       register: register,
       logout: logout,
       forgotPassword: forgotPassword,
+      loginSessionRepository: loginSessionRepository,
     );
 
     return _authBloc!;

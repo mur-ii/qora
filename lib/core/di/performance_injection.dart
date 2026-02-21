@@ -4,6 +4,9 @@ import '../../features/performance/data/datasources/performance_local_datasource
 import '../../features/performance/data/models/performance_summary.dart';
 import '../../features/performance/data/repositories/performance_repository_impl.dart';
 import '../../features/performance/presentation/bloc/performance_bloc.dart';
+import '../../features/research_log/data/datasources/login_session_local_datasource.dart';
+import '../../features/research_log/data/models/login_session.dart';
+import '../../features/research_log/data/repositories/login_session_repository_impl.dart';
 
 class PerformanceInjection {
   static PerformanceBloc? _performanceBloc;
@@ -17,7 +20,20 @@ class PerformanceInjection {
       localDataSource: localDataSource,
     );
 
-    _performanceBloc = PerformanceBloc(repository: repository);
+    final loginSessionBox = Hive.box<LoginSession>('login_session_box');
+    final metaBox = Hive.box<String>('app_meta');
+    final loginSessionDataSource = LoginSessionLocalDataSource(
+      box: loginSessionBox,
+    );
+    final loginSessionRepository = LoginSessionRepositoryImpl(
+      localDataSource: loginSessionDataSource,
+      metaBox: metaBox,
+    );
+
+    _performanceBloc = PerformanceBloc(
+      repository: repository,
+      loginSessionRepository: loginSessionRepository,
+    );
 
     return _performanceBloc!;
   }

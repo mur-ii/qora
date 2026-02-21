@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../research_log/domain/repositories/login_session_repository.dart';
+import '../../domain/entities/user.dart';
 import '../../domain/usecases/forgot_password.dart';
 import '../../domain/usecases/login_with_email.dart';
 import '../../domain/usecases/login_with_google.dart';
@@ -14,6 +16,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final Register register;
   final Logout logout;
   final ForgotPassword forgotPassword;
+  final LoginSessionRepository loginSessionRepository;
+  String? _activeSessionId;
 
   AuthBloc({
     required this.loginWithEmail,
@@ -21,9 +25,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.register,
     required this.logout,
     required this.forgotPassword,
+    required this.loginSessionRepository,
   }) : super(AuthInitial()) {
     on<LoginWithEmailEvent>(_onLoginWithEmail);
     on<LoginWithGoogleEvent>(_onLoginWithGoogle);
+    on<LoginWithNameEvent>(_onLoginWithName);
     on<RegisterEvent>(_onRegister);
     on<LogoutEvent>(_onLogout);
     on<ForgotPasswordEvent>(_onForgotPassword);
@@ -56,6 +62,26 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
+  Future<void> _onLoginWithName(
+    LoginWithNameEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading(isEmailLogin: true));
+    try {
+      final session = await loginSessionRepository.startSession(event.fullName);
+      _activeSessionId = session.sessionId;
+      final user = User(
+        id: session.sessionId,
+        email: '',
+        name: event.fullName,
+        photoUrl: null,
+      );
+      emit(AuthAuthenticated(user: user));
+    } catch (e) {
+      emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
   Future<void> _onRegister(RegisterEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
@@ -69,6 +95,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
+      final sessionId =
+          _activeSessionId ?? loginSessionRepository.getActiveSessionId();
+      if (sessionId != null) {
+        await loginSessionRepository.endSession(sessionId);
+        _activeSessionId = null;
+      }
       await logout();
       emit(AuthUnauthenticated());
     } catch (e) {

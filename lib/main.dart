@@ -12,8 +12,8 @@ import 'features/booking/data/models/booking_record.dart';
 import 'features/performance/data/models/performance_summary.dart';
 import 'features/performance/presentation/bloc/performance_bloc.dart';
 import 'features/performance/presentation/bloc/performance_event.dart';
-import 'features/research/data/models/participant_record.dart';
-import 'features/research/data/models/research_entry.dart';
+import 'features/research_log/data/models/login_session.dart';
+import 'features/research_log/data/models/sus_entry.dart';
 import 'features/voice_assistant/di/voice_assistant_injection.dart';
 import 'features/voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import 'features/voice_assistant/presentation/bloc/voice_assistant_state.dart';
@@ -37,19 +37,17 @@ void main() async {
   if (!Hive.isAdapterRegistered(bookingRecordTypeId)) {
     Hive.registerAdapter(BookingRecordAdapter());
   }
-  if (!Hive.isAdapterRegistered(researchPreferenceTypeId)) {
-    Hive.registerAdapter(ResearchPreferenceAdapter());
+  if (!Hive.isAdapterRegistered(loginSessionTypeId)) {
+    Hive.registerAdapter(LoginSessionAdapter());
   }
-  if (!Hive.isAdapterRegistered(researchEntryTypeId)) {
-    Hive.registerAdapter(ResearchEntryAdapter());
-  }
-  if (!Hive.isAdapterRegistered(participantRecordTypeId)) {
-    Hive.registerAdapter(ParticipantRecordAdapter());
+  if (!Hive.isAdapterRegistered(susEntryTypeId)) {
+    Hive.registerAdapter(SusEntryAdapter());
   }
   await Hive.openBox<PerformanceSummary>('performance_box');
   await Hive.openBox<BookingRecord>('booking_box');
-  await Hive.openBox<ResearchEntry>('research_box');
-  await Hive.openBox<ParticipantRecord>('participant_box');
+  await Hive.openBox<LoginSession>('login_session_box');
+  await Hive.openBox<SusEntry>('sus_box');
+  await Hive.openBox<String>('app_meta');
 
   // Initialize navigation service with router
   final navigationService = VoiceAssistantInjection.getNavigationService();

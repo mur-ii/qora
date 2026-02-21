@@ -348,15 +348,9 @@ class PreferencesSection extends StatelessWidget {
         ),
         _MenuItem(
           icon: Icons.assignment_outlined,
-          title: 'Research Log',
-          subtitle: 'Participant notes and scores',
+          title: 'Log Penelitian',
+          subtitle: 'Daftar sesi testing',
           onTap: () => context.push('/research-log'),
-        ),
-        _MenuItem(
-          icon: Icons.analytics_outlined,
-          title: 'Performance Summary',
-          subtitle: 'GUI vs VUI session history',
-          onTap: () => context.push('/performance-summary'),
         ),
         _MenuItemWithToggle(
           icon: Icons.notifications_outlined,
