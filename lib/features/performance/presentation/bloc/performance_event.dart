@@ -14,11 +14,16 @@ enum PerformanceStep { search, selection, payment, confirmation }
 class StartSession extends PerformanceEvent {
   final InteractionMethod method;
   final String? searchedLocation;
+  final String? scenarioId;
 
-  const StartSession({required this.method, this.searchedLocation});
+  const StartSession({
+    required this.method,
+    this.searchedLocation,
+    this.scenarioId,
+  });
 
   @override
-  List<Object?> get props => [method, searchedLocation];
+  List<Object?> get props => [method, searchedLocation, scenarioId];
 }
 
 class AddClick extends PerformanceEvent {

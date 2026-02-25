@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/services/alpha_test_logger.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../data/services/agentic_ai_service.dart';
 import '../../domain/entities/function_call_entity.dart';
@@ -25,6 +26,36 @@ class VoiceAssistantBloc
   final AgenticAIService agenticAIService;
   final Map<String, StringBuffer> _functionArgBuffers = {};
   final Map<String, String> _functionArgNames = {};
+  final AlphaTestLogger _logger = AlphaTestLogger.instance;
+  final Map<String, DateTime> _functionStartTimes = {};
+  Stopwatch? _sessionCreateStopwatch;
+  Stopwatch? _webrtcInitStopwatch;
+  DateTime? _lastUserTranscriptAt;
+
+  String _mapIntent(String functionName) {
+    switch (functionName) {
+      case 'search_hotels':
+        return 'search_hotel';
+      case 'get_hotel_details':
+        return 'view_hotel_detail';
+      case 'select_room':
+        return 'select_room';
+      case 'check_availability':
+        return 'check_availability';
+      case 'get_pricing':
+        return 'get_pricing';
+      case 'create_booking':
+        return 'create_booking';
+      case 'confirm_booking':
+        return 'confirm_booking';
+      case 'navigate_to_screen':
+        return 'navigate';
+      case 'update_booking_step':
+        return 'update_booking_step';
+      default:
+        return functionName;
+    }
+  }
 
   VoiceAssistantBloc({
     required this.createSessionUseCase,
@@ -61,14 +92,23 @@ class VoiceAssistantBloc
 
       // Step 1: Create session
       AppLogger.info('VoiceAssistant', 'Starting voice assistant session');
+      _sessionCreateStopwatch = Stopwatch()..start();
       final session = await createSessionUseCase.call(
         model: event.model ?? 'gpt-realtime-mini-2025-12-15',
         voice: event.voice ?? 'verse',
         tools: agenticAIService.getFunctionDefinitions(),
         instructions: agenticAIService.getSystemInstructions(),
       );
+      _sessionCreateStopwatch?.stop();
+      if (_sessionCreateStopwatch != null) {
+        _logger.logRealtimeMetric(
+          'realtime_session_create_ms',
+          _sessionCreateStopwatch!.elapsedMilliseconds,
+        );
+      }
 
       // Step 2: Initialize WebRTC
+      _webrtcInitStopwatch = Stopwatch()..start();
       await initializeWebRTCUseCase.call(
         clientSecret: session.clientSecret,
         onConnectionStateChange: (connectionState) {
@@ -188,6 +228,21 @@ class VoiceAssistantBloc
     TranscriptReceived event,
     Emitter<VoiceAssistantState> emit,
   ) async {
+    if (event.isUser) {
+      _lastUserTranscriptAt = DateTime.now();
+    } else if (_lastUserTranscriptAt != null) {
+      final deltaMs = DateTime.now()
+          .difference(_lastUserTranscriptAt!)
+          .inMilliseconds;
+      _logger.logRealtimeMetric('audio_response_latency_ms', deltaMs);
+    }
+
+    _logger.logConversationTurn(
+      isUser: event.isUser,
+      text: event.transcript,
+      intent: event.isUser ? null : null,
+    );
+
     final updatedMessages = List<ConversationMessage>.from(state.messages)
       ..add(
         ConversationMessage(
@@ -206,6 +261,9 @@ class VoiceAssistantBloc
   ) async {
     try {
       emit(state.copyWith(isProcessing: true));
+
+      _functionStartTimes[event.callId] = DateTime.now();
+      _logger.logIntent(intent: _mapIntent(event.name), source: 'function');
 
       _functionArgBuffers.remove(event.callId);
       _functionArgNames.remove(event.callId);
@@ -243,6 +301,16 @@ class VoiceAssistantBloc
 
       final result = await agenticAIService.executeFunction(functionCall);
 
+      final startedAt = _functionStartTimes.remove(event.callId);
+      if (startedAt != null) {
+        _logger.logFunctionCall(
+          name: event.name,
+          arguments: event.arguments,
+          durationMs: DateTime.now().difference(startedAt).inMilliseconds,
+          success: true,
+        );
+      }
+
       // Send result back to OpenAI
       await sendFunctionResultUseCase.call(result);
 
@@ -276,6 +344,17 @@ class VoiceAssistantBloc
         error: e,
         stackTrace: stackTrace,
       );
+      final startedAt = _functionStartTimes.remove(event.callId);
+      if (startedAt != null) {
+        _logger.logFunctionCall(
+          name: event.name,
+          arguments: event.arguments,
+          durationMs: DateTime.now().difference(startedAt).inMilliseconds,
+          success: false,
+          error: e.toString(),
+        );
+      }
+      _logger.logError(type: 'function_call', message: e.toString());
       emit(state.copyWith(isProcessing: false, error: 'Function error: $e'));
     }
   }
@@ -324,6 +403,29 @@ class VoiceAssistantBloc
       if (transcript != null && transcript.isNotEmpty) {
         add(TranscriptReceived(transcript: transcript, isUser: false));
       }
+      return;
+    }
+
+    if (eventType == 'response.done') {
+      final response = event.event['response'] as Map<String, dynamic>?;
+      final usage = response?['usage'] as Map<String, dynamic>?;
+      final responseId = response?['id']?.toString();
+      if (usage != null) {
+        final inputTokens = usage['input_tokens'] as int? ?? 0;
+        final outputTokens = usage['output_tokens'] as int? ?? 0;
+        _logger.recordTokenUsage(
+          inputTokens: inputTokens,
+          outputTokens: outputTokens,
+          responseId: responseId,
+        );
+      }
+      return;
+    }
+
+    if (eventType == 'error') {
+      final error = event.event['error'];
+      _logger.logError(type: 'openai_realtime', message: error?.toString());
+      return;
     }
   }
 
@@ -356,6 +458,13 @@ class VoiceAssistantBloc
       ),
     );
     if (status == VoiceConnectionStatus.connected) {
+      if (_webrtcInitStopwatch != null && _webrtcInitStopwatch!.isRunning) {
+        _webrtcInitStopwatch!.stop();
+        _logger.logRealtimeMetric(
+          'webrtc_connect_ms',
+          _webrtcInitStopwatch!.elapsedMilliseconds,
+        );
+      }
       AppLogger.info('VoiceAssistant', 'Connection state: connected');
     } else if (status == VoiceConnectionStatus.failed) {
       AppLogger.warn('VoiceAssistant', 'Connection state: failed');

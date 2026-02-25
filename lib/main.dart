@@ -6,6 +6,7 @@ import 'core/config/env_config.dart';
 import 'core/di/auth_injection.dart';
 import 'core/di/performance_injection.dart';
 import 'core/router/app_router.dart';
+import 'core/services/alpha_test_logger.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/booking/data/models/booking_record.dart';
@@ -48,6 +49,7 @@ void main() async {
   await Hive.openBox<LoginSession>('login_session_box');
   await Hive.openBox<SusEntry>('sus_box');
   await Hive.openBox<String>('app_meta');
+  await AlphaTestLogger.instance.initialize();
 
   // Initialize navigation service with router
   final navigationService = VoiceAssistantInjection.getNavigationService();

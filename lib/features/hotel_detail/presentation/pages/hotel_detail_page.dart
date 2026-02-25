@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/performance_tracked_page.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
 import '../../data/datasources/hotel_detail_remote_datasource.dart';
@@ -77,13 +78,16 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
             });
           }
         },
-        child: _HotelDetailPageContent(
-          selectedRoomId: _selectedRoomId,
-          onRoomSelected: (roomId) {
-            setState(() {
-              _selectedRoomId = roomId;
-            });
-          },
+        child: PerformanceTrackedPage(
+          pageName: 'Detail Hotel Page',
+          child: _HotelDetailPageContent(
+            selectedRoomId: _selectedRoomId,
+            onRoomSelected: (roomId) {
+              setState(() {
+                _selectedRoomId = roomId;
+              });
+            },
+          ),
         ),
       ),
     );

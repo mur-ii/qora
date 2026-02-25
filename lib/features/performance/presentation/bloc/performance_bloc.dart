@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/services/alpha_test_logger.dart';
 import '../../../research_log/domain/repositories/login_session_repository.dart';
 import '../../data/models/performance_summary.dart';
 import '../../domain/repositories/performance_repository.dart';
@@ -9,6 +10,7 @@ import 'performance_state.dart';
 class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
   final PerformanceRepository repository;
   final LoginSessionRepository loginSessionRepository;
+  final AlphaTestLogger _logger = AlphaTestLogger.instance;
 
   PerformanceSummary? _activeSession;
   final Map<PerformanceStep, DateTime> _stepStarts = {};
@@ -40,6 +42,7 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
         _activeSession = _activeSession!.copyWith(
           searchedLocation: event.searchedLocation,
         );
+        _logger.updateSearchedLocation(event.searchedLocation!);
       }
       emit(PerformanceSessionActive(_activeSession!));
       return;
@@ -70,6 +73,12 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     );
 
     _activeSession = session;
+    _logger.startSession(
+      method: event.method,
+      searchedLocation: event.searchedLocation,
+      scenarioId: event.scenarioId,
+      testerSessionId: testerSessionId,
+    );
     emit(PerformanceSessionActive(session));
   }
 
@@ -82,6 +91,7 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     _activeSession = _activeSession!.copyWith(
       totalClicks: _activeSession!.totalClicks + 1,
     );
+    _logger.logInteraction('tap');
     emit(PerformanceSessionActive(_activeSession!));
   }
 
@@ -94,6 +104,7 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     _activeSession = _activeSession!.copyWith(
       totalClicks: _activeSession!.totalClicks + 1,
     );
+    _logger.logInteraction('scroll');
     emit(PerformanceSessionActive(_activeSession!));
   }
 
@@ -109,6 +120,7 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     _activeSession = _activeSession!.copyWith(
       totalVoiceCommands: _activeSession!.totalVoiceCommands + 1,
     );
+    _logger.logInteraction('voice_command');
     emit(PerformanceSessionActive(_activeSession!));
   }
 
@@ -124,6 +136,7 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     );
 
     _activeSession = _activeSession!.copyWith(errorTypes: updatedErrorTypes);
+    _logger.logError(type: 'correction', message: event.toString());
     emit(PerformanceSessionActive(_activeSession!));
   }
 
@@ -140,6 +153,7 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
       errorsCount: _activeSession!.errorsCount + 1,
       errorTypes: updatedErrorTypes,
     );
+    _logger.logError(type: event.errorType ?? 'unknown');
     emit(PerformanceSessionActive(_activeSession!));
   }
 
@@ -150,6 +164,7 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     }
 
     _stepStarts[event.step] = DateTime.now();
+    _logger.logStepStart(event.step.name);
     emit(PerformanceSessionActive(_activeSession!));
   }
 
@@ -195,6 +210,7 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
         break;
     }
 
+    _logger.logStepEnd(event.step.name, duration);
     emit(PerformanceSessionActive(_activeSession!));
   }
 
@@ -232,6 +248,7 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
 
     try {
       await repository.saveSession(finalized);
+      await _logger.endSession(summary: finalized);
       _activeSession = null;
       emit(PerformanceSessionSaved(finalized));
 
@@ -324,6 +341,7 @@ class PerformanceBloc extends Bloc<PerformanceEvent, PerformanceState> {
     _activeSession = _activeSession!.copyWith(
       searchedLocation: event.searchedLocation,
     );
+    _logger.updateSearchedLocation(event.searchedLocation);
     emit(PerformanceSessionActive(_activeSession!));
   }
 

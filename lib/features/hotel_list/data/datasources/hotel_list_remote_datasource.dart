@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
+import '../../../../core/services/alpha_test_logger.dart';
 import '../models/hotel_model.dart';
 
 abstract class HotelListRemoteDataSource {
@@ -11,6 +12,7 @@ abstract class HotelListRemoteDataSource {
 class HotelListRemoteDataSourceImpl implements HotelListRemoteDataSource {
   @override
   Future<List<HotelModel>> getHotels() async {
+    final stopwatch = Stopwatch()..start();
     // Simulate network delay
     await Future.delayed(const Duration(milliseconds: 800));
 
@@ -21,6 +23,12 @@ class HotelListRemoteDataSourceImpl implements HotelListRemoteDataSource {
     final Map<String, dynamic> data = json.decode(response);
 
     final List<dynamic> hotelsJson = data['hotels'];
-    return hotelsJson.map((json) => HotelModel.fromJson(json)).toList();
+    final result = hotelsJson.map((json) => HotelModel.fromJson(json)).toList();
+    stopwatch.stop();
+    AlphaTestLogger.instance.logNetworkLatency(
+      endpoint: 'hotel_list',
+      durationMs: stopwatch.elapsedMilliseconds,
+    );
+    return result;
   }
 }
