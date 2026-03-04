@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/services/navigation_service.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../../booking/domain/entities/booking_entity.dart';
@@ -394,15 +395,15 @@ class AgenticAIService {
             'screen_name': {
               'type': 'string',
               'enum': [
-                'home',
-                'hotel_list',
-                'hotel_detail',
-                'booking_summary',
-                'booking_guest_info',
-                'booking_payment',
-                'booking_confirmation',
-                'search',
-                'notifications',
+                AppRoutes.screenHome,
+                AppRoutes.screenHotelList,
+                AppRoutes.screenHotelDetail,
+                AppRoutes.screenBookingSummary,
+                AppRoutes.screenBookingGuestInfo,
+                AppRoutes.screenBookingPayment,
+                AppRoutes.screenBookingConfirmation,
+                AppRoutes.screenSearch,
+                AppRoutes.screenNotifications,
               ],
             },
             'params': {'type': 'object', 'description': 'Screen parameters'},
@@ -552,13 +553,13 @@ class AgenticAIService {
 
     // Navigate to hotel list
     await navigationService.navigateTo(
-      screenName: 'hotel_list',
+      screenName: AppRoutes.screenHotelList,
       params: normalizedArgs,
     );
 
     _updateAgentState(
       currentStep: BookingStep.selecting,
-      currentScreen: 'hotel_list',
+      currentScreen: AppRoutes.screenHotelList,
     );
 
     final assistantPrompt = _buildHotelListSpeech(
@@ -596,11 +597,11 @@ class AgenticAIService {
 
     // Navigate to hotel detail
     await navigationService.navigateTo(
-      screenName: 'hotel_detail',
+      screenName: AppRoutes.screenHotelDetail,
       params: {'hotel_id': hotelId},
     );
 
-    _updateAgentState(currentScreen: 'hotel_detail');
+    _updateAgentState(currentScreen: AppRoutes.screenHotelDetail);
 
     return {
       'success': true,
@@ -906,11 +907,11 @@ class AgenticAIService {
 
     // Navigate to booking summary
     await navigationService.navigateTo(
-      screenName: 'booking_summary',
+      screenName: AppRoutes.screenBookingSummary,
       params: navigationParams,
     );
 
-    _updateAgentState(currentScreen: 'booking_summary');
+    _updateAgentState(currentScreen: AppRoutes.screenBookingSummary);
 
     return {
       'success': true,
@@ -981,9 +982,9 @@ Terima kasih telah menggunakan layanan kami. Semoga Anda menikmati pengalaman me
         ? Map<String, dynamic>.from(params)
         : <String, dynamic>{};
 
-    if (screenName == 'booking_payment' ||
-        screenName == 'booking_guest_info' ||
-        screenName == 'booking_confirmation') {
+    if (screenName == AppRoutes.screenBookingPayment ||
+        screenName == AppRoutes.screenBookingGuestInfo ||
+        screenName == AppRoutes.screenBookingConfirmation) {
       if (!resolvedParams.containsKey('booking')) {
         final bookingEntity = _buildBookingEntityFromCache();
         if (bookingEntity != null) {

@@ -25,9 +25,7 @@ class DestinationSection extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () {
-                  // TODO: Navigate to all destinations
-                },
+                onPressed: null,
                 child: Text(
                   'Lihat Semua',
                   style: AppTypography.labelLarge.copyWith(
@@ -43,7 +41,11 @@ class DestinationSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: GridView.builder(
             shrinkWrap: true,
+            primary: false,
             physics: const NeverScrollableScrollPhysics(),
+            cacheExtent: 600,
+            addAutomaticKeepAlives: false,
+            addRepaintBoundaries: true,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 12,
@@ -53,10 +55,7 @@ class DestinationSection extends StatelessWidget {
             itemCount: _destinations.length,
             itemBuilder: (context, index) {
               final destination = _destinations[index];
-              return GestureDetector(
-                onTap: () {
-                  // TODO: Navigate to province hotels
-                },
+              return RepaintBoundary(
                 child: DestinationCard(
                   key: ValueKey(destination['name']),
                   name: destination['name']!,
@@ -71,7 +70,7 @@ class DestinationSection extends StatelessWidget {
   }
 }
 
-final List<Map<String, String>> _destinations = [
+const List<Map<String, String>> _destinations = [
   {
     'name': 'Bali',
     'imageUrl':

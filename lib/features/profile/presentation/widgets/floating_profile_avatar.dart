@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../../domain/entities/profile_entity.dart';
 
 /// Floating profile avatar with level indicator
@@ -14,7 +15,7 @@ class FloatingProfileAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/profile'),
+      onTap: () => context.push(AppRoutes.profilePath),
       child: Container(
         width: 36,
         height: 36,

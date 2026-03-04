@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -63,7 +64,7 @@ class AuthHomePage extends StatelessWidget {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthUnauthenticated) {
-            context.go('/login');
+            context.go(AppRoutes.loginPath);
           }
         },
         child: Center(
@@ -75,7 +76,7 @@ class AuthHomePage extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF3B82F6).withOpacity(0.1),
+                    color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -127,7 +128,6 @@ class AuthHomePage extends StatelessWidget {
                       _buildFeatureItem('✓ Email & Password Authentication'),
                       _buildFeatureItem('✓ Google Sign-In (Mock)'),
                       _buildFeatureItem('✓ User Registration'),
-                      _buildFeatureItem('✓ Forgot Password'),
                       _buildFeatureItem(
                         '✓ Clean Architecture (Domain, Data, Presentation)',
                       ),

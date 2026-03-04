@@ -45,6 +45,25 @@ class AuthMockService {
     return user;
   }
 
+  Future<UserModel> loginWithName(String fullName) async {
+    await Future.delayed(const Duration(milliseconds: 600));
+
+    if (fullName.trim().isEmpty) {
+      throw Exception('Full name is required');
+    }
+
+    // Mock quick access flow for test sessions
+    final user = UserModel(
+      id: 'tester_${DateTime.now().millisecondsSinceEpoch}',
+      email: '',
+      name: fullName.trim(),
+      photoUrl: null,
+    );
+
+    _currentUser = user;
+    return user;
+  }
+
   Future<UserModel> register(String email, String password, String name) async {
     await Future.delayed(const Duration(seconds: 2));
 
@@ -79,20 +98,6 @@ class AuthMockService {
   Future<void> logout() async {
     await Future.delayed(const Duration(milliseconds: 500));
     _currentUser = null;
-  }
-
-  Future<void> forgotPassword(String email) async {
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (email.isEmpty) {
-      throw Exception('Email is required');
-    }
-
-    if (!_isValidEmail(email)) {
-      throw Exception('Invalid email format');
-    }
-
-    // Mock password reset email sent
   }
 
   UserModel? getCurrentUser() {

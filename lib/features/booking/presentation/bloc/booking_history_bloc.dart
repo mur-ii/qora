@@ -37,7 +37,7 @@ class BookingHistoryBloc
 
       emit(BookingHistoryLoaded(ongoing: ongoing, history: history));
     } catch (e) {
-      emit(BookingHistoryError(e.toString()));
+      emit(BookingHistoryError(e.toString().replaceAll('Exception: ', '')));
     }
   }
 }

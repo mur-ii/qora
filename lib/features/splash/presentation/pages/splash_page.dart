@@ -2,10 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/utils/lottie_loader.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -15,16 +20,38 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  late final Future<LottieComposition?> _lottieCompositionFuture;
+  Timer? _navigationTimer;
+
   @override
   void initState() {
     super.initState();
-    _navigateToHome();
+    _lottieCompositionFuture = _loadLottieComposition();
+    context.read<AuthBloc>().add(const CheckAuthStatusEvent());
+    _navigationTimer = Timer(const Duration(seconds: 2), _handleNavigation);
   }
 
-  void _navigateToHome() {
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) context.goNamed('login');
-    });
+  @override
+  void dispose() {
+    _navigationTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<LottieComposition?> _loadLottieComposition() async {
+    final data = await rootBundle.load('assets/lotties/ai-cpu.lottie');
+    return LottieLoader.lottieLoader(data.buffer.asUint8List());
+  }
+
+  void _handleNavigation() {
+    if (!mounted) {
+      return;
+    }
+
+    final authState = context.read<AuthBloc>().state;
+    final target = authState is AuthAuthenticated
+      ? AppRoutes.homeName
+      : AppRoutes.loginName;
+    context.goNamed(target);
   }
 
   @override
@@ -52,8 +79,8 @@ class _SplashPageState extends State<SplashPage> {
 
   Widget _buildLottieAnimation(ColorScheme colorScheme) {
     return Center(
-      child: FutureBuilder<ByteData>(
-        future: rootBundle.load('assets/lotties/ai-cpu.lottie'),
+      child: FutureBuilder<LottieComposition?>(
+        future: _lottieCompositionFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return SizedBox(
@@ -65,37 +92,30 @@ class _SplashPageState extends State<SplashPage> {
             );
           }
 
-          return FutureBuilder<LottieComposition?>(
-            future: LottieLoader.lottieLoader(
-              snapshot.data!.buffer.asUint8List(),
-            ),
-            builder: (context, lottieSnapshot) {
-              if (lottieSnapshot.hasData && lottieSnapshot.data != null) {
-                return SizedBox(
-                  width: 220,
-                  child: Lottie(
-                    composition: lottieSnapshot.data,
-                    animate: true,
-                    repeat: true,
-                    fit: BoxFit.contain,
-                  ),
-                );
-              }
+          if (snapshot.data != null) {
+            return SizedBox(
+              width: 220,
+              child: Lottie(
+                composition: snapshot.data,
+                animate: true,
+                repeat: true,
+                fit: BoxFit.contain,
+              ),
+            );
+          }
 
-              return Container(
-                width: 220,
-                height: 220,
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.hotel_rounded,
-                  size: 100,
-                  color: colorScheme.primary,
-                ),
-              );
-            },
+          return Container(
+            width: 220,
+            height: 220,
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.hotel_rounded,
+              size: 100,
+              color: colorScheme.primary,
+            ),
           );
         },
       ),

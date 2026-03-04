@@ -3,13 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/di/hotel_list_injection.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_toast.dart';
-import '../../../../core/widgets/performance_tracked_page.dart';
-import '../../data/datasources/hotel_list_remote_datasource.dart';
-import '../../data/repositories/hotel_list_repository_impl.dart';
-import '../../domain/usecases/get_hotel_list.dart';
 import '../bloc/hotel_list_bloc.dart';
 import '../bloc/hotel_list_event.dart';
 import '../bloc/hotel_list_state.dart';
@@ -43,10 +41,7 @@ class _HotelListPageState extends State<HotelListPage> {
   @override
   void initState() {
     super.initState();
-    final dataSource = HotelListRemoteDataSourceImpl();
-    final repository = HotelListRepositoryImpl(dataSource);
-    final useCase = GetHotelList(repository);
-    _hotelListBloc = HotelListBloc(getHotelList: useCase)
+    _hotelListBloc = HotelListInjection.createBloc()
       ..add(LoadHotelListEvent(location: widget.location));
   }
 
@@ -95,6 +90,8 @@ class _HotelListPageContent extends StatelessWidget {
   final String? rooms;
   final String? guests;
 
+  static final DateFormat _shortDateFormatter = DateFormat('dd MMM');
+
   const _HotelListPageContent({
     this.location,
     this.checkIn,
@@ -105,206 +102,202 @@ class _HotelListPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PerformanceTrackedPage(
-      pageName: 'List Hotel Page',
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.surface,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-            tooltip: 'Kembali',
-            onPressed: () {
-              final router = GoRouter.of(context);
-              if (router.canPop()) {
-                router.pop();
-              } else {
-                router.go('/');
-              }
-            },
-          ),
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${location ?? 'Hotel'} · ${_formatDateRangeShort()}',
-                style: AppTypography.titleMedium.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          tooltip: 'Kembali',
+          onPressed: () {
+            final router = GoRouter.of(context);
+            if (router.canPop()) {
+              router.pop();
+            } else {
+              router.go(AppRoutes.homePath);
+            }
+          },
         ),
-        body: Column(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Filter buttons row
-            Container(
-              color: AppColors.surface,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _FilterButton(
-                      icon: Icons.sort,
-                      label: 'Sortir',
-                      onTap: () => _showSortOptions(context),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _FilterButton(
-                      icon: Icons.tune,
-                      label: 'Filter',
-                      onTap: () => _showFilterOptions(context),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _FilterButton(
-                      icon: Icons.map_outlined,
-                      label: 'Peta',
-                      onTap: () {
-                        // TODO: Implement map view
-                        AppToast.showInfo(context, 'Peta akan segera hadir');
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Accommodation count
-            BlocBuilder<HotelListBloc, HotelListState>(
-              buildWhen: (previous, current) =>
-                  previous.runtimeType != current.runtimeType ||
-                  (current is HotelListLoaded &&
-                      previous is HotelListLoaded &&
-                      current.hotels.length != previous.hotels.length),
-              builder: (context, state) {
-                if (state is HotelListLoaded) {
-                  return Container(
-                    width: double.infinity,
-                    color: AppColors.surface,
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: Text(
-                      '${state.hotels.length} akomodasi',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-            Expanded(
-              child: BlocBuilder<HotelListBloc, HotelListState>(
-                buildWhen: (previous, current) {
-                  // Only rebuild when state type changes or hotel list changes
-                  if (previous.runtimeType != current.runtimeType) return true;
-                  if (current is HotelListLoaded &&
-                      previous is HotelListLoaded) {
-                    return current.hotels != previous.hotels;
-                  }
-                  return false;
-                },
-                builder: (context, state) {
-                  if (state is HotelListLoading) {
-                    return const _HotelListLoadingView();
-                  }
-
-                  if (state is HotelListError) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: AppColors.error,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Gagal memuat hotel',
-                            style: AppTypography.titleLarge.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            state.message,
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () {
-                              context.read<HotelListBloc>().add(
-                                LoadHotelListEvent(location: location),
-                              );
-                            },
-                            child: const Text('Coba Lagi'),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  if (state is HotelListEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.hotel_outlined,
-                            size: 64,
-                            color: AppColors.textTertiary,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Tidak ada hotel ditemukan',
-                            style: AppTypography.titleLarge.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Coba sesuaikan pencarian atau filter Anda',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-
-                  if (state is HotelListLoaded) {
-                    final hotels = state.hotels;
-                    return ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: hotels.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        final hotel = hotels[index];
-                        return HotelCard(key: ValueKey(hotel.id), hotel: hotel);
-                      },
-                    );
-                  }
-
-                  return const SizedBox();
-                },
+            Text(
+              '${location ?? 'Hotel'} · ${_formatDateRangeShort()}',
+              style: AppTypography.titleMedium.copyWith(
+                fontWeight: FontWeight.w500,
+                color: AppColors.textPrimary,
               ),
             ),
           ],
         ),
+      ),
+      body: Column(
+        children: [
+          // Filter buttons row
+          Container(
+            color: AppColors.surface,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _FilterButton(
+                    icon: Icons.sort,
+                    label: 'Sortir',
+                    onTap: () => _showSortOptions(context),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _FilterButton(
+                    icon: Icons.tune,
+                    label: 'Filter',
+                    onTap: () => _showFilterOptions(context),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _FilterButton(
+                    icon: Icons.map_outlined,
+                    label: 'Peta',
+                    onTap: () {
+         
+                      AppToast.showInfo(context, 'Peta akan segera hadir');
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Accommodation count
+          BlocBuilder<HotelListBloc, HotelListState>(
+            buildWhen: (previous, current) =>
+                previous.runtimeType != current.runtimeType ||
+                (current is HotelListLoaded &&
+                    previous is HotelListLoaded &&
+                    current.hotels.length != previous.hotels.length),
+            builder: (context, state) {
+              if (state is HotelListLoaded) {
+                return Container(
+                  width: double.infinity,
+                  color: AppColors.surface,
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  child: Text(
+                    '${state.hotels.length} akomodasi',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          Expanded(
+            child: BlocBuilder<HotelListBloc, HotelListState>(
+              buildWhen: (previous, current) {
+                // Only rebuild when state type changes or hotel list changes
+                if (previous.runtimeType != current.runtimeType) return true;
+                if (current is HotelListLoaded && previous is HotelListLoaded) {
+                  return current.hotels != previous.hotels;
+                }
+                return false;
+              },
+              builder: (context, state) {
+                if (state is HotelListLoading) {
+                  return const _HotelListLoadingView();
+                }
+
+                if (state is HotelListError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Gagal memuat hotel',
+                          style: AppTypography.titleLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          state.message,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.read<HotelListBloc>().add(
+                              LoadHotelListEvent(location: location),
+                            );
+                          },
+                          child: const Text('Coba Lagi'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                if (state is HotelListEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.hotel_outlined,
+                          size: 64,
+                          color: AppColors.textTertiary,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Tidak ada hotel ditemukan',
+                          style: AppTypography.titleLarge.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Coba sesuaikan pencarian atau filter Anda',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                if (state is HotelListLoaded) {
+                  final hotels = state.hotels;
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: hotels.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final hotel = hotels[index];
+                      return HotelCard(key: ValueKey(hotel.id), hotel: hotel);
+                    },
+                  );
+                }
+
+                return const SizedBox();
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -329,342 +322,334 @@ class _HotelListPageContent extends StatelessWidget {
       ),
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
-          return PerformanceTrackedPage(
-            pageName: 'Filter Bottom Sheet',
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(context).size.height * 0.8,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Filter',
-                        style: AppTypography.titleLarge.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            selectedBudgetKey = null;
-                            selectedTypes.clear();
-                            selectedAmenities.clear();
-                          });
-                          hotelListBloc.add(const ResetHotelFiltersEvent());
-                        },
-                        child: const Text('Reset'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Budget Filter
-                          Text(
-                            'Budget',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _FilterChip(
-                                label: '< Rp 200.000',
-                                isSelected: selectedBudgetKey == 'lt_200k',
-                                onSelected: (selected) {
-                                  setState(() {
-                                    selectedBudgetKey = selected
-                                        ? 'lt_200k'
-                                        : null;
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'Rp 200.000 - Rp 500.000',
-                                isSelected: selectedBudgetKey == '200_500k',
-                                onSelected: (selected) {
-                                  setState(() {
-                                    selectedBudgetKey = selected
-                                        ? '200_500k'
-                                        : null;
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'Rp 500.000 - Rp 1.000.000',
-                                isSelected: selectedBudgetKey == '500_1000k',
-                                onSelected: (selected) {
-                                  setState(() {
-                                    selectedBudgetKey = selected
-                                        ? '500_1000k'
-                                        : null;
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: '> Rp 1.000.000',
-                                isSelected: selectedBudgetKey == 'gt_1000k',
-                                onSelected: (selected) {
-                                  setState(() {
-                                    selectedBudgetKey = selected
-                                        ? 'gt_1000k'
-                                        : null;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Accommodation Type Filter
-                          Text(
-                            'Tipe Akomodasi',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _FilterChip(
-                                label: 'Hotel',
-                                isSelected: selectedTypes.contains('hotel'),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedTypes.add('hotel');
-                                    } else {
-                                      selectedTypes.remove('hotel');
-                                    }
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'Apartemen',
-                                isSelected: selectedTypes.contains('apartemen'),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedTypes.add('apartemen');
-                                    } else {
-                                      selectedTypes.remove('apartemen');
-                                    }
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'Guest House',
-                                isSelected: selectedTypes.contains(
-                                  'guest_house',
-                                ),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedTypes.add('guest_house');
-                                    } else {
-                                      selectedTypes.remove('guest_house');
-                                    }
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'Villa',
-                                isSelected: selectedTypes.contains('villa'),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedTypes.add('villa');
-                                    } else {
-                                      selectedTypes.remove('villa');
-                                    }
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'Resort',
-                                isSelected: selectedTypes.contains('resort'),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedTypes.add('resort');
-                                    } else {
-                                      selectedTypes.remove('resort');
-                                    }
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Room Facilities Filter
-                          Text(
-                            'Fasilitas Kamar',
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _FilterChip(
-                                label: 'WiFi Gratis',
-                                isSelected: selectedAmenities.contains('wifi'),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedAmenities.add('wifi');
-                                    } else {
-                                      selectedAmenities.remove('wifi');
-                                    }
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'AC',
-                                isSelected: selectedAmenities.contains(
-                                  'air conditioning',
-                                ),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedAmenities.add('air conditioning');
-                                    } else {
-                                      selectedAmenities.remove(
-                                        'air conditioning',
-                                      );
-                                    }
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'TV',
-                                isSelected: selectedAmenities.contains('tv'),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedAmenities.add('tv');
-                                    } else {
-                                      selectedAmenities.remove('tv');
-                                    }
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'Kamar Mandi Dalam',
-                                isSelected: selectedAmenities.contains(
-                                  'bathroom',
-                                ),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedAmenities.add('bathroom');
-                                    } else {
-                                      selectedAmenities.remove('bathroom');
-                                    }
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'Breakfast',
-                                isSelected: selectedAmenities.contains(
-                                  'restaurant',
-                                ),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedAmenities.add('restaurant');
-                                    } else {
-                                      selectedAmenities.remove('restaurant');
-                                    }
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'Kolam Renang',
-                                isSelected: selectedAmenities.contains('pool'),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedAmenities.add('pool');
-                                    } else {
-                                      selectedAmenities.remove('pool');
-                                    }
-                                  });
-                                },
-                              ),
-                              _FilterChip(
-                                label: 'Parkir',
-                                isSelected: selectedAmenities.contains(
-                                  'parking',
-                                ),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    if (selected) {
-                                      selectedAmenities.add('parking');
-                                    } else {
-                                      selectedAmenities.remove('parking');
-                                    }
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
+          return Container(
+            padding: const EdgeInsets.all(24),
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Filter',
+                      style: AppTypography.titleLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
+                    TextButton(
                       onPressed: () {
-                        final filters = HotelListFilters(
-                          budgetKey: selectedBudgetKey,
-                          types: selectedTypes,
-                          amenities: selectedAmenities,
-                        );
-
-                        if (filters.isEmpty) {
-                          hotelListBloc.add(const ResetHotelFiltersEvent());
-                        } else {
-                          hotelListBloc.add(ApplyHotelFiltersEvent(filters));
-                        }
-                        Navigator.pop(context);
+                        setState(() {
+                          selectedBudgetKey = null;
+                          selectedTypes.clear();
+                          selectedAmenities.clear();
+                        });
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                      child: const Text('Reset'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Budget Filter
+                        Text(
+                          'Budget',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _FilterChip(
+                              label: '< Rp 200.000',
+                              isSelected: selectedBudgetKey == 'lt_200k',
+                              onSelected: (selected) {
+                                setState(() {
+                                  selectedBudgetKey = selected
+                                      ? 'lt_200k'
+                                      : null;
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Rp 200.000 - Rp 500.000',
+                              isSelected: selectedBudgetKey == '200_500k',
+                              onSelected: (selected) {
+                                setState(() {
+                                  selectedBudgetKey = selected
+                                      ? '200_500k'
+                                      : null;
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Rp 500.000 - Rp 1.000.000',
+                              isSelected: selectedBudgetKey == '500_1000k',
+                              onSelected: (selected) {
+                                setState(() {
+                                  selectedBudgetKey = selected
+                                      ? '500_1000k'
+                                      : null;
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: '> Rp 1.000.000',
+                              isSelected: selectedBudgetKey == 'gt_1000k',
+                              onSelected: (selected) {
+                                setState(() {
+                                  selectedBudgetKey = selected
+                                      ? 'gt_1000k'
+                                      : null;
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Accommodation Type Filter
+                        Text(
+                          'Tipe Akomodasi',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _FilterChip(
+                              label: 'Hotel',
+                              isSelected: selectedTypes.contains('hotel'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedTypes.add('hotel');
+                                  } else {
+                                    selectedTypes.remove('hotel');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Apartemen',
+                              isSelected: selectedTypes.contains('apartemen'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedTypes.add('apartemen');
+                                  } else {
+                                    selectedTypes.remove('apartemen');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Guest House',
+                              isSelected: selectedTypes.contains('guest_house'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedTypes.add('guest_house');
+                                  } else {
+                                    selectedTypes.remove('guest_house');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Villa',
+                              isSelected: selectedTypes.contains('villa'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedTypes.add('villa');
+                                  } else {
+                                    selectedTypes.remove('villa');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Resort',
+                              isSelected: selectedTypes.contains('resort'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedTypes.add('resort');
+                                  } else {
+                                    selectedTypes.remove('resort');
+                                  }
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Room Facilities Filter
+                        Text(
+                          'Fasilitas Kamar',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _FilterChip(
+                              label: 'WiFi Gratis',
+                              isSelected: selectedAmenities.contains('wifi'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('wifi');
+                                  } else {
+                                    selectedAmenities.remove('wifi');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'AC',
+                              isSelected: selectedAmenities.contains(
+                                'air conditioning',
+                              ),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('air conditioning');
+                                  } else {
+                                    selectedAmenities.remove(
+                                      'air conditioning',
+                                    );
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'TV',
+                              isSelected: selectedAmenities.contains('tv'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('tv');
+                                  } else {
+                                    selectedAmenities.remove('tv');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Kamar Mandi Dalam',
+                              isSelected: selectedAmenities.contains(
+                                'bathroom',
+                              ),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('bathroom');
+                                  } else {
+                                    selectedAmenities.remove('bathroom');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Breakfast',
+                              isSelected: selectedAmenities.contains(
+                                'restaurant',
+                              ),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('restaurant');
+                                  } else {
+                                    selectedAmenities.remove('restaurant');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Kolam Renang',
+                              isSelected: selectedAmenities.contains('pool'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('pool');
+                                  } else {
+                                    selectedAmenities.remove('pool');
+                                  }
+                                });
+                              },
+                            ),
+                            _FilterChip(
+                              label: 'Parkir',
+                              isSelected: selectedAmenities.contains('parking'),
+                              onSelected: (selected) {
+                                setState(() {
+                                  if (selected) {
+                                    selectedAmenities.add('parking');
+                                  } else {
+                                    selectedAmenities.remove('parking');
+                                  }
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final filters = HotelListFilters(
+                        budgetKey: selectedBudgetKey,
+                        types: selectedTypes,
+                        amenities: selectedAmenities,
+                      );
+
+                      if (filters.isEmpty) {
+                        hotelListBloc.add(const ResetHotelFiltersEvent());
+                      } else {
+                        hotelListBloc.add(ApplyHotelFiltersEvent(filters));
+                      }
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
-                        'Terapkan Filter',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
+                    ),
+                    child: const Text(
+                      'Terapkan Filter',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -678,8 +663,7 @@ class _HotelListPageContent extends StatelessWidget {
     try {
       final checkInDate = DateTime.parse(checkIn!);
       final checkOutDate = DateTime.parse(checkOut!);
-      final formatter = DateFormat('dd MMM');
-      return '${formatter.format(checkInDate)} - ${formatter.format(checkOutDate)}';
+      return '${_shortDateFormatter.format(checkInDate)} - ${_shortDateFormatter.format(checkOutDate)}';
     } catch (e) {
       return '';
     }
@@ -806,7 +790,7 @@ class _FilterChip extends StatelessWidget {
       label: Text(label),
       selected: isSelected,
       onSelected: onSelected,
-      selectedColor: AppColors.primary.withOpacity(0.2),
+      selectedColor: AppColors.primary.withValues(alpha: 0.2),
       checkmarkColor: AppColors.primary,
       labelStyle: TextStyle(
         color: isSelected ? AppColors.primary : AppColors.textSecondary,

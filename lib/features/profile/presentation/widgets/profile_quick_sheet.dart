@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/profile_entity.dart';
 
@@ -63,7 +64,7 @@ class ProfileQuickSheet extends StatelessWidget {
                   title: 'Payment Information',
                   onTap: () {
                     Navigator.pop(context);
-                    context.push('/profile');
+                    context.push(AppRoutes.profilePath);
                   },
                 ),
                 const SizedBox(height: 12),
@@ -72,7 +73,7 @@ class ProfileQuickSheet extends StatelessWidget {
                   title: 'Account Management',
                   onTap: () {
                     Navigator.pop(context);
-                    context.push('/profile');
+                    context.push(AppRoutes.profilePath);
                   },
                 ),
                 const SizedBox(height: 12),
@@ -81,7 +82,7 @@ class ProfileQuickSheet extends StatelessWidget {
                   title: 'Preferences',
                   onTap: () {
                     Navigator.pop(context);
-                    context.push('/profile');
+                    context.push(AppRoutes.profilePath);
                   },
                 ),
                 const SizedBox(height: 12),
@@ -90,7 +91,7 @@ class ProfileQuickSheet extends StatelessWidget {
                   title: 'Help & Support',
                   onTap: () {
                     Navigator.pop(context);
-                    context.push('/profile');
+                    context.push(AppRoutes.profilePath);
                   },
                 ),
               ],
@@ -107,7 +108,7 @@ class ProfileQuickSheet extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  context.push('/profile');
+                  context.push(AppRoutes.profilePath);
                 },
                 style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,

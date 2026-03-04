@@ -57,7 +57,7 @@ class HotelListBloc extends Bloc<HotelListEvent, HotelListState> {
         );
       }
     } catch (e) {
-      emit(HotelListError(e.toString()));
+      emit(HotelListError(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -112,6 +112,7 @@ class HotelListBloc extends Bloc<HotelListEvent, HotelListState> {
   ) {
     if (_allHotels.isEmpty) return;
 
+    _activeSort = null;
     _activeFilters = const HotelListFilters();
     final filteredAndSorted = _applyFiltersAndSort(_allHotels);
 

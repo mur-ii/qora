@@ -64,7 +64,3 @@ class ProfileError extends ProfileState {
   @override
   List<Object?> get props => [message];
 }
-
-class LogoutSuccess extends ProfileState {
-  const LogoutSuccess();
-}

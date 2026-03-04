@@ -28,6 +28,16 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<User> loginWithName(String fullName) async {
+    try {
+      final userModel = await remoteDataSource.loginWithName(fullName);
+      return userModel.toEntity();
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  @override
   Future<User> register(String email, String password, String name) async {
     try {
       final userModel = await remoteDataSource.register(email, password, name);
@@ -41,15 +51,6 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> logout() async {
     try {
       await remoteDataSource.logout();
-    } catch (e) {
-      throw Exception(e.toString().replaceAll('Exception: ', ''));
-    }
-  }
-
-  @override
-  Future<void> forgotPassword(String email) async {
-    try {
-      await remoteDataSource.forgotPassword(email);
     } catch (e) {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }

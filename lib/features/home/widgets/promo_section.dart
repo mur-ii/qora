@@ -25,9 +25,7 @@ class PromoSection extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () {
-                  // TODO: Navigate to all promos
-                },
+                onPressed: null,
                 child: Text(
                   'Lihat Semua',
                   style: AppTypography.labelLarge.copyWith(
@@ -46,10 +44,14 @@ class PromoSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _promos.length,
             itemExtent: 292, // Card width (280) + margin (12)
-            cacheExtent: 600, // Preload cards for smooth scrolling
+            cacheExtent: 900,
+            addAutomaticKeepAlives: false,
+            addRepaintBoundaries: true,
             itemBuilder: (context, index) {
               final promo = _promos[index];
-              return PromoCard(key: ValueKey(promo), imagePath: promo);
+              return RepaintBoundary(
+                child: PromoCard(key: ValueKey(promo), imagePath: promo),
+              );
             },
           ),
         ),
@@ -58,7 +60,7 @@ class PromoSection extends StatelessWidget {
   }
 }
 
-final List<String> _promos = [
+const List<String> _promos = [
   'assets/images/banner-promo-1.webp',
   'assets/images/banner-promo-2.webp',
   'assets/images/banner-promo-3.webp',

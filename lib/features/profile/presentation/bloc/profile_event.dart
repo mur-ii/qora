@@ -11,21 +11,10 @@ class LoadProfileEvent extends ProfileEvent {
   const LoadProfileEvent();
 }
 
-class LoadPaymentMethodsEvent extends ProfileEvent {
-  const LoadPaymentMethodsEvent();
-}
-
-class LoadTransactionsEvent extends ProfileEvent {
-  const LoadTransactionsEvent();
-}
-
-class LoadPreferencesEvent extends ProfileEvent {
-  const LoadPreferencesEvent();
-}
-
 class UpdatePreferencesEvent extends ProfileEvent {
   const UpdatePreferencesEvent({
     this.language,
+    this.notificationsEnabled,
     this.emailNotifications,
     this.pushNotifications,
     this.smsNotifications,
@@ -33,6 +22,7 @@ class UpdatePreferencesEvent extends ProfileEvent {
   });
 
   final String? language;
+  final bool? notificationsEnabled;
   final bool? emailNotifications;
   final bool? pushNotifications;
   final bool? smsNotifications;
@@ -40,14 +30,11 @@ class UpdatePreferencesEvent extends ProfileEvent {
 
   @override
   List<Object?> get props => [
-        language,
-        emailNotifications,
-        pushNotifications,
-        smsNotifications,
-        marketingEmails,
-      ];
-}
-
-class LogoutEvent extends ProfileEvent {
-  const LogoutEvent();
+    language,
+    notificationsEnabled,
+    emailNotifications,
+    pushNotifications,
+    smsNotifications,
+    marketingEmails,
+  ];
 }

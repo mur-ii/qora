@@ -21,6 +21,7 @@ class VoiceAssistantInjection {
   static VoiceAssistantBloc provideVoiceAssistantBloc({
     required String openAiApiKey,
     required NavigationService navigationService,
+    String? model,
   }) {
     _navigationService = navigationService;
 
@@ -62,6 +63,7 @@ class VoiceAssistantInjection {
       disconnectUseCase: disconnectUseCase,
       setMicrophoneMutedUseCase: setMicrophoneMutedUseCase,
       agenticAIService: agenticAIService,
+      defaultModel: model,
     );
 
     return _voiceAssistantBloc!;

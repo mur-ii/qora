@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../router/app_routes.dart';
 import '../utils/app_logger.dart';
 
 /// Service to handle programmatic navigation from AI function calls
@@ -22,59 +23,62 @@ class NavigationService {
 
     try {
       switch (screenName) {
-        case 'home':
-          _router!.go('/');
+        case AppRoutes.screenHome:
+          _router!.go(AppRoutes.homePath);
           break;
 
-        case 'hotel_list':
+        case AppRoutes.screenHotelList:
           final queryParams = _buildQueryParams(params);
-          _router!.go('/hotel-list?$queryParams');
+          _router!.go(AppRoutes.hotelListPathWithQuery(queryParams));
           break;
 
-        case 'hotel_detail':
+        case AppRoutes.screenHotelDetail:
           final hotelId = params?['hotel_id'] as String?;
           if (hotelId != null) {
-            _router!.push('/hotel-detail/$hotelId');
+            _router!.push(AppRoutes.hotelDetailPathFor(hotelId));
           }
           break;
 
-        case 'booking_summary':
+        case AppRoutes.screenBookingSummary:
           final queryParams = _buildQueryParams(params);
           final booking = params?['booking'];
           if (booking != null) {
-            _router!.go('/booking/summary?$queryParams', extra: booking);
+            _router!.go(
+              AppRoutes.bookingSummaryPathWithQuery(queryParams),
+              extra: booking,
+            );
           } else {
-            _router!.go('/booking/summary?$queryParams');
+            _router!.go(AppRoutes.bookingSummaryPathWithQuery(queryParams));
           }
           break;
 
-        case 'booking_guest_info':
+        case AppRoutes.screenBookingGuestInfo:
           final booking = params?['booking'];
           if (booking != null) {
-            _router!.go('/booking/payment', extra: booking);
+            _router!.go(AppRoutes.bookingGuestInfoPath, extra: booking);
           }
           break;
 
-        case 'booking_payment':
+        case AppRoutes.screenBookingPayment:
           final booking = params?['booking'];
           if (booking != null) {
-            _router!.go('/booking/payment', extra: booking);
+            _router!.go(AppRoutes.bookingPaymentPath, extra: booking);
           }
           break;
 
-        case 'booking_confirmation':
+        case AppRoutes.screenBookingConfirmation:
           final booking = params?['booking'];
           if (booking != null) {
-            _router!.go('/booking/confirmation', extra: booking);
+            _router!.go(AppRoutes.bookingConfirmationPath, extra: booking);
           }
           break;
 
-        case 'search':
-          _router!.go('/search');
+        case AppRoutes.screenSearch:
+          _router!.go(AppRoutes.searchPath);
           break;
 
-        case 'notifications':
-          _router!.go('/notifications');
+        case AppRoutes.screenNotifications:
+          _router!.go(AppRoutes.notificationsPath);
           break;
 
         default:

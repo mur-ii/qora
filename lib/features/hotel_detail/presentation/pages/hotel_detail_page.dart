@@ -3,14 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/di/hotel_detail_injection.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/performance_tracked_page.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
-import '../../data/datasources/hotel_detail_remote_datasource.dart';
-import '../../data/repositories/hotel_detail_repository_impl.dart';
-import '../../domain/usecases/get_hotel_detail.dart';
 import '../bloc/hotel_detail_bloc.dart';
 import '../bloc/hotel_detail_event.dart';
 import '../bloc/hotel_detail_state.dart';
@@ -34,13 +32,9 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) {
-        final dataSource = HotelDetailRemoteDataSourceImpl();
-        final repository = HotelDetailRepositoryImpl(dataSource);
-        final useCase = GetHotelDetail(repository);
-        return HotelDetailBloc(getHotelDetail: useCase)
-          ..add(LoadHotelDetailEvent(widget.hotelId));
-      },
+      create: (context) =>
+          HotelDetailInjection.createBloc()
+            ..add(LoadHotelDetailEvent(widget.hotelId)),
       child: BlocListener<VoiceAssistantBloc, VoiceAssistantState>(
         listenWhen: (previous, current) =>
             previous.agentState != current.agentState ||
@@ -78,16 +72,13 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
             });
           }
         },
-        child: PerformanceTrackedPage(
-          pageName: 'Detail Hotel Page',
-          child: _HotelDetailPageContent(
-            selectedRoomId: _selectedRoomId,
-            onRoomSelected: (roomId) {
-              setState(() {
-                _selectedRoomId = roomId;
-              });
-            },
-          ),
+        child: _HotelDetailPageContent(
+          selectedRoomId: _selectedRoomId,
+          onRoomSelected: (roomId) {
+            setState(() {
+              _selectedRoomId = roomId;
+            });
+          },
         ),
       ),
     );
@@ -98,6 +89,12 @@ class _HotelDetailPageContent extends StatelessWidget {
   final String? selectedRoomId;
   final Function(String) onRoomSelected;
 
+  static final NumberFormat _currencyFormatter = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
+
   const _HotelDetailPageContent({
     required this.selectedRoomId,
     required this.onRoomSelected,
@@ -105,12 +102,6 @@ class _HotelDetailPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    );
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: BlocBuilder<HotelDetailBloc, HotelDetailState>(
@@ -329,11 +320,13 @@ class _HotelDetailPageContent extends StatelessWidget {
         },
       ),
       bottomNavigationBar: BlocBuilder<HotelDetailBloc, HotelDetailState>(
+        buildWhen: (previous, current) =>
+            previous.runtimeType != current.runtimeType,
         builder: (context, state) {
           if (state is HotelDetailLoaded) {
-            // Get price from selected room or show starting price
             double displayPrice = state.hotel.pricePerNight;
             String priceLabel = 'Mulai dari';
+            int maxGuests = 2;
 
             if (selectedRoomId != null) {
               try {
@@ -342,10 +335,10 @@ class _HotelDetailPageContent extends StatelessWidget {
                 );
                 displayPrice = selectedRoom.pricePerNight;
                 priceLabel = 'Kamar terpilih';
+                maxGuests = selectedRoom.maxGuests;
               } catch (e) {
-                // If room not found, use default price
                 displayPrice = state.hotel.pricePerNight;
-                priceLabel = 'Starting from';
+                priceLabel = 'Mulai dari';
               }
             }
 
@@ -376,7 +369,7 @@ class _HotelDetailPageContent extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            formatter.format(displayPrice),
+                            _currencyFormatter.format(displayPrice),
                             style: AppTypography.titleLarge.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AppColors.primary,
@@ -397,7 +390,6 @@ class _HotelDetailPageContent extends StatelessWidget {
                         onPressed: selectedRoomId == null
                             ? null
                             : () {
-                                // Navigate to booking summary with selected room
                                 final now = DateTime.now();
                                 final checkIn = DateTime(
                                   now.year,
@@ -412,34 +404,33 @@ class _HotelDetailPageContent extends StatelessWidget {
 
                                 context.push(
                                   Uri(
-                                    path: '/booking/summary',
+                                    path: AppRoutes.bookingSummaryPath,
                                     queryParameters: {
                                       'hotelId': state.hotel.id,
                                       'roomId': selectedRoomId!,
                                       'checkIn': checkIn.toIso8601String(),
                                       'checkOut': checkOut.toIso8601String(),
-                                      'guests': '2',
+                                      'guests': maxGuests.toString(),
                                       'rooms': '1',
                                     },
                                   ).toString(),
                                 );
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: selectedRoomId == null
-                              ? Colors.grey[400]
-                              : AppColors.primary,
+                          backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
+                          elevation: 0,
+                          disabledBackgroundColor: Colors.grey[300],
                         ),
                         child: Text(
                           selectedRoomId == null
                               ? 'Pilih Kamar'
                               : 'Pesan Sekarang',
                           style: AppTypography.labelLarge.copyWith(
-                            color: Colors.white,
                             fontWeight: FontWeight.w600,
                           ),
                         ),

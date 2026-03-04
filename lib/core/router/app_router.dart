@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/pages/auth_home_page.dart';
-import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/booking/domain/entities/booking_entity.dart';
@@ -13,52 +12,47 @@ import '../../features/hotel_detail/presentation/pages/hotel_detail_page.dart';
 import '../../features/hotel_list/presentation/pages/hotel_list_page.dart';
 import '../../features/notifications/presentation/pages/notification_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
-import '../../features/research_log/presentation/pages/research_log_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../widgets/main_navigation_page.dart';
+import 'app_routes.dart';
 
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: AppRoutes.splashPath,
   routes: [
     GoRoute(
-      path: '/splash',
-      name: 'splash',
+      path: AppRoutes.splashPath,
+      name: AppRoutes.splashName,
       builder: (context, state) => const SplashPage(),
     ),
     GoRoute(
-      path: '/login',
-      name: 'login',
+      path: AppRoutes.loginPath,
+      name: AppRoutes.loginName,
       builder: (context, state) => const LoginPage(),
     ),
     GoRoute(
-      path: '/register',
-      name: 'register',
+      path: AppRoutes.registerPath,
+      name: AppRoutes.registerName,
       builder: (context, state) => const RegisterPage(),
     ),
     GoRoute(
-      path: '/forgot-password',
-      name: 'forgot-password',
-      builder: (context, state) => const ForgotPasswordPage(),
-    ),
-    GoRoute(
-      path: '/auth-home',
-      name: 'auth-home',
+      path: AppRoutes.authHomePath,
+      name: AppRoutes.authHomeName,
       builder: (context, state) => const AuthHomePage(),
     ),
     GoRoute(
-      path: '/',
-      name: 'home',
+      path: AppRoutes.homePath,
+      name: AppRoutes.homeName,
       builder: (context, state) => const MainNavigationPage(),
     ),
     GoRoute(
-      path: '/notifications',
-      name: 'notifications',
+      path: AppRoutes.notificationsPath,
+      name: AppRoutes.notificationsName,
       builder: (context, state) => const NotificationPage(),
     ),
     GoRoute(
-      path: '/hotel-list',
-      name: 'hotel-list',
+      path: AppRoutes.hotelListPath,
+      name: AppRoutes.hotelListName,
       builder: (context, state) {
         final location = state.uri.queryParameters['location'];
         final checkIn = state.uri.queryParameters['checkIn'];
@@ -81,26 +75,26 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/hotel-detail/:id',
-      name: 'hotel-detail',
+      path: AppRoutes.hotelDetailPath,
+      name: AppRoutes.hotelDetailName,
       builder: (context, state) {
         final id = state.pathParameters['id']!;
         return HotelDetailPage(hotelId: id);
       },
     ),
     GoRoute(
-      path: '/search',
-      name: 'search',
+      path: AppRoutes.searchPath,
+      name: AppRoutes.searchName,
       builder: (context, state) => const SearchPage(),
     ),
     GoRoute(
-      path: '/search-location',
-      name: 'search-location',
+      path: AppRoutes.searchLocationPath,
+      name: AppRoutes.searchLocationName,
       builder: (context, state) => const SearchPage(),
     ),
     GoRoute(
-      path: '/booking/summary',
-      name: 'booking-summary',
+      path: AppRoutes.bookingSummaryPath,
+      name: AppRoutes.bookingSummaryName,
       builder: (context, state) {
         final booking = state.extra is BookingEntity
             ? state.extra as BookingEntity
@@ -144,38 +138,33 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/booking/guest-info',
-      name: 'booking-guest-info',
+      path: AppRoutes.bookingGuestInfoPath,
+      name: AppRoutes.bookingGuestInfoName,
       builder: (context, state) {
         final booking = state.extra as BookingEntity;
         return PaymentPage(booking: booking);
       },
     ),
     GoRoute(
-      path: '/booking/payment',
-      name: 'booking-payment',
+      path: AppRoutes.bookingPaymentPath,
+      name: AppRoutes.bookingPaymentName,
       builder: (context, state) {
         final booking = state.extra as BookingEntity;
         return PaymentPage(booking: booking);
       },
     ),
     GoRoute(
-      path: '/booking/confirmation',
-      name: 'booking-confirmation',
+      path: AppRoutes.bookingConfirmationPath,
+      name: AppRoutes.bookingConfirmationName,
       builder: (context, state) {
         final booking = state.extra as BookingEntity;
         return BookingConfirmationPage(booking: booking);
       },
     ),
     GoRoute(
-      path: '/profile',
-      name: 'profile',
+      path: AppRoutes.profilePath,
+      name: AppRoutes.profileName,
       builder: (context, state) => const ProfilePage(),
-    ),
-    GoRoute(
-      path: '/research-log',
-      name: 'research-log',
-      builder: (context, state) => const ResearchLogPage(),
     ),
   ],
   errorBuilder: (context, state) =>

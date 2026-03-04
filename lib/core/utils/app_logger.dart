@@ -18,8 +18,8 @@ class AppLogger {
     Object? error,
     StackTrace? stackTrace,
   }) {
-    debugPrint('[ERROR][$tag] $message');
     if (kReleaseMode) return;
+    debugPrint('[ERROR][$tag] $message');
     if (error != null) {
       debugPrint('Error: $error');
     }

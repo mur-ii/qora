@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/booking_entity.dart';
 
@@ -50,7 +51,7 @@ class GuestInfoPage extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                  context.push('/booking/payment', extra: booking);
+                  context.push(AppRoutes.bookingPaymentPath, extra: booking);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,

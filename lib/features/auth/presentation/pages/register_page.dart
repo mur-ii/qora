@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_toast.dart';
 import '../bloc/auth_bloc.dart';
@@ -95,6 +96,10 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = context.select<AuthBloc, bool>(
+      (bloc) => bloc.state is AuthLoading,
+    );
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -105,193 +110,186 @@ class _RegisterPageState extends State<RegisterPage> {
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: BlocConsumer<AuthBloc, AuthState>(
+      body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
             AppToast.showError(context, state.message);
           } else if (state is AuthAuthenticated) {
             AppToast.showSuccess(context, 'Welcome, ${state.user.name}!');
-            context.go('/');
+            context.go(AppRoutes.homePath);
           }
         },
-        builder: (context, state) {
-          final isLoading = state is AuthLoading;
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Logo or App Name
+                    const Icon(
+                      Icons.person_add_outlined,
+                      size: 64,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(height: 24),
 
-          return SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Logo or App Name
-                      const Icon(
-                        Icons.person_add_outlined,
-                        size: 64,
-                        color: AppColors.primary,
+                    // Title
+                    const Text(
+                      'Create Account',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F2937),
                       ),
-                      const SizedBox(height: 24),
+                    ),
+                    const SizedBox(height: 8),
 
-                      // Title
-                      const Text(
-                        'Create Account',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2937),
+                    // Subtitle
+                    const Text(
+                      'Sign up to get started',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Name Field
+                    AuthTextField(
+                      controller: _nameController,
+                      label: 'Full Name',
+                      hintText: 'Enter your full name',
+                      validator: _validateName,
+                      enabled: !isLoading,
+                      prefixIcon: const Icon(
+                        Icons.person_outline,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Email Field
+                    AuthTextField(
+                      controller: _emailController,
+                      label: 'Email',
+                      hintText: 'Enter your email',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: _validateEmail,
+                      enabled: !isLoading,
+                      prefixIcon: const Icon(
+                        Icons.email_outlined,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Password Field
+                    AuthTextField(
+                      controller: _passwordController,
+                      label: 'Password',
+                      hintText: 'Create a password',
+                      isPassword: true,
+                      validator: _validatePassword,
+                      enabled: !isLoading,
+                      prefixIcon: const Icon(
+                        Icons.lock_outline,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Confirm Password Field
+                    AuthTextField(
+                      controller: _confirmPasswordController,
+                      label: 'Confirm Password',
+                      hintText: 'Re-enter your password',
+                      isPassword: true,
+                      validator: _validateConfirmPassword,
+                      enabled: !isLoading,
+                      prefixIcon: const Icon(
+                        Icons.lock_outline,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Register Button
+                    AuthButton(
+                      text: 'Create Account',
+                      onPressed: _handleRegister,
+                      isLoading: isLoading,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Divider
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Divider(
+                            color: Color(0xFFE5E7EB),
+                            thickness: 1,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Subtitle
-                      const Text(
-                        'Sign up to get started',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF6B7280),
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-
-                      // Name Field
-                      AuthTextField(
-                        controller: _nameController,
-                        label: 'Full Name',
-                        hintText: 'Enter your full name',
-                        validator: _validateName,
-                        enabled: !isLoading,
-                        prefixIcon: const Icon(
-                          Icons.person_outline,
-                          color: Color(0xFF6B7280),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Email Field
-                      AuthTextField(
-                        controller: _emailController,
-                        label: 'Email',
-                        hintText: 'Enter your email',
-                        keyboardType: TextInputType.emailAddress,
-                        validator: _validateEmail,
-                        enabled: !isLoading,
-                        prefixIcon: const Icon(
-                          Icons.email_outlined,
-                          color: Color(0xFF6B7280),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Password Field
-                      AuthTextField(
-                        controller: _passwordController,
-                        label: 'Password',
-                        hintText: 'Create a password',
-                        isPassword: true,
-                        validator: _validatePassword,
-                        enabled: !isLoading,
-                        prefixIcon: const Icon(
-                          Icons.lock_outline,
-                          color: Color(0xFF6B7280),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Confirm Password Field
-                      AuthTextField(
-                        controller: _confirmPasswordController,
-                        label: 'Confirm Password',
-                        hintText: 'Re-enter your password',
-                        isPassword: true,
-                        validator: _validateConfirmPassword,
-                        enabled: !isLoading,
-                        prefixIcon: const Icon(
-                          Icons.lock_outline,
-                          color: Color(0xFF6B7280),
-                        ),
-                      ),
-                      const SizedBox(height: 32),
-
-                      // Register Button
-                      AuthButton(
-                        text: 'Create Account',
-                        onPressed: _handleRegister,
-                        isLoading: isLoading,
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Divider
-                      Row(
-                        children: [
-                          const Expanded(
-                            child: Divider(
-                              color: Color(0xFFE5E7EB),
-                              thickness: 1,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'OR',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              'OR',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
+                        ),
+                        const Expanded(
+                          child: Divider(
+                            color: Color(0xFFE5E7EB),
+                            thickness: 1,
                           ),
-                          const Expanded(
-                            child: Divider(
-                              color: Color(0xFFE5E7EB),
-                              thickness: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
 
-                      // Google Sign In Button
-                      GoogleSignInButton(
-                        onPressed: _handleGoogleSignIn,
-                        isLoading: isLoading,
-                      ),
-                      const SizedBox(height: 32),
+                    // Google Sign In Button
+                    GoogleSignInButton(
+                      onPressed: _handleGoogleSignIn,
+                      isLoading: isLoading,
+                    ),
+                    const SizedBox(height: 32),
 
-                      // Sign In Link
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Already have an account? ',
-                            style: TextStyle(color: Color(0xFF6B7280)),
-                          ),
-                          TextButton(
-                            onPressed: isLoading
-                                ? null
-                                : () {
-                                    Navigator.pop(context);
-                                  },
-                            child: const Text(
-                              'Sign In',
-                              style: TextStyle(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
+                    // Sign In Link
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Already have an account? ',
+                          style: TextStyle(color: Color(0xFF6B7280)),
+                        ),
+                        TextButton(
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  Navigator.pop(context);
+                                },
+                          child: const Text(
+                            'Sign In',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }

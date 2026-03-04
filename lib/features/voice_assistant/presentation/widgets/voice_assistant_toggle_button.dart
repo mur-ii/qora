@@ -49,6 +49,7 @@ class _VoiceAssistantToggleButtonState
 
   Future<void> _checkPermissions() async {
     final status = await Permission.microphone.status;
+    if (!mounted) return;
     setState(() {
       _permissionGranted = status.isGranted;
     });
@@ -56,17 +57,16 @@ class _VoiceAssistantToggleButtonState
 
   Future<void> _requestPermissions() async {
     final status = await Permission.microphone.request();
+    if (!mounted) return;
     setState(() {
       _permissionGranted = status.isGranted;
     });
 
     if (!status.isGranted) {
-      if (mounted) {
-        AppToast.showError(
-          context,
-          'Microphone permission is required for voice assistant',
-        );
-      }
+      AppToast.showError(
+        context,
+        'Microphone permission is required for voice assistant',
+      );
     }
   }
 
@@ -194,7 +194,7 @@ class _VoiceAssistantToggleButtonState
                     onChanged: isConnecting
                         ? null
                         : (value) => _handleModeChange(value, state),
-                    activeColor: activeColor,
+                    activeThumbColor: activeColor,
                     activeTrackColor: AppColors.primaryLight,
                     inactiveThumbColor: AppColors.surface,
                     inactiveTrackColor: inactiveColor,
@@ -419,11 +419,11 @@ class VoiceAssistantIconButton extends StatelessWidget {
                       color: theme.colorScheme.surface,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: theme.colorScheme.outline.withOpacity(0.4),
+                        color: theme.colorScheme.outline.withValues(alpha: 0.4),
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: theme.shadowColor.withOpacity(0.08),
+                          color: theme.shadowColor.withValues(alpha: 0.08),
                           blurRadius: 4,
                         ),
                       ],

@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/profile_injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../data/datasources/profile_remote_datasource.dart';
-import '../../data/repositories/profile_repository_impl.dart';
-import '../../domain/usecases/get_payment_methods.dart';
-import '../../domain/usecases/get_profile.dart';
-import '../../domain/usecases/update_preferences.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -19,15 +15,8 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) {
-        final dataSource = ProfileRemoteDataSourceImpl();
-        final repository = ProfileRepositoryImpl(dataSource);
-        return ProfileBloc(
-          getProfile: GetProfile(repository),
-          getPaymentMethods: GetPaymentMethods(repository),
-          updatePreferences: UpdatePreferences(repository),
-        )..add(const LoadProfileEvent());
-      },
+      create: (context) =>
+          ProfileInjection.createBloc()..add(const LoadProfileEvent()),
       child: const _ProfilePageContent(),
     );
   }
@@ -88,11 +77,29 @@ class _ProfilePageContent extends StatelessWidget {
                 children: [
                   ProfileSection(profile: state.profile),
                   const SizedBox(height: 20),
-                  PaymentInformationSection(),
+                  PaymentInformationSection(
+                    paymentMethodsCount: state.paymentMethods?.length ?? 0,
+                    transactionsCount: state.transactions?.length ?? 0,
+                  ),
                   const SizedBox(height: 20),
                   const AccountManagementSection(),
                   const SizedBox(height: 20),
-                  const PreferencesSection(),
+                  PreferencesSection(
+                    preferences: state.preferences,
+                    onUpdate: (payload) {
+                      context.read<ProfileBloc>().add(
+                            UpdatePreferencesEvent(
+                              language: payload.language,
+                              notificationsEnabled:
+                                  payload.notificationsEnabled,
+                              emailNotifications: payload.emailNotifications,
+                              pushNotifications: payload.pushNotifications,
+                              smsNotifications: payload.smsNotifications,
+                              marketingEmails: payload.marketingEmails,
+                            ),
+                          );
+                    },
+                  ),
                   const SizedBox(height: 20),
                   const HelpSupportSection(),
                   const SizedBox(height: 8),

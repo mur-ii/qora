@@ -37,6 +37,10 @@ class DestinationCard extends StatelessWidget {
             CachedNetworkImage(
               imageUrl: imageUrl,
               fit: BoxFit.cover,
+              filterQuality: FilterQuality.low,
+              fadeInDuration: const Duration(milliseconds: 150),
+              placeholderFadeInDuration: Duration.zero,
+              useOldImageOnUrlChange: true,
               memCacheHeight: 280, // 2x display height for retina
               memCacheWidth: 400,
               maxHeightDiskCache: 280,

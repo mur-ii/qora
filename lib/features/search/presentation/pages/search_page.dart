@@ -2,15 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/di/search_injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../performance/data/models/performance_summary.dart';
-import '../../../performance/presentation/bloc/performance_bloc.dart';
-import '../../../performance/presentation/bloc/performance_event.dart';
-import '../../data/datasources/search_remote_datasource.dart';
-import '../../data/repositories/search_repository_impl.dart';
-import '../../domain/usecases/search_hotels.dart';
+import '../../../../core/utils/debouncer.dart';
 import '../bloc/search_bloc.dart';
 import '../bloc/search_event.dart';
 import '../bloc/search_state.dart';
@@ -21,13 +17,9 @@ class SearchPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) {
-        final dataSource = SearchRemoteDataSourceImpl();
-        final repository = SearchRepositoryImpl(dataSource);
-        final useCase = SearchHotels(repository);
-        return SearchBloc(searchHotels: useCase)
-          ..add(const SearchHotelsEvent()); // Load all suggestions initially
-      },
+      create: (context) =>
+          SearchInjection.createBloc()
+            ..add(const SearchHotelsEvent()),
       child: const _SearchPageContent(),
     );
   }
@@ -42,36 +34,15 @@ class _SearchPageContent extends StatefulWidget {
 
 class _SearchPageContentState extends State<_SearchPageContent> {
   final TextEditingController _searchController = TextEditingController();
-  bool _sessionStarted = false;
-  bool _searchStepStarted = false;
-  String _lastSearchValue = '';
+  final Debouncer _debouncer = Debouncer(
+    duration: const Duration(milliseconds: 250),
+  );
 
   @override
   void dispose() {
+    _debouncer.dispose();
     _searchController.dispose();
     super.dispose();
-  }
-
-  void _ensureSessionStarted() {
-    if (_sessionStarted) return;
-    _sessionStarted = true;
-    context.read<PerformanceBloc>().add(
-      const StartSession(method: InteractionMethod.gui),
-    );
-  }
-
-  void _startSearchInputIfNeeded() {
-    if (_searchStepStarted) return;
-    _searchStepStarted = true;
-    context.read<PerformanceBloc>().add(
-      const StartStep(PerformanceStep.search),
-    );
-  }
-
-  void _endSearchInputIfNeeded() {
-    if (!_searchStepStarted) return;
-    _searchStepStarted = false;
-    context.read<PerformanceBloc>().add(const EndStep(PerformanceStep.search));
   }
 
   void _performSearch(String query) {
@@ -87,12 +58,6 @@ class _SearchPageContentState extends State<_SearchPageContent> {
   }
 
   void _selectLocation(String locationOrHotelName) {
-    _ensureSessionStarted();
-    context.read<PerformanceBloc>().add(const AddClick());
-    context.read<PerformanceBloc>().add(
-      UpdateSearchedLocation(locationOrHotelName),
-    );
-    _endSearchInputIfNeeded();
     // Return selected value to home page
     context.pop(locationOrHotelName);
   }
@@ -127,61 +92,56 @@ class _SearchPageContentState extends State<_SearchPageContent> {
                 ),
               ],
             ),
-            child: TextField(
-              controller: _searchController,
-              autofocus: true,
-              onTap: () {
-                _ensureSessionStarted();
-                _startSearchInputIfNeeded();
-              },
-              decoration: InputDecoration(
-                hintText: 'Cari kota atau nama hotel...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _ensureSessionStarted();
-                          context.read<PerformanceBloc>().add(const AddClick());
-                          _searchController.clear();
-                          _lastSearchValue = '';
-                          _performSearch('');
-                          setState(() {});
-                        },
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                  borderSide: const BorderSide(color: AppColors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                  borderSide: const BorderSide(color: AppColors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                  borderSide: const BorderSide(
-                    color: AppColors.primary,
-                    width: 2,
+            child: ValueListenableBuilder<TextEditingValue>(
+              valueListenable: _searchController,
+              builder: (context, value, _) {
+                return TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Cari kota atau nama hotel...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: value.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              _performSearch('');
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.radiusMedium,
+                      ),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.radiusMedium,
+                      ),
+                      borderSide: const BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(
+                        AppTheme.radiusMedium,
+                      ),
+                      borderSide: const BorderSide(
+                        color: AppColors.primary,
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.surfaceVariant,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spacingMedium,
+                      vertical: 14,
+                    ),
                   ),
-                ),
-                filled: true,
-                fillColor: AppColors.surfaceVariant,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spacingMedium,
-                  vertical: 14,
-                ),
-              ),
-              onChanged: (value) {
-                _ensureSessionStarted();
-                _startSearchInputIfNeeded();
-                if (_lastSearchValue.isNotEmpty &&
-                    value.length < _lastSearchValue.length) {
-                  context.read<PerformanceBloc>().add(const AddCorrection());
-                }
-                _lastSearchValue = value;
-                _performSearch(value);
-                setState(() {});
+                  onChanged: (value) {
+                    _debouncer.run(() => _performSearch(value));
+                  },
+                );
               },
             ),
           ),
@@ -249,57 +209,77 @@ class _SearchPageContentState extends State<_SearchPageContent> {
 
                 if (state is SearchLoaded) {
                   // Create unique list of locations and hotel names
+                  final locations = <String>{};
                   final suggestions = <String>{};
 
                   for (final hotel in state.hotels) {
-                    suggestions.add(hotel.location);
-                    suggestions.add(hotel.name);
+                    locations.add(hotel.location);
+                    suggestions
+                      ..add(hotel.location)
+                      ..add(hotel.name);
                   }
 
                   final sortedSuggestions = suggestions.toList()..sort();
 
-                  return NotificationListener<ScrollEndNotification>(
-                    onNotification: (notification) {
-                      _ensureSessionStarted();
-                      context.read<PerformanceBloc>().add(const AddScroll());
-                      return false;
-                    },
-                    child: ListView.builder(
-                      itemCount: sortedSuggestions.length,
-                      itemBuilder: (context, index) {
-                        final suggestion = sortedSuggestions[index];
-                        final isLocation = state.hotels.any(
-                          (hotel) => hotel.location == suggestion,
-                        );
-
-                        return ListTile(
-                          leading: Icon(
-                            isLocation ? Icons.location_on : Icons.hotel,
-                            color: AppColors.primary,
-                          ),
-                          title: Text(
-                            suggestion,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          subtitle: Text(
-                            isLocation ? 'Lokasi' : 'Hotel',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                          onTap: () => _selectLocation(suggestion),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 16,
+                  if (sortedSuggestions.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search_off,
+                            size: 64,
                             color: AppColors.textTertiary,
                           ),
-                        );
-                      },
-                    ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Tidak ditemukan',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Coba kata kunci lain',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: sortedSuggestions.length,
+                    itemBuilder: (context, index) {
+                      final suggestion = sortedSuggestions[index];
+                      final isLocation = locations.contains(suggestion);
+
+                      return ListTile(
+                        leading: Icon(
+                          isLocation ? Icons.location_on : Icons.hotel,
+                          color: AppColors.primary,
+                        ),
+                        title: Text(
+                          suggestion,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        subtitle: Text(
+                          isLocation ? 'Lokasi' : 'Hotel',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        onTap: () => _selectLocation(suggestion),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 14,
+                          color: AppColors.textSecondary,
+                        ),
+                      );
+                    },
                   );
                 }
 

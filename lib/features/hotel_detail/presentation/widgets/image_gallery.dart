@@ -1,5 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+
+import '../../../../core/widgets/optimized_network_image.dart';
 
 class ImageGallery extends StatelessWidget {
   final List<String> images;
@@ -13,8 +14,9 @@ class ImageGallery extends StatelessWidget {
       child: PageView.builder(
         itemCount: images.length,
         itemBuilder: (context, index) {
-          return CachedNetworkImage(
+          return OptimizedNetworkImage(
             imageUrl: images[index],
+            height: 300,
             fit: BoxFit.cover,
             placeholder: (context, url) => Container(
               color: Colors.grey[300],

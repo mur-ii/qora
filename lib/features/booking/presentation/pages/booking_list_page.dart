@@ -1,13 +1,12 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/di/booking_injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../data/datasources/booking_local_datasource.dart';
 import '../../data/models/booking_record.dart';
-import '../../data/repositories/booking_local_repository_impl.dart';
 import '../bloc/booking_history_bloc.dart';
 import '../bloc/booking_history_event.dart';
 import '../bloc/booking_history_state.dart';
@@ -19,11 +18,7 @@ class BookingListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) {
-        final box = Hive.box<BookingRecord>('booking_box');
-        final dataSource = BookingLocalDataSource(box: box);
-        final repository = BookingLocalRepositoryImpl(
-          localDataSource: dataSource,
-        );
+        final repository = BookingInjection.createLocalRepository();
         return BookingHistoryBloc(repository: repository)
           ..add(const LoadBookingHistory());
       },
@@ -207,7 +202,7 @@ class _BookingCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -225,18 +220,23 @@ class _BookingCard extends StatelessWidget {
                 child: Container(
                   height: 140,
                   width: double.infinity,
-                  color: AppColors.neutral.withOpacity(0.1),
+                  color: AppColors.neutral.withValues(alpha: 0.1),
                   child: record.imageUrl.isNotEmpty
-                      ? Image.network(
-                          record.imageUrl,
+                      ? CachedNetworkImage(
+                          imageUrl: record.imageUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(
-                              Icons.hotel,
-                              size: 48,
-                              color: AppColors.textTertiary,
-                            );
-                          },
+                          placeholder: (context, url) => const Center(
+                            child: SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => const Icon(
+                            Icons.hotel,
+                            size: 48,
+                            color: AppColors.textTertiary,
+                          ),
                         )
                       : const Icon(
                           Icons.hotel,
@@ -331,7 +331,7 @@ class _BookingCard extends StatelessWidget {
                       Container(
                         width: 1,
                         height: 30,
-                        color: AppColors.textTertiary.withOpacity(0.2),
+                        color: AppColors.textTertiary.withValues(alpha: 0.2),
                       ),
                       const SizedBox(width: 16),
                       Expanded(

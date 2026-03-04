@@ -1,9 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/optimized_network_image.dart';
 import '../../domain/entities/hotel_detail_entity.dart';
 
 class RoomTypesSection extends StatefulWidget {
@@ -83,10 +83,9 @@ class _RoomTypesSectionState extends State<RoomTypesSection> {
                             topLeft: Radius.circular(16),
                             topRight: Radius.circular(16),
                           ),
-                          child: CachedNetworkImage(
+                          child: OptimizedNetworkImage(
                             imageUrl: room.imageUrl,
                             height: 180,
-                            width: double.infinity,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => Container(
                               height: 180,

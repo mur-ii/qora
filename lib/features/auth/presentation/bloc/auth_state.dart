@@ -1,32 +1,46 @@
+import 'package:equatable/equatable.dart';
+
 import '../../domain/entities/user.dart';
 
-abstract class AuthState {}
+abstract class AuthState extends Equatable {
+  const AuthState();
 
-class AuthInitial extends AuthState {}
+  @override
+  List<Object?> get props => [];
+}
+
+class AuthInitial extends AuthState {
+  const AuthInitial();
+}
 
 class AuthLoading extends AuthState {
   final bool isEmailLogin;
   final bool isGoogleLogin;
 
-  AuthLoading({this.isEmailLogin = false, this.isGoogleLogin = false});
+  const AuthLoading({this.isEmailLogin = false, this.isGoogleLogin = false});
+
+  @override
+  List<Object?> get props => [isEmailLogin, isGoogleLogin];
 }
 
 class AuthAuthenticated extends AuthState {
   final User user;
 
-  AuthAuthenticated({required this.user});
+  const AuthAuthenticated({required this.user});
+
+  @override
+  List<Object?> get props => [user];
 }
 
-class AuthUnauthenticated extends AuthState {}
+class AuthUnauthenticated extends AuthState {
+  const AuthUnauthenticated();
+}
 
 class AuthError extends AuthState {
   final String message;
 
-  AuthError({required this.message});
-}
+  const AuthError({required this.message});
 
-class ForgotPasswordSuccess extends AuthState {
-  final String message;
-
-  ForgotPasswordSuccess({required this.message});
+  @override
+  List<Object?> get props => [message];
 }

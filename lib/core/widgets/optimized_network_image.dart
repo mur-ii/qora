@@ -38,46 +38,47 @@ class OptimizedNetworkImage extends StatelessWidget {
       height: height,
       fit: fit,
       // Auto-calculate cache sizes based on display size if not provided
-      memCacheHeight: memCacheHeight ?? (height != null ? (height! * 2).toInt() : null),
-      memCacheWidth: memCacheWidth ?? (width != null ? (width! * 2).toInt() : null),
+      memCacheHeight:
+          memCacheHeight ?? (height != null ? (height! * 2).toInt() : null),
+      memCacheWidth:
+          memCacheWidth ?? (width != null ? (width! * 2).toInt() : null),
       maxHeightDiskCache: maxHeightDiskCache ?? memCacheHeight,
       maxWidthDiskCache: maxWidthDiskCache ?? memCacheWidth,
-      placeholder: placeholder ??
+      placeholder:
+          placeholder ??
           (context, url) => Container(
-                width: width,
-                height: height,
-                color: Colors.grey[300],
-                child: Center(
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).primaryColor.withOpacity(0.5),
-                      ),
-                    ),
+            width: width,
+            height: height,
+            color: Colors.grey[300],
+            child: Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).primaryColor.withValues(alpha: 0.5),
                   ),
                 ),
               ),
-      errorWidget: errorWidget ??
+            ),
+          ),
+      errorWidget:
+          errorWidget ??
           (context, url, error) => Container(
-                width: width,
-                height: height,
-                color: Colors.grey[200],
-                child: Icon(
-                  Icons.broken_image_outlined,
-                  size: 40,
-                  color: Colors.grey[400],
-                ),
-              ),
+            width: width,
+            height: height,
+            color: Colors.grey[200],
+            child: Icon(
+              Icons.broken_image_outlined,
+              size: 40,
+              color: Colors.grey[400],
+            ),
+          ),
     );
 
     if (borderRadius != null) {
-      return ClipRRect(
-        borderRadius: borderRadius!,
-        child: image,
-      );
+      return ClipRRect(borderRadius: borderRadius!, child: image);
     }
 
     return image;

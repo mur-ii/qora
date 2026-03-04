@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/search_hotel_entity.dart';
@@ -22,7 +23,7 @@ class SearchHotelCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        context.push('/hotel-detail/${hotel.id}');
+        context.push(AppRoutes.hotelDetailPathFor(hotel.id));
       },
       child: Container(
         margin: const EdgeInsets.symmetric(

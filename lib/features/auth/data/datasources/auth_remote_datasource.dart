@@ -3,9 +3,9 @@ import '../models/user_model.dart';
 abstract class AuthRemoteDataSource {
   Future<UserModel> loginWithEmail(String email, String password);
   Future<UserModel> loginWithGoogle();
+  Future<UserModel> loginWithName(String fullName);
   Future<UserModel> register(String email, String password, String name);
   Future<void> logout();
-  Future<void> forgotPassword(String email);
   UserModel? getCurrentUser();
 }
 
@@ -25,6 +25,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
+  Future<UserModel> loginWithName(String fullName) {
+    return authService.loginWithName(fullName);
+  }
+
+  @override
   Future<UserModel> register(String email, String password, String name) {
     return authService.register(email, password, name);
   }
@@ -32,11 +37,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> logout() {
     return authService.logout();
-  }
-
-  @override
-  Future<void> forgotPassword(String email) {
-    return authService.forgotPassword(email);
   }
 
   @override

@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
-import '../../../../core/services/alpha_test_logger.dart';
 import '../../domain/entities/guest_form_entity.dart';
 import '../models/booking_model.dart';
 
@@ -37,7 +36,6 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     required int guests,
     required int rooms,
   }) async {
-    final stopwatch = Stopwatch()..start();
     // Simulate API delay
     await Future.delayed(const Duration(milliseconds: 800));
 
@@ -152,11 +150,6 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     };
 
     final result = BookingModel.fromJson(data);
-    stopwatch.stop();
-    AlphaTestLogger.instance.logNetworkLatency(
-      endpoint: 'booking_summary',
-      durationMs: stopwatch.elapsedMilliseconds,
-    );
     return result;
   }
 
@@ -165,7 +158,6 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     required String bookingId,
     required GuestFormEntity guestInfo,
   }) async {
-    final stopwatch = Stopwatch()..start();
     // Simulate API delay
     await Future.delayed(const Duration(milliseconds: 600));
 
@@ -188,11 +180,6 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     };
 
     final result = BookingModel.fromJson(data);
-    stopwatch.stop();
-    AlphaTestLogger.instance.logNetworkLatency(
-      endpoint: 'booking_guest_info',
-      durationMs: stopwatch.elapsedMilliseconds,
-    );
     return result;
   }
 
@@ -201,7 +188,6 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
     required String bookingId,
     required String paymentMethod,
   }) async {
-    final stopwatch = Stopwatch()..start();
     // Simulate API delay
     await Future.delayed(const Duration(milliseconds: 1200));
 
@@ -213,11 +199,6 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
 
     final result = BookingModel.fromJson(
       jsonData['data'] as Map<String, dynamic>,
-    );
-    stopwatch.stop();
-    AlphaTestLogger.instance.logNetworkLatency(
-      endpoint: 'booking_confirm',
-      durationMs: stopwatch.elapsedMilliseconds,
     );
     return result;
   }

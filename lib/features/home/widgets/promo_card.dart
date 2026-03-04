@@ -32,6 +32,9 @@ class PromoCard extends StatelessWidget {
           imagePath,
           fit: BoxFit.cover,
           alignment: Alignment.center,
+          filterQuality: FilterQuality.low,
+          cacheWidth: 560,
+          cacheHeight: 340,
         ),
       ),
     );

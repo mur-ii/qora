@@ -1,11 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/di/notification_injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../domain/entities/notification_entity.dart';
+import '../bloc/notification_bloc.dart';
 
 class NotificationPage extends StatelessWidget {
   const NotificationPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) =>
+          NotificationInjection.createBloc()
+            ..add(const LoadNotificationsEvent()),
+      child: const _NotificationPageContent(),
+    );
+  }
+}
+
+class _NotificationPageContent extends StatelessWidget {
+  const _NotificationPageContent();
 
   @override
   Widget build(BuildContext context) {
@@ -23,91 +41,78 @@ class NotificationPage extends StatelessWidget {
         ),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
         actions: [
-          TextButton(
-            onPressed: () {
-              // TODO: Mark all as read
+          BlocBuilder<NotificationBloc, NotificationState>(
+            buildWhen: (previous, current) =>
+                previous.hasUnread != current.hasUnread,
+            builder: (context, state) {
+              return TextButton(
+                onPressed: state.hasUnread
+                    ? () => context.read<NotificationBloc>().add(
+                          const MarkAllReadEvent(),
+                        )
+                    : null,
+                child: Text(
+                  'Tandai Semua',
+                  style: AppTypography.labelMedium.copyWith(
+                    color: state.hasUnread
+                        ? AppColors.primary
+                        : AppColors.textTertiary,
+                  ),
+                ),
+              );
             },
-            child: Text(
-              'Tandai Semua',
-              style: AppTypography.labelMedium.copyWith(
-                color: AppColors.primary,
-              ),
-            ),
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        children: [
-          _buildDateHeader('Hari Ini'),
-          _buildNotificationItem(
-            context: context,
-            type: NotificationType.booking,
-            title: 'Booking Berhasil!',
-            message:
-                'Reservasi Anda di Grand Luxury Hotel telah dikonfirmasi untuk tanggal 22-25 Januari 2026.',
-            time: DateTime.now().subtract(const Duration(hours: 2)),
-            isUnread: true,
-          ),
-          _buildNotificationItem(
-            context: context,
-            type: NotificationType.promo,
-            title: 'Promo Spesial Weekend! 🎉',
-            message:
-                'Dapatkan diskon hingga 50% untuk booking hotel di akhir pekan. Buruan pesan sekarang!',
-            time: DateTime.now().subtract(const Duration(hours: 5)),
-            isUnread: true,
-          ),
-          _buildDateHeader('Kemarin'),
-          _buildNotificationItem(
-            context: context,
-            type: NotificationType.payment,
-            title: 'Pembayaran Berhasil',
-            message:
-                'Pembayaran sebesar Rp 2.500.000 untuk Sunset Beach Resort telah diterima.',
-            time: DateTime.now().subtract(const Duration(days: 1, hours: 10)),
-            isUnread: false,
-          ),
-          _buildNotificationItem(
-            context: context,
-            type: NotificationType.reminder,
-            title: 'Pengingat Check-in',
-            message:
-                'Jangan lupa! Check-in Anda di Mountain View Lodge besok pukul 14:00.',
-            time: DateTime.now().subtract(const Duration(days: 1, hours: 14)),
-            isUnread: false,
-          ),
-          _buildDateHeader('Minggu Lalu'),
-          _buildNotificationItem(
-            context: context,
-            type: NotificationType.review,
-            title: 'Bagikan Pengalaman Anda',
-            message:
-                'Terima kasih telah menginap di Royal Palace Hotel. Berikan review Anda!',
-            time: DateTime.now().subtract(const Duration(days: 5)),
-            isUnread: false,
-          ),
-          _buildNotificationItem(
-            context: context,
-            type: NotificationType.promo,
-            title: 'Cashback 100rb',
-            message:
-                'Dapatkan cashback Rp 100.000 untuk transaksi minimal Rp 500.000. Berlaku hingga akhir bulan!',
-            time: DateTime.now().subtract(const Duration(days: 6)),
-            isUnread: false,
-          ),
-          _buildNotificationItem(
-            context: context,
-            type: NotificationType.booking,
-            title: 'Konfirmasi Pembatalan',
-            message:
-                'Pembatalan booking Anda di Beachfront Paradise telah diproses. Dana akan dikembalikan dalam 3-5 hari kerja.',
-            time: DateTime.now().subtract(const Duration(days: 7)),
-            isUnread: false,
-          ),
-        ],
+      body: BlocBuilder<NotificationBloc, NotificationState>(
+        builder: (context, state) {
+          if (state.status == NotificationStatus.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state.status == NotificationStatus.failure) {
+            return Center(
+              child: Text(
+                state.errorMessage ?? 'Gagal memuat notifikasi',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            );
+          }
+
+          if (state.sections.isEmpty) {
+            return Center(
+              child: Text(
+                'Belum ada notifikasi',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            );
+          }
+
+          final items = _buildSectionedItems(state.sections);
+
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemCount: items.length,
+            itemBuilder: (context, index) => items[index],
+          );
+        },
       ),
     );
+  }
+
+  List<Widget> _buildSectionedItems(List<NotificationSection> sections) {
+    final widgets = <Widget>[];
+    for (final section in sections) {
+      widgets.add(_buildDateHeader(section.label));
+      for (final item in section.items) {
+        widgets.add(_NotificationItem(item: item));
+      }
+    }
+    return widgets;
   }
 
   Widget _buildDateHeader(String date) {
@@ -122,30 +127,36 @@ class NotificationPage extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildNotificationItem({
-    required BuildContext context,
-    required NotificationType type,
-    required String title,
-    required String message,
-    required DateTime time,
-    required bool isUnread,
-  }) {
+class _NotificationItem extends StatelessWidget {
+  final NotificationEntity item;
+
+  const _NotificationItem({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: isUnread ? AppColors.primary.withOpacity(0.05) : Colors.white,
+        color: item.isUnread
+            ? AppColors.primary.withValues(alpha: 0.05)
+            : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isUnread
-              ? AppColors.primary.withOpacity(0.2)
+          color: item.isUnread
+              ? AppColors.primary.withValues(alpha: 0.2)
               : AppColors.border,
           width: 1,
         ),
       ),
       child: InkWell(
         onTap: () {
-          // TODO: Handle notification tap
+          if (item.isUnread) {
+            context.read<NotificationBloc>().add(
+                  MarkNotificationReadEvent(item.id),
+                );
+          }
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
@@ -153,7 +164,7 @@ class NotificationPage extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildNotificationIcon(type, isUnread),
+              _buildNotificationIcon(item.type),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -163,14 +174,14 @@ class NotificationPage extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            title,
+                            item.title,
                             style: AppTypography.titleSmall.copyWith(
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
                           ),
                         ),
-                        if (isUnread)
+                        if (item.isUnread)
                           Container(
                             width: 8,
                             height: 8,
@@ -183,7 +194,7 @@ class NotificationPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      message,
+                      item.message,
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                         height: 1.4,
@@ -193,7 +204,7 @@ class NotificationPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _formatTime(time),
+                      _formatTime(item.time),
                       style: AppTypography.labelSmall.copyWith(
                         color: AppColors.textTertiary,
                       ),
@@ -208,7 +219,7 @@ class NotificationPage extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationIcon(NotificationType type, bool isUnread) {
+  Widget _buildNotificationIcon(NotificationType type) {
     IconData icon;
     Color backgroundColor;
 
@@ -239,7 +250,7 @@ class NotificationPage extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: backgroundColor.withOpacity(0.1),
+        color: backgroundColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Icon(icon, color: backgroundColor, size: 24),
@@ -261,5 +272,3 @@ class NotificationPage extends StatelessWidget {
     }
   }
 }
-
-enum NotificationType { booking, payment, promo, reminder, review }

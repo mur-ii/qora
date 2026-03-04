@@ -44,7 +44,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       _currentBookingId = booking.bookingId;
       emit(BookingSummaryLoaded(_applyBookingOverrides(booking, event)));
     } catch (e) {
-      emit(BookingError(e.toString()));
+      emit(BookingError(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -72,7 +72,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
 
       emit(GuestInfoSubmitted(booking));
     } catch (e) {
-      emit(BookingError(e.toString()));
+      emit(BookingError(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -95,7 +95,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
 
       emit(BookingConfirmed(booking));
     } catch (e) {
-      emit(BookingError(e.toString()));
+      emit(BookingError(e.toString().replaceAll('Exception: ', '')));
     }
   }
 

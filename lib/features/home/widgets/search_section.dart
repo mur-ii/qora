@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/router/app_routes.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/app_toast.dart';
 import '../bloc/home_bloc.dart';
 
 class SearchSection extends StatelessWidget {
@@ -13,84 +13,88 @@ class SearchSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(AppTheme.spacingMedium),
-      padding: const EdgeInsets.all(AppTheme.spacingMedium),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowLight,
-            blurRadius: AppTheme.elevationSmall,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Cari Hotel',
-            style: AppTypography.titleMedium.copyWith(
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+    return RepaintBoundary(
+      child: Container(
+        margin: const EdgeInsets.all(AppTheme.spacingMedium),
+        padding: const EdgeInsets.all(AppTheme.spacingMedium),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          border: Border.all(color: AppColors.border),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadowLight,
+              blurRadius: AppTheme.elevationSmall,
+              offset: const Offset(0, 2),
             ),
-          ),
-          const SizedBox(height: 6),
-          BlocSelector<HomeBloc, HomeState, bool>(
-            selector: (state) => state.updatedByVoice,
-            builder: (context, updatedByVoice) {
-              if (!updatedByVoice) return const SizedBox.shrink();
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Cari Hotel',
+              style: AppTypography.titleMedium.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            BlocSelector<HomeBloc, HomeState, bool>(
+              selector: (state) => state.updatedByVoice,
+              builder: (context, updatedByVoice) {
+                if (!updatedByVoice) return const SizedBox.shrink();
 
-              return Row(
-                children: [
-                  Icon(
-                    Icons.record_voice_over_outlined,
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Diperbarui oleh Voice AI',
-                    style: AppTypography.labelSmall.copyWith(
+                return Row(
+                  children: [
+                    Icon(
+                      Icons.record_voice_over_outlined,
+                      size: 16,
                       color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
                     ),
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          BlocSelector<HomeBloc, HomeState, String>(
-            selector: (state) => state.location,
-            builder: (context, location) {
-              return _VoiceHighlight(child: _LocationField(location: location));
-            },
-          ),
-          const SizedBox(height: 12),
-          BlocSelector<HomeBloc, HomeState, String>(
-            selector: (state) => state.formattedDateRange,
-            builder: (context, dateRange) {
-              return _VoiceHighlight(
-                child: _DateRangeField(dateRange: dateRange),
-              );
-            },
-          ),
-          const SizedBox(height: 12),
-          BlocSelector<HomeBloc, HomeState, String>(
-            selector: (state) => state.formattedRoomAndGuest,
-            builder: (context, roomAndGuest) {
-              return _VoiceHighlight(
-                child: _RoomGuestField(roomAndGuest: roomAndGuest),
-              );
-            },
-          ),
-          const SizedBox(height: 20),
-          const _SearchButton(),
-        ],
+                    const SizedBox(width: 6),
+                    Text(
+                      'Diperbarui oleh Voice AI',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            BlocSelector<HomeBloc, HomeState, String>(
+              selector: (state) => state.location,
+              builder: (context, location) {
+                return _VoiceHighlight(
+                  child: _LocationField(location: location),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            BlocSelector<HomeBloc, HomeState, String>(
+              selector: (state) => state.formattedDateRange,
+              builder: (context, dateRange) {
+                return _VoiceHighlight(
+                  child: _DateRangeField(dateRange: dateRange),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            BlocSelector<HomeBloc, HomeState, String>(
+              selector: (state) => state.formattedRoomAndGuest,
+              builder: (context, roomAndGuest) {
+                return _VoiceHighlight(
+                  child: _RoomGuestField(roomAndGuest: roomAndGuest),
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+            const _SearchButton(),
+          ],
+        ),
       ),
     );
   }
@@ -137,12 +141,14 @@ class _LocationFieldState extends State<_LocationField> {
         color: AppColors.textPrimary,
         fontWeight: FontWeight.w500,
       ),
-      onTap: () {
-        context.push('/search-location').then((value) {
-          if (value != null && value is String) {
-            context.read<HomeBloc>().add(HomeLocationChanged(value));
-          }
-        });
+      onTap: () async {
+        final router = GoRouter.of(context);
+        final bloc = context.read<HomeBloc>();
+        final value = await router.push(AppRoutes.searchLocationPath);
+        if (!mounted) return;
+        if (value is String) {
+          bloc.add(HomeLocationChanged(value));
+        }
       },
       decoration: _buildInputDecoration(
         hintText: 'Pilih kota atau hotel',
@@ -165,7 +171,7 @@ class _VoiceHighlight extends StatelessWidget {
       builder: (context, voiceUpdatedAt) {
         if (voiceUpdatedAt == null) return child;
 
-        final highlightColor = AppColors.primary.withOpacity(0.12);
+        final highlightColor = AppColors.primary.withValues(alpha: 0.12);
 
         return TweenAnimationBuilder<double>(
           key: ValueKey(voiceUpdatedAt.millisecondsSinceEpoch),
@@ -187,7 +193,7 @@ class _VoiceHighlight extends StatelessWidget {
                   Positioned.fill(
                     child: ColoredBox(color: color ?? Colors.transparent),
                   ),
-                  child,
+                  RepaintBoundary(child: child),
                 ],
               ),
             );
@@ -549,56 +555,24 @@ class _SearchButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<HomeBloc, HomeState>(
-      listener: (context, state) {
-        if (state.status == HomeStatus.failure) {
-          AppToast.showError(
-            context,
-            state.errorMessage ?? 'Terjadi kesalahan',
-          );
-          // Reset status after showing error
-          context.read<HomeBloc>().add(const HomeStatusReset());
-        } else if (state.status == HomeStatus.success) {
-          // Navigate to hotel list with query parameters
-          final checkIn = state.checkInDate!.toIso8601String();
-          final checkOut = state.checkOutDate!.toIso8601String();
-
-          context.go(
-            Uri(
-              path: '/hotel-list',
-              queryParameters: {
-                'location': state.location,
-                'checkIn': checkIn,
-                'checkOut': checkOut,
-                'rooms': state.roomCount.toString(),
-                'guests': state.guestCount.toString(),
-              },
-            ).toString(),
-          );
-          context.read<HomeBloc>().add(const HomeStatusReset());
-        }
-      },
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: () {
-            context.read<HomeBloc>().add(const HomeSearchSubmitted());
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-            ),
-            elevation: 0,
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          context.read<HomeBloc>().add(const HomeSearchSubmitted());
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
           ),
-          child: Text(
-            'Cari Hotel',
-            style: AppTypography.labelLarge.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          elevation: 0,
+        ),
+        child: Text(
+          'Cari Hotel',
+          style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -618,6 +592,53 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
   DateTime? _startDate;
   DateTime? _endDate;
   final ScrollController _scrollController = ScrollController();
+  late final List<DateTime> _months;
+
+  static const List<String> _shortMonthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agt',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des',
+  ];
+
+  static const List<String> _fullMonthNames = [
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
+  ];
+
+  static const List<String> _dayNames = [
+    'Min',
+    'Sen',
+    'Sel',
+    'Rab',
+    'Kam',
+    'Jum',
+    'Sab',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _months = _generateMonths();
+  }
 
   List<DateTime> _generateMonths() {
     final List<DateTime> months = [];
@@ -674,39 +695,11 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
   }
 
   String _getMonthName(int month) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'Mei',
-      'Jun',
-      'Jul',
-      'Agt',
-      'Sep',
-      'Okt',
-      'Nov',
-      'Des',
-    ];
-    return months[month - 1];
+    return _shortMonthNames[month - 1];
   }
 
   String _getFullMonthName(int month) {
-    const months = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-    return months[month - 1];
+    return _fullMonthNames[month - 1];
   }
 
   @override
@@ -717,8 +710,6 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
 
   @override
   Widget build(BuildContext context) {
-    final months = _generateMonths();
-
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
@@ -752,7 +743,7 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
-              children: ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+              children: _dayNames
                   .map(
                     (day) => Expanded(
                       child: Center(
@@ -776,10 +767,10 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: months.length,
+              itemCount: _months.length,
               itemBuilder: (context, index) {
                 return _MonthCalendar(
-                  month: months[index],
+                  month: _months[index],
                   startDate: _startDate,
                   endDate: _endDate,
                   onDateTap: _onDateTap,
@@ -797,7 +788,7 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -932,7 +923,7 @@ class _MonthCalendar extends StatelessWidget {
                   color: selected
                       ? AppColors.primary
                       : inRange
-                      ? AppColors.primary.withOpacity(0.2)
+                      ? AppColors.primary.withValues(alpha: 0.2)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                 ),

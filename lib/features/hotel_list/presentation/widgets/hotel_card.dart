@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/hotel_entity.dart';
@@ -46,7 +47,7 @@ class _HotelCardState extends State<HotelCard> {
         : null;
 
     return GestureDetector(
-      onTap: () => context.push('/hotel-detail/${widget.hotel.id}'),
+      onTap: () => context.push(AppRoutes.hotelDetailPathFor(widget.hotel.id)),
       child: Container(
         height: 155,
         margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -56,7 +57,7 @@ class _HotelCardState extends State<HotelCard> {
           border: Border.all(color: Colors.grey[200]!, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 4,
               offset: const Offset(0, 1),
             ),
@@ -125,7 +126,7 @@ class _HotelCardState extends State<HotelCard> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 2,
                             offset: const Offset(0, 1),
                           ),

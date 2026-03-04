@@ -4,11 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../domain/entities/profile_entity.dart';
+import '../../domain/entities/user_preferences_entity.dart';
 
 /// Section 1: Profile & Level
 class ProfileSection extends StatelessWidget {
@@ -229,10 +231,24 @@ class ProfileSection extends StatelessWidget {
 
 /// Section 2: Payment Information
 class PaymentInformationSection extends StatelessWidget {
-  const PaymentInformationSection({super.key});
+  const PaymentInformationSection({
+    super.key,
+    required this.paymentMethodsCount,
+    required this.transactionsCount,
+  });
+
+  final int paymentMethodsCount;
+  final int transactionsCount;
 
   @override
   Widget build(BuildContext context) {
+    final paymentSubtitle = paymentMethodsCount == 0
+        ? 'Belum ada metode pembayaran'
+        : '$paymentMethodsCount kartu tersimpan';
+    final transactionSubtitle = transactionsCount == 0
+        ? 'Belum ada transaksi'
+        : '$transactionsCount transaksi';
+
     return _SectionCard(
       title: 'Informasi Pembayaran',
       icon: Icons.credit_card_outlined,
@@ -240,13 +256,13 @@ class PaymentInformationSection extends StatelessWidget {
         _MenuItem(
           icon: Icons.payment_outlined,
           title: 'Metode Pembayaran',
-          subtitle: '2 kartu tersimpan',
+          subtitle: paymentSubtitle,
           onTap: () {},
         ),
         _MenuItem(
           icon: Icons.receipt_long_outlined,
           title: 'Riwayat Transaksi',
-          subtitle: 'Lihat semua transaksi',
+          subtitle: transactionSubtitle,
           onTap: () {},
         ),
         _MenuItem(
@@ -308,7 +324,7 @@ class AccountManagementSection extends StatelessWidget {
                     onPressed: () {
                       Navigator.pop(ctx);
                       context.read<AuthBloc>().add(LogoutEvent());
-                      context.go('/login');
+                      context.go(AppRoutes.loginPath);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFE57373),
@@ -332,10 +348,22 @@ class AccountManagementSection extends StatelessWidget {
 
 /// Section 4: Preferences
 class PreferencesSection extends StatelessWidget {
-  const PreferencesSection({super.key});
+  const PreferencesSection({
+    super.key,
+    required this.preferences,
+    required this.onUpdate,
+  });
+
+  final UserPreferencesEntity? preferences;
+  final ValueChanged<UserPreferencesEntity> onUpdate;
 
   @override
   Widget build(BuildContext context) {
+    final prefs = preferences;
+    final notificationsEnabled = prefs?.notificationsEnabled ?? false;
+    final emailNotifications = prefs?.emailNotifications ?? false;
+    final pushNotifications = prefs?.pushNotifications ?? false;
+
     return _SectionCard(
       title: 'Preferensi',
       icon: Icons.settings_outlined,
@@ -343,28 +371,46 @@ class PreferencesSection extends StatelessWidget {
         _MenuItem(
           icon: Icons.language_outlined,
           title: 'Bahasa',
-          subtitle: 'Indonesia',
+          subtitle: prefs?.language ?? 'Indonesia',
           onTap: () {},
-        ),
-        _MenuItem(
-          icon: Icons.assignment_outlined,
-          title: 'Log Penelitian',
-          subtitle: 'Daftar sesi testing',
-          onTap: () => context.push('/research-log'),
         ),
         _MenuItemWithToggle(
           icon: Icons.notifications_outlined,
           title: 'Notifikasi',
           subtitle: 'Notifikasi push',
-          value: true,
-          onChanged: (value) {},
+          value: notificationsEnabled,
+          enabled: prefs != null,
+          onChanged: (value) {
+            if (prefs == null) return;
+            onUpdate(
+              prefs.copyWith(
+                notificationsEnabled: value,
+                pushNotifications: value,
+              ),
+            );
+          },
         ),
         _MenuItemWithToggle(
           icon: Icons.email_outlined,
           title: 'Notifikasi Email',
           subtitle: 'Pembaruan pemesanan & penawaran',
-          value: true,
-          onChanged: (value) {},
+          value: emailNotifications,
+          enabled: prefs != null,
+          onChanged: (value) {
+            if (prefs == null) return;
+            onUpdate(prefs.copyWith(emailNotifications: value));
+          },
+        ),
+        _MenuItemWithToggle(
+          icon: Icons.notifications_active_outlined,
+          title: 'Notifikasi Push',
+          subtitle: 'Aktifkan pemberitahuan perangkat',
+          value: pushNotifications,
+          enabled: prefs != null,
+          onChanged: (value) {
+            if (prefs == null) return;
+            onUpdate(prefs.copyWith(pushNotifications: value));
+          },
         ),
         _MenuItem(
           icon: Icons.privacy_tip_outlined,
@@ -582,6 +628,7 @@ class _MenuItemWithToggle extends StatelessWidget {
     required this.subtitle,
     required this.value,
     required this.onChanged,
+    this.enabled = true,
   });
 
   final IconData icon;
@@ -589,6 +636,7 @@ class _MenuItemWithToggle extends StatelessWidget {
   final String subtitle;
   final bool value;
   final ValueChanged<bool> onChanged;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -628,11 +676,11 @@ class _MenuItemWithToggle extends StatelessWidget {
               ],
             ),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.primary,
-          ),
+                Switch(
+                  value: value,
+                  onChanged: enabled ? onChanged : null,
+                  activeThumbColor: AppColors.primary,
+                ),
         ],
       ),
     );
