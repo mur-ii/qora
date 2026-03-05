@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -119,19 +118,16 @@ class _BookingSummaryPageContentState
 
             if (state is BookingSummaryLoaded) {
               final voiceState = context.read<VoiceAssistantBloc>().state;
-              if (voiceState.connectionStatus ==
-                  VoiceConnectionStatus.connected) {
+              if (voiceState.isActive) {
                 _requestSummaryReview(state.booking);
               }
             }
           },
         ),
         BlocListener<VoiceAssistantBloc, VoiceAssistantState>(
-          listenWhen: (previous, current) =>
-              previous.connectionStatus != current.connectionStatus,
+          listenWhen: (previous, current) => previous.status != current.status,
           listener: (context, voiceState) {
-            if (voiceState.connectionStatus !=
-                VoiceConnectionStatus.connected) {
+            if (!voiceState.isActive) {
               return;
             }
 
@@ -269,17 +265,17 @@ class _BookingSummaryPageContentState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: CachedNetworkImage(
-              imageUrl: booking.hotel.imageUrl,
-              height: 200,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => Container(
-                color: Colors.grey[200],
-                child: const Center(child: CircularProgressIndicator()),
-              ),
+          Container(
+            height: 120,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Color(0xFFDBEAFE),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            ),
+            child: const Icon(
+              Icons.hotel_outlined,
+              size: 48,
+              color: Color(0xFF1D4ED8),
             ),
           ),
           Padding(

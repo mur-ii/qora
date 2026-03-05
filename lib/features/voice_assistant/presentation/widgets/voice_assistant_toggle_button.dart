@@ -1,4 +1,3 @@
-import 'package:draggable_float_widget/draggable_float_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -84,12 +83,11 @@ class _VoiceAssistantToggleButtonState
     if (!mounted) return;
 
     if (enableVoice) {
-      if (state.connectionStatus == VoiceConnectionStatus.disconnected ||
-          state.connectionStatus == VoiceConnectionStatus.failed) {
+      if (state.status == VoiceAssistantStatus.idle) {
         context.read<VoiceAssistantBloc>().add(const StartVoiceAssistant());
       }
     } else {
-      if (state.connectionStatus == VoiceConnectionStatus.connected) {
+      if (state.isActive) {
         context.read<VoiceAssistantBloc>().add(const StopVoiceAssistant());
       }
     }
@@ -112,15 +110,23 @@ class _VoiceAssistantToggleButtonState
   }
 
   String _statusText({
-    required bool isActive,
-    required bool isConnecting,
-    required bool isFailed,
+    required VoiceAssistantStatus status,
     required bool isMuted,
+    required bool hasError,
   }) {
-    if (isFailed) return 'Failed';
-    if (isConnecting) return 'Connecting';
-    if (isActive && isMuted) return 'Muted';
-    if (isActive) return widget.activeLabel ?? 'Listening';
+    if (hasError && status == VoiceAssistantStatus.idle) {
+      return 'Failed';
+    }
+    if (status == VoiceAssistantStatus.connecting ||
+        status == VoiceAssistantStatus.disconnecting) {
+      return 'Connecting';
+    }
+    if (isMuted && status != VoiceAssistantStatus.idle) return 'Muted';
+    if (status == VoiceAssistantStatus.speaking) return 'Speaking';
+    if (status == VoiceAssistantStatus.listening) return 'Listening';
+    if (status == VoiceAssistantStatus.connected) {
+      return widget.activeLabel ?? 'Listening';
+    }
     return widget.inactiveLabel ?? 'Idle';
   }
 
@@ -128,11 +134,12 @@ class _VoiceAssistantToggleButtonState
   Widget build(BuildContext context) {
     return BlocBuilder<VoiceAssistantBloc, VoiceAssistantState>(
       builder: (context, state) {
-        final isActive =
-            state.connectionStatus == VoiceConnectionStatus.connected;
+        final isActive = state.isActive;
         final isConnecting =
-            state.connectionStatus == VoiceConnectionStatus.connecting;
-        final isFailed = state.connectionStatus == VoiceConnectionStatus.failed;
+            state.status == VoiceAssistantStatus.connecting ||
+            state.status == VoiceAssistantStatus.disconnecting;
+        final isFailed =
+            state.error != null && state.status == VoiceAssistantStatus.idle;
         final isMuted = state.isMuted;
 
         final theme = Theme.of(context);
@@ -146,10 +153,9 @@ class _VoiceAssistantToggleButtonState
           isMuted: isMuted,
         );
         final statusText = _statusText(
-          isActive: isActive,
-          isConnecting: isConnecting,
-          isFailed: isFailed,
+          status: state.status,
           isMuted: isMuted,
+          hasError: state.error != null,
         );
         final canToggleMute = isActive && !isConnecting;
 
@@ -286,158 +292,6 @@ class _VoiceAssistantToggleButtonState
                 ),
               ),
             ],
-          ],
-        );
-      },
-    );
-  }
-}
-
-class DraggableVoiceAssistantOverlay extends StatelessWidget {
-  final Widget child;
-  final Widget button;
-  final EdgeInsets padding;
-  final Size estimatedButtonSize;
-
-  const DraggableVoiceAssistantOverlay({
-    super.key,
-    required this.child,
-    required this.button,
-    this.padding = const EdgeInsets.all(16),
-    this.estimatedButtonSize = const Size(72, 96),
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final safePadding = padding.copyWith(
-      left: padding.left + media.padding.left,
-      top: padding.top + media.padding.top,
-      right: padding.right + media.padding.right,
-      bottom: padding.bottom + media.padding.bottom + media.viewInsets.bottom,
-    );
-
-    return Stack(
-      children: [
-        child,
-        DraggableFloatWidget(
-          width: estimatedButtonSize.width,
-          height: estimatedButtonSize.height,
-          config: DraggableFloatWidgetBaseConfig(
-            isFullScreen: false,
-            initPositionXInLeft: false,
-            initPositionYInTop: true,
-            initPositionYMarginBorder: safePadding.top,
-            borderLeft: safePadding.left,
-            borderRight: safePadding.right,
-            borderTop: safePadding.top,
-            borderBottom: safePadding.bottom,
-          ),
-          child: button,
-        ),
-      ],
-    );
-  }
-}
-
-/// Compact variant - just an icon button without elevation
-class VoiceAssistantIconButton extends StatelessWidget {
-  final double size;
-  final Color? activeColor;
-  final Color? inactiveColor;
-  final bool showMuteToggle;
-
-  const VoiceAssistantIconButton({
-    super.key,
-    this.size = 24,
-    this.activeColor,
-    this.inactiveColor,
-    this.showMuteToggle = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<VoiceAssistantBloc, VoiceAssistantState>(
-      builder: (context, state) {
-        final isActive =
-            state.connectionStatus == VoiceConnectionStatus.connected;
-        final isConnecting =
-            state.connectionStatus == VoiceConnectionStatus.connecting;
-        final isMuted = state.isMuted;
-        final canToggleMute = isActive && !isConnecting;
-        final theme = Theme.of(context);
-
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            IconButton(
-              onPressed: isConnecting
-                  ? null
-                  : () {
-                      if (isActive) {
-                        context.read<VoiceAssistantBloc>().add(
-                          const StopVoiceAssistant(),
-                        );
-                      } else {
-                        context.read<VoiceAssistantBloc>().add(
-                          const StartVoiceAssistant(),
-                        );
-                      }
-                    },
-              icon: isConnecting
-                  ? SizedBox(
-                      width: size,
-                      height: size,
-                      child: const CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Icon(
-                      isActive
-                          ? (isMuted ? Icons.mic_off : Icons.mic)
-                          : Icons.mic_none,
-                      color: isActive
-                          ? (activeColor ?? theme.colorScheme.primary)
-                          : (inactiveColor ?? theme.colorScheme.outline),
-                      size: size,
-                    ),
-            ),
-            if (showMuteToggle)
-              Positioned(
-                right: -2,
-                bottom: -2,
-                child: InkResponse(
-                  onTap: canToggleMute
-                      ? () {
-                          context.read<VoiceAssistantBloc>().add(
-                            const ToggleVoiceAssistantMute(),
-                          );
-                        }
-                      : null,
-                  radius: 12,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surface,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: theme.colorScheme.outline.withValues(alpha: 0.4),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: theme.shadowColor.withValues(alpha: 0.08),
-                          blurRadius: 4,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      isMuted ? Icons.volume_off : Icons.volume_up,
-                      size: 12,
-                      color: canToggleMute
-                          ? theme.colorScheme.primary
-                          : theme.disabledColor,
-                    ),
-                  ),
-                ),
-              ),
           ],
         );
       },

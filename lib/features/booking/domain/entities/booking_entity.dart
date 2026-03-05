@@ -48,7 +48,6 @@ class HotelInfoEntity extends Equatable {
   final String name;
   final String address;
   final double rating;
-  final String imageUrl;
   final String phone;
   final String email;
 
@@ -57,27 +56,17 @@ class HotelInfoEntity extends Equatable {
     required this.name,
     required this.address,
     required this.rating,
-    required this.imageUrl,
     required this.phone,
     required this.email,
   });
 
   @override
-  List<Object?> get props => [
-    id,
-    name,
-    address,
-    rating,
-    imageUrl,
-    phone,
-    email,
-  ];
+  List<Object?> get props => [id, name, address, rating, phone, email];
 }
 
 class RoomInfoEntity extends Equatable {
   final String id;
   final String name;
-  final String imageUrl;
   final String bedType;
   final int maxGuests;
   final String? roomNumber;
@@ -85,21 +74,13 @@ class RoomInfoEntity extends Equatable {
   const RoomInfoEntity({
     required this.id,
     required this.name,
-    required this.imageUrl,
     required this.bedType,
     required this.maxGuests,
     this.roomNumber,
   });
 
   @override
-  List<Object?> get props => [
-    id,
-    name,
-    imageUrl,
-    bedType,
-    maxGuests,
-    roomNumber,
-  ];
+  List<Object?> get props => [id, name, bedType, maxGuests, roomNumber];
 }
 
 class BookingDetailsEntity extends Equatable {

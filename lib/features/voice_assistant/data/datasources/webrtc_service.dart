@@ -6,11 +6,14 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../domain/entities/connection_state_entity.dart';
 import '../../domain/entities/function_call_entity.dart';
+import '../../voice_logger.dart';
 
 class WebRTCService {
   RTCPeerConnection? _peerConnection;
   RTCDataChannel? _dataChannel;
   MediaStream? _localStream;
+
+  final VoiceConversationLogger? _conversationLogger;
 
   ConnectionStateEntity _connectionState = ConnectionStateEntity.disconnected;
 
@@ -22,17 +25,27 @@ class WebRTCService {
 
   ConnectionStateEntity get connectionState => _connectionState;
 
+  WebRTCService({VoiceConversationLogger? conversationLogger})
+    : _conversationLogger = conversationLogger;
+
   /// Initialize WebRTC with Google STUN servers
   Future<void> initialize({
     required Function(ConnectionStateEntity) onConnectionStateChange,
     required Function(String) onTranscript,
     required Function(FunctionCallEntity) onFunctionCall,
     required Function(Map<String, dynamic>) onAgentEvent,
+    String? modelName,
   }) async {
+    if (_peerConnection != null || _dataChannel != null) {
+      await disconnect();
+    }
+
     _onConnectionStateChange = onConnectionStateChange;
     _onTranscript = onTranscript;
     _onFunctionCall = onFunctionCall;
     _onAgentEvent = onAgentEvent;
+
+    _conversationLogger?.setModelName(modelName);
 
     _updateConnectionState(ConnectionStateEntity.connecting);
 
@@ -47,6 +60,7 @@ class WebRTCService {
       };
 
       _peerConnection = await createPeerConnection(configuration);
+      _conversationLogger?.logLifecycle('WebRTC peer connection created');
 
       // Set up connection state listener
       _peerConnection!.onConnectionState = (state) {
@@ -55,6 +69,7 @@ class WebRTCService {
         } else if (state ==
             RTCPeerConnectionState.RTCPeerConnectionStateFailed) {
           AppLogger.warn('WebRTC', 'Connection state: failed');
+          _conversationLogger?.logError('WebRTC connection failed');
         } else if (state ==
             RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
           AppLogger.warn('WebRTC', 'Connection state: disconnected');
@@ -88,6 +103,7 @@ class WebRTCService {
 
       // Capture microphone audio
       await _captureAudio();
+      _conversationLogger?.logLifecycle('Microphone stream started');
 
       // Create data channel for events
       await _createDataChannel();
@@ -128,6 +144,10 @@ class WebRTCService {
         error: e,
         stackTrace: stackTrace,
       );
+      final message = e.toString().toLowerCase();
+      if (message.contains('permission') || message.contains('notallowed')) {
+        throw Exception('Microphone permission denied');
+      }
       rethrow;
     }
   }
@@ -163,6 +183,8 @@ class WebRTCService {
       final data = jsonDecode(message) as Map<String, dynamic>;
       final eventType = data['type'] as String?;
 
+      _conversationLogger?.logRealtimeEvent(data);
+
       if (eventType == null) {
         AppLogger.warn('WebRTC', 'Received message without type field');
         return;
@@ -174,6 +196,14 @@ class WebRTCService {
           if (transcript != null && transcript.isNotEmpty) {
             _onTranscript?.call(transcript);
           }
+          break;
+
+        case 'input_audio_buffer.speech_started':
+          _onAgentEvent?.call(data);
+          break;
+
+        case 'input_audio_buffer.speech_stopped':
+          _onAgentEvent?.call(data);
           break;
 
         case 'response.function_call_arguments.done':
@@ -224,8 +254,6 @@ class WebRTCService {
         case 'conversation.item.created':
         case 'response.done':
         case 'response.created':
-        case 'input_audio_buffer.speech_started':
-        case 'input_audio_buffer.speech_stopped':
           _onAgentEvent?.call(data);
           break;
 
@@ -344,7 +372,14 @@ class WebRTCService {
   /// Disconnect and cleanup
   Future<void> disconnect() async {
     try {
+      _onConnectionStateChange = null;
+      _onTranscript = null;
+      _onFunctionCall = null;
+      _onAgentEvent = null;
+
       // Close data channel
+      _dataChannel?.onMessage = null;
+      _dataChannel?.onDataChannelState = null;
       _dataChannel?.close();
       _dataChannel = null;
 
@@ -356,6 +391,9 @@ class WebRTCService {
       _localStream = null;
 
       // Close peer connection
+      _peerConnection?.onTrack = null;
+      _peerConnection?.onIceCandidate = null;
+      _peerConnection?.onConnectionState = null;
       await _peerConnection?.close();
       _peerConnection = null;
 

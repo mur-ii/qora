@@ -27,6 +27,13 @@ class AgenticAIService {
 
   AgentStateEntity get agentState => _agentState;
 
+  void reset() {
+    _agentState = const AgentStateEntity();
+    _hotelSearchResults = {};
+    _selectedHotel = {};
+    _bookingData = {};
+  }
+
   void previewUserConstraints(Map<String, dynamic> args) {
     final normalized = Map<String, dynamic>.from(_applyDefaultScenario(args));
     final constraints = _agentState.userConstraints;
@@ -154,15 +161,13 @@ class AgenticAIService {
         name: hotel['name'].toString(),
         address: hotel['address'].toString(),
         rating: (hotel['rating'] as num).toDouble(),
-        imageUrl: hotel['imageUrl'].toString(),
-        phone: hotel['phone'].toString(),
-        email: hotel['email'].toString(),
+        phone: hotel['phone']?.toString() ?? '',
+        email: hotel['email']?.toString() ?? '',
       ),
       room: RoomInfoEntity(
         id: room['id'].toString(),
         name: room['name'].toString(),
-        imageUrl: room['imageUrl'].toString(),
-        bedType: room['bedType'].toString(),
+        bedType: room['bedType']?.toString() ?? 'Double',
         maxGuests: (room['maxGuests'] as num).toInt(),
       ),
       bookingDetails: BookingDetailsEntity(
@@ -871,7 +876,6 @@ class AgenticAIService {
         'name': hotelData['name'] ?? baseHotel['name'],
         'address': hotelData['address'] ?? baseHotel['address'],
         'rating': hotelData['rating'] ?? baseHotel['rating'],
-        'imageUrl': hotelData['imageUrl'] ?? baseHotel['imageUrl'],
       },
     };
 
@@ -881,7 +885,6 @@ class AgenticAIService {
       if (roomData != null) ...{
         'id': roomData['id']?.toString() ?? baseRoom['id'],
         'name': roomData['name'] ?? baseRoom['name'],
-        'imageUrl': roomData['imageUrl'] ?? baseRoom['imageUrl'],
         'bedType': roomData['bedType'] ?? baseRoom['bedType'],
         'maxGuests': roomData['maxGuests'] ?? baseRoom['maxGuests'],
       },

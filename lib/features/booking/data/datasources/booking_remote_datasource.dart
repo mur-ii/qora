@@ -79,7 +79,6 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
         'name': selectedHotel['name'] ?? existingHotel['name'],
         'address': selectedHotel['address'] ?? existingHotel['address'],
         'rating': selectedHotel['rating'] ?? existingHotel['rating'],
-        'imageUrl': selectedHotel['imageUrl'] ?? existingHotel['imageUrl'],
       };
     }
 
@@ -87,7 +86,6 @@ class BookingRemoteDataSourceImpl implements BookingRemoteDataSource {
       data['room'] = {
         'id': selectedRoom['id']?.toString(),
         'name': selectedRoom['name'],
-        'imageUrl': selectedRoom['imageUrl'],
         'bedType': selectedRoom['bedType'],
         'maxGuests': selectedRoom['maxGuests'],
       };

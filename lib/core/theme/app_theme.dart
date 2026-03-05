@@ -39,28 +39,21 @@ class AppTheme {
       brightness: Brightness.light,
 
       // Color Scheme
-      colorScheme: const ColorScheme.light(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: AppColors.primary,
+        brightness: Brightness.light,
         primary: AppColors.primary,
-        primaryContainer: AppColors.primaryLight,
+        onPrimary: AppColors.textOnPrimary,
         secondary: AppColors.secondary,
-        secondaryContainer: AppColors.secondaryLight,
-        tertiary: AppColors.accent,
-        tertiaryContainer: AppColors.accentLight,
+        onSecondary: AppColors.textOnDark,
         error: AppColors.error,
         surface: AppColors.surface,
-        surfaceContainer: AppColors.surfaceVariant,
-        onPrimary: AppColors.textOnPrimary,
-        onSecondary: AppColors.textOnDark,
-        onTertiary: AppColors.textPrimary,
         onSurface: AppColors.textPrimary,
-        onSurfaceVariant: AppColors.textSecondary,
         outline: AppColors.border,
-        outlineVariant: AppColors.borderDark,
         shadow: AppColors.shadowMedium,
         scrim: AppColors.scrim,
         inverseSurface: AppColors.neutral,
         onInverseSurface: AppColors.textOnDark,
-        inversePrimary: AppColors.primaryLight,
       ),
 
       // Scaffold background
@@ -253,13 +246,13 @@ class AppTheme {
 
       // Bottom Navigation Bar Theme
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.neutral,
+        backgroundColor: AppColors.surface,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textTertiary,
-        selectedIconTheme: IconThemeData(color: AppColors.primary, size: 28),
+        selectedIconTheme: IconThemeData(color: AppColors.primary, size: 26),
         unselectedIconTheme: IconThemeData(
           color: AppColors.textTertiary,
-          size: 24,
+          size: 22,
         ),
         selectedLabelStyle: TextStyle(
           fontFamily: AppTypography.fontFamily,
@@ -277,7 +270,7 @@ class AppTheme {
 
       // Navigation Bar Theme (Material 3)
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.neutral,
+        backgroundColor: AppColors.surface,
         indicatorColor: AppColors.primary.withValues(alpha: 0.15),
         height: 70,
         elevation: elevationMedium,
@@ -493,7 +486,7 @@ class AppTheme {
       // Tooltip Theme
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
-          color: AppColors.neutral,
+          color: AppColors.neutral900,
           borderRadius: BorderRadius.circular(radiusSmall),
         ),
         textStyle: const TextStyle(

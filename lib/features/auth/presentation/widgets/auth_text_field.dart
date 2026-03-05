@@ -47,7 +47,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF1F2937),
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: 8),
@@ -65,7 +65,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
                 ? IconButton(
                     icon: Icon(
                       _obscureText ? Icons.visibility_off : Icons.visibility,
-                      color: const Color(0xFF6B7280),
+                      color: AppColors.textSecondary,
                     ),
                     onPressed: () {
                       setState(() {

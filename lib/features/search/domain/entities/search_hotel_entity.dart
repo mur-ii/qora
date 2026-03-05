@@ -5,7 +5,6 @@ class SearchHotelEntity extends Equatable {
   final String name;
   final String location;
   final String city;
-  final String imageUrl;
   final double pricePerNight;
   final double rating;
   final int reviewCount;
@@ -17,7 +16,6 @@ class SearchHotelEntity extends Equatable {
     required this.name,
     required this.location,
     required this.city,
-    required this.imageUrl,
     required this.pricePerNight,
     required this.rating,
     required this.reviewCount,
@@ -27,15 +25,6 @@ class SearchHotelEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    name,
-    location,
-    city,
-    imageUrl,
-    pricePerNight,
-    rating,
-    reviewCount,
-    isPromo,
-    amenities,
+    id, name, location, city, pricePerNight, rating, reviewCount, isPromo, amenities,
   ];
 }

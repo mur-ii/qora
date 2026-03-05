@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -111,7 +110,7 @@ class ProfileQuickSheet extends StatelessWidget {
                   context.push(AppRoutes.profilePath);
                 },
                 style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
@@ -154,27 +153,17 @@ class ProfileQuickSheet extends StatelessWidget {
                 ),
               ),
               // Avatar
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                ),
-                child: ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: profile.avatarUrl,
-                    fit: BoxFit.cover,
-                    memCacheHeight: 144,
-                    memCacheWidth: 144,
-                    placeholder: (context, url) => Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.person, size: 36),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.person, size: 36),
-                    ),
+              CircleAvatar(
+                radius: 36,
+                backgroundColor: const Color(0xFFDBEAFE),
+                child: Text(
+                  profile.fullName.isNotEmpty
+                      ? profile.fullName[0].toUpperCase()
+                      : '?',
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1D4ED8),
                   ),
                 ),
               ),

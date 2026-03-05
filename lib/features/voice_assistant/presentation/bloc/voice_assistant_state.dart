@@ -2,10 +2,17 @@ import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/agent_state_entity.dart';
 
-enum VoiceConnectionStatus { disconnected, connecting, connected, failed }
+enum VoiceAssistantStatus {
+  idle,
+  connecting,
+  connected,
+  listening,
+  speaking,
+  disconnecting,
+}
 
 class VoiceAssistantState extends Equatable {
-  final VoiceConnectionStatus connectionStatus;
+  final VoiceAssistantStatus status;
   final List<ConversationMessage> messages;
   final AgentStateEntity agentState;
   final String? error;
@@ -13,7 +20,7 @@ class VoiceAssistantState extends Equatable {
   final bool isMuted;
 
   const VoiceAssistantState({
-    this.connectionStatus = VoiceConnectionStatus.disconnected,
+    this.status = VoiceAssistantStatus.idle,
     this.messages = const [],
     this.agentState = const AgentStateEntity(),
     this.error,
@@ -22,7 +29,7 @@ class VoiceAssistantState extends Equatable {
   });
 
   VoiceAssistantState copyWith({
-    VoiceConnectionStatus? connectionStatus,
+    VoiceAssistantStatus? status,
     List<ConversationMessage>? messages,
     AgentStateEntity? agentState,
     String? error,
@@ -30,7 +37,7 @@ class VoiceAssistantState extends Equatable {
     bool? isMuted,
   }) {
     return VoiceAssistantState(
-      connectionStatus: connectionStatus ?? this.connectionStatus,
+      status: status ?? this.status,
       messages: messages ?? this.messages,
       agentState: agentState ?? this.agentState,
       error: error,
@@ -39,9 +46,14 @@ class VoiceAssistantState extends Equatable {
     );
   }
 
+  bool get isActive =>
+      status == VoiceAssistantStatus.connected ||
+      status == VoiceAssistantStatus.listening ||
+      status == VoiceAssistantStatus.speaking;
+
   @override
   List<Object?> get props => [
-    connectionStatus,
+    status,
     messages,
     agentState,
     error,

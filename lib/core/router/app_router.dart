@@ -16,9 +16,11 @@ import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../widgets/main_navigation_page.dart';
 import 'app_routes.dart';
+import 'voice_assistant_navigation_observer.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: AppRoutes.splashPath,
+  observers: [VoiceAssistantNavigationObserver()],
   routes: [
     GoRoute(
       path: AppRoutes.splashPath,

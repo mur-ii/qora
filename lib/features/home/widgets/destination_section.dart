@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import 'destination_card.dart';
 
 class DestinationSection extends StatelessWidget {
   const DestinationSection({super.key});
@@ -14,26 +13,12 @@ class DestinationSection extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Destinasi',
-                style: AppTypography.titleLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              TextButton(
-                onPressed: null,
-                child: Text(
-                  'Lihat Semua',
-                  style: AppTypography.labelLarge.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
+          child: Text(
+            'Destinasi Populer',
+            style: AppTypography.titleLarge.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -43,25 +28,16 @@ class DestinationSection extends StatelessWidget {
             shrinkWrap: true,
             primary: false,
             physics: const NeverScrollableScrollPhysics(),
-            cacheExtent: 600,
-            addAutomaticKeepAlives: false,
-            addRepaintBoundaries: true,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              childAspectRatio: 1.4,
+              crossAxisCount: 3,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 1.3,
             ),
             itemCount: _destinations.length,
             itemBuilder: (context, index) {
-              final destination = _destinations[index];
-              return RepaintBoundary(
-                child: DestinationCard(
-                  key: ValueKey(destination['name']),
-                  name: destination['name']!,
-                  imageUrl: destination['imageUrl']!,
-                ),
-              );
+              final d = _destinations[index];
+              return _DestinationCard(name: d['name']!, icon: d['icon']!);
             },
           ),
         ),
@@ -70,35 +46,55 @@ class DestinationSection extends StatelessWidget {
   }
 }
 
+class _DestinationCard extends StatelessWidget {
+  const _DestinationCard({required this.name, required this.icon});
+
+  final String name;
+  final String icon;
+
+  static const _iconMap = <String, IconData>{
+    'beach': Icons.beach_access_outlined,
+    'city': Icons.location_city_outlined,
+    'mountain': Icons.landscape_outlined,
+    'culture': Icons.temple_buddhist_outlined,
+    'park': Icons.park_outlined,
+    'island': Icons.water_outlined,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final iconData = _iconMap[icon] ?? Icons.place_outlined;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(iconData, size: 26, color: AppColors.primary),
+          const SizedBox(height: 6),
+          Text(
+            name,
+            style: AppTypography.labelSmall.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 const List<Map<String, String>> _destinations = [
-  {
-    'name': 'Bali',
-    'imageUrl':
-        'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800',
-  },
-  {
-    'name': 'DKI Jakarta',
-    'imageUrl':
-        'https://images.unsplash.com/photo-1591825729269-caeb344f6df2?w=800',
-  },
-  {
-    'name': 'Jawa Barat',
-    'imageUrl':
-        'https://images.unsplash.com/photo-1601933973783-43cf8a7d4c5f?w=800',
-  },
-  {
-    'name': 'Jawa Tengah',
-    'imageUrl':
-        'https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=800',
-  },
-  {
-    'name': 'Jawa Timur',
-    'imageUrl':
-        'https://images.unsplash.com/photo-1548048026-5a1a941d93d3?w=800',
-  },
-  {
-    'name': 'Sumatera Utara',
-    'imageUrl':
-        'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=800',
-  },
+  {'name': 'Bali', 'icon': 'beach'},
+  {'name': 'Jakarta', 'icon': 'city'},
+  {'name': 'Bandung', 'icon': 'mountain'},
+  {'name': 'Yogyakarta', 'icon': 'culture'},
+  {'name': 'Surabaya', 'icon': 'city'},
+  {'name': 'Lombok', 'icon': 'island'},
 ];

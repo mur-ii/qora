@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -97,7 +96,11 @@ class OngoingBookingsTab extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final record = state.ongoing[index];
-              return _BookingCard(record: record, isHistory: false);
+              // RepaintBoundary caches the rasterized card (shadow included) so
+              // the GPU texture is reused on scroll instead of re-blurring.
+              return RepaintBoundary(
+                child: _BookingCard(record: record, isHistory: false),
+              );
             },
           );
         }
@@ -141,7 +144,9 @@ class HistoryBookingsTab extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final record = state.history[index];
-              return _BookingCard(record: record, isHistory: true);
+              return RepaintBoundary(
+                child: _BookingCard(record: record, isHistory: true),
+              );
             },
           );
         }
@@ -164,6 +169,9 @@ class _BookingCard extends StatelessWidget {
   final bool isHistory;
 
   const _BookingCard({required this.record, required this.isHistory});
+
+  // Cached once per class, not recreated on every build() call.
+  static final _dateFormat = DateFormat('dd MMM yyyy');
 
   Color _statusColor(String status) {
     switch (status) {
@@ -194,7 +202,6 @@ class _BookingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final status = _statusLabel();
     final statusColor = _statusColor(status);
-    final dateFormat = DateFormat('dd MMM yyyy');
 
     return Container(
       decoration: BoxDecoration(
@@ -218,31 +225,14 @@ class _BookingCard extends StatelessWidget {
                   top: Radius.circular(12),
                 ),
                 child: Container(
-                  height: 140,
+                  height: 100,
                   width: double.infinity,
-                  color: AppColors.neutral.withValues(alpha: 0.1),
-                  child: record.imageUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: record.imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => const Center(
-                            child: SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => const Icon(
-                            Icons.hotel,
-                            size: 48,
-                            color: AppColors.textTertiary,
-                          ),
-                        )
-                      : const Icon(
-                          Icons.hotel,
-                          size: 48,
-                          color: AppColors.textTertiary,
-                        ),
+                  color: const Color(0xFFDBEAFE),
+                  child: const Icon(
+                    Icons.hotel_outlined,
+                    size: 40,
+                    color: Color(0xFF1D4ED8),
+                  ),
                 ),
               ),
               Positioned(
@@ -319,7 +309,7 @@ class _BookingCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              dateFormat.format(record.checkIn),
+                              _dateFormat.format(record.checkIn),
                               style: AppTypography.bodyMedium.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
@@ -346,7 +336,7 @@ class _BookingCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              dateFormat.format(record.checkOut),
+                              _dateFormat.format(record.checkOut),
                               style: AppTypography.bodyMedium.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,

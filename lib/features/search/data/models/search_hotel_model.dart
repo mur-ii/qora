@@ -6,7 +6,6 @@ class SearchHotelModel extends SearchHotelEntity {
     required super.name,
     required super.location,
     required super.city,
-    required super.imageUrl,
     required super.pricePerNight,
     required super.rating,
     required super.reviewCount,
@@ -19,30 +18,21 @@ class SearchHotelModel extends SearchHotelEntity {
       id: json['id'] as String,
       name: json['name'] as String,
       location: json['location'] as String,
-      city: json['city'] as String,
-      imageUrl: json['imageUrl'] as String,
+      city: json['city'] as String? ?? '',
       pricePerNight: (json['pricePerNight'] as num).toDouble(),
       rating: (json['rating'] as num).toDouble(),
-      reviewCount: json['reviewCount'] as int,
-      isPromo: json['isPromo'] as bool,
-      amenities: (json['amenities'] as List<dynamic>)
-          .map((e) => e.toString())
-          .toList(),
+      reviewCount: json['reviewCount'] as int? ?? 0,
+      isPromo: json['isPromo'] as bool? ?? false,
+      amenities: (json['amenities'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'location': location,
-      'city': city,
-      'imageUrl': imageUrl,
-      'pricePerNight': pricePerNight,
-      'rating': rating,
-      'reviewCount': reviewCount,
-      'isPromo': isPromo,
-      'amenities': amenities,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'id': id, 'name': name, 'location': location, 'city': city,
+    'pricePerNight': pricePerNight, 'rating': rating,
+    'reviewCount': reviewCount, 'isPromo': isPromo, 'amenities': amenities,
+  };
 }

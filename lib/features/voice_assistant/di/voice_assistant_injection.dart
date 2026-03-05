@@ -5,25 +5,36 @@ import '../data/datasources/openai_realtime_datasource.dart';
 import '../data/datasources/webrtc_service.dart';
 import '../data/repositories/voice_assistant_repository_impl.dart';
 import '../data/services/agentic_ai_service.dart';
-import '../domain/usecases/create_session_usecase.dart';
-import '../domain/usecases/disconnect_usecase.dart';
-import '../domain/usecases/initialize_webrtc_usecase.dart';
-import '../domain/usecases/request_assistant_response_usecase.dart';
-import '../domain/usecases/send_function_result_usecase.dart';
-import '../domain/usecases/set_microphone_muted_usecase.dart';
 import '../presentation/bloc/voice_assistant_bloc.dart';
+import '../session_token_tracker.dart';
+import '../voice_assistant_controller.dart';
+import '../voice_assistant_service.dart';
+import '../voice_logger.dart';
 
 class VoiceAssistantInjection {
   static VoiceAssistantBloc? _voiceAssistantBloc;
   static NavigationService? _navigationService;
+  static VoiceConversationLogger? _conversationLogger;
+  static VoiceAssistantController? _voiceAssistantController;
+  static SessionTokenTracker? _sessionTokenTracker;
 
   /// Initialize voice assistant dependencies
   static VoiceAssistantBloc provideVoiceAssistantBloc({
     required String openAiApiKey,
     required NavigationService navigationService,
     String? model,
+    bool enableFileLogging = true,
   }) {
     _navigationService = navigationService;
+
+    _sessionTokenTracker ??= SessionTokenTracker();
+    _conversationLogger ??= VoiceConversationLogger(
+      modelName: model,
+      tokenTracker: _sessionTokenTracker,
+    );
+    if (enableFileLogging) {
+      _conversationLogger!.enableFileLogging();
+    }
 
     // Data sources
     final httpClient = http.Client();
@@ -31,7 +42,9 @@ class VoiceAssistantInjection {
       apiKey: openAiApiKey,
       httpClient: httpClient,
     );
-    final webRTCService = WebRTCService();
+    final webRTCService = WebRTCService(
+      conversationLogger: _conversationLogger,
+    );
 
     // Repository
     final repository = VoiceAssistantRepositoryImpl(
@@ -39,34 +52,51 @@ class VoiceAssistantInjection {
       webRTCService: webRTCService,
     );
 
+    // Service + Controller
+    final voiceAssistantService = VoiceAssistantService(
+      repository: repository,
+      logger: _conversationLogger!,
+    );
+
     // Agentic AI Service
     final agenticAIService = AgenticAIService(
       navigationService: navigationService,
     );
 
-    // Use cases
-    final createSessionUseCase = CreateSessionUseCase(repository);
-    final initializeWebRTCUseCase = InitializeWebRTCUseCase(repository);
-    final requestAssistantResponseUseCase = RequestAssistantResponseUseCase(
-      repository,
+    _voiceAssistantController = VoiceAssistantController(
+      service: voiceAssistantService,
+      agenticAIService: agenticAIService,
+      logger: _conversationLogger!,
+      tokenTracker: _sessionTokenTracker!,
     );
-    final sendFunctionResultUseCase = SendFunctionResultUseCase(repository);
-    final disconnectUseCase = DisconnectUseCase(repository);
-    final setMicrophoneMutedUseCase = SetMicrophoneMutedUseCase(repository);
 
     // BLoC
     _voiceAssistantBloc = VoiceAssistantBloc(
-      createSessionUseCase: createSessionUseCase,
-      initializeWebRTCUseCase: initializeWebRTCUseCase,
-      requestAssistantResponseUseCase: requestAssistantResponseUseCase,
-      sendFunctionResultUseCase: sendFunctionResultUseCase,
-      disconnectUseCase: disconnectUseCase,
-      setMicrophoneMutedUseCase: setMicrophoneMutedUseCase,
+      voiceAssistantController: _voiceAssistantController!,
       agenticAIService: agenticAIService,
       defaultModel: model,
     );
 
     return _voiceAssistantBloc!;
+  }
+
+  /// Access the in-memory conversation logs for storage/export.
+  static VoiceConversationLogger getConversationLogger() {
+    _sessionTokenTracker ??= SessionTokenTracker();
+    return _conversationLogger ??= VoiceConversationLogger(
+      tokenTracker: _sessionTokenTracker,
+    );
+  }
+
+  static VoiceAssistantController getVoiceAssistantController() {
+    if (_voiceAssistantController == null) {
+      throw StateError('VoiceAssistantController not initialized');
+    }
+    return _voiceAssistantController!;
+  }
+
+  static VoiceAssistantController? tryGetVoiceAssistantController() {
+    return _voiceAssistantController;
   }
 
   /// Get navigation service
@@ -79,5 +109,8 @@ class VoiceAssistantInjection {
     _voiceAssistantBloc?.close();
     _voiceAssistantBloc = null;
     _navigationService = null;
+    _conversationLogger = null;
+    _voiceAssistantController = null;
+    _sessionTokenTracker = null;
   }
 }

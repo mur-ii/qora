@@ -33,6 +33,7 @@ class VoiceAssistantRepositoryImpl implements VoiceAssistantRepository {
   @override
   Future<void> initializeWebRTC({
     required String clientSecret,
+    String? modelName,
     required Function(ConnectionStateEntity) onConnectionStateChange,
     required Function(String) onTranscript,
     required Function(FunctionCallEntity) onFunctionCall,
@@ -44,6 +45,7 @@ class VoiceAssistantRepositoryImpl implements VoiceAssistantRepository {
       onTranscript: onTranscript,
       onFunctionCall: onFunctionCall,
       onAgentEvent: onAgentEvent,
+      modelName: modelName,
     );
 
     // Create SDP offer

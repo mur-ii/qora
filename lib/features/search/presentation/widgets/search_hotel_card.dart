@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -22,17 +21,17 @@ class SearchHotelCard extends StatelessWidget {
     );
 
     return GestureDetector(
-      onTap: () {
-        context.push(AppRoutes.hotelDetailPathFor(hotel.id));
-      },
+      onTap: () => context.push(AppRoutes.hotelDetailPathFor(hotel.id)),
       child: Container(
         margin: const EdgeInsets.symmetric(
           horizontal: AppTheme.spacingMedium,
           vertical: AppTheme.spacingSmall,
         ),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          border: Border.all(color: AppColors.border),
           boxShadow: [
             BoxShadow(
               color: AppColors.shadowLight,
@@ -41,54 +40,43 @@ class SearchHotelCard extends StatelessWidget {
             ),
           ],
         ),
-        child: Column(
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Hotel Image
+            // Icon placeholder
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(AppTheme.radiusMedium),
-                    topRight: Radius.circular(AppTheme.radiusMedium),
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: CachedNetworkImage(
-                    imageUrl: hotel.imageUrl,
-                    height: 160,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
-                      height: 160,
-                      color: AppColors.surfaceVariant,
-                      child: const Center(
-                        child: CircularProgressIndicator(color: AppColors.primary),
-                      ),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      height: 160,
-                      color: AppColors.surfaceVariant,
-                      child: const Icon(Icons.hotel, size: 40, color: AppColors.border),
-                    ),
+                  child: const Icon(
+                    Icons.hotel_outlined,
+                    size: 32,
+                    color: AppColors.primary,
                   ),
                 ),
                 if (hotel.isPromo)
                   Positioned(
-                    top: 12,
-                    left: 12,
+                    top: 4,
+                    left: 4,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+                        horizontal: 5,
+                        vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.discount,
-                        borderRadius: BorderRadius.circular(6),
+                        color: AppColors.warning,
+                        borderRadius: BorderRadius.circular(4),
                       ),
                       child: const Text(
                         'PROMO',
                         style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 11,
+                          color: Colors.white,
+                          fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -96,9 +84,9 @@ class SearchHotelCard extends StatelessWidget {
                   ),
               ],
             ),
-            // Hotel Info
-            Padding(
-              padding: const EdgeInsets.all(14),
+            const SizedBox(width: 12),
+            // Info
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -110,15 +98,15 @@ class SearchHotelCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 14,
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 13,
                         color: AppColors.textSecondary,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 3),
                       Expanded(
                         child: Text(
                           hotel.location,
@@ -135,8 +123,8 @@ class SearchHotelCard extends StatelessWidget {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 6,
+                          vertical: 3,
                         ),
                         decoration: BoxDecoration(
                           color: _getRatingColor(hotel.rating),
@@ -146,47 +134,37 @@ class SearchHotelCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
-                              Icons.star,
-                              size: 12,
-                              color: AppColors.textOnPrimary,
+                              Icons.star_rounded,
+                              size: 11,
+                              color: Colors.white,
                             ),
-                            const SizedBox(width: 4),
+                            const SizedBox(width: 3),
                             Text(
                               hotel.rating.toStringAsFixed(1),
                               style: const TextStyle(
-                                color: AppColors.textOnPrimary,
-                                fontSize: 12,
+                                color: Colors.white,
+                                fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 6),
                       Text(
-                        '(${hotel.reviewCount} reviews)',
+                        '(${hotel.reviewCount})',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                         ),
                       ),
                       const Spacer(),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            formatter.format(hotel.pricePerNight),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          Text(
-                            '/ night',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppColors.textSecondary),
-                          ),
-                        ],
+                      Text(
+                        formatter.format(hotel.pricePerNight),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ],
                   ),
@@ -200,14 +178,9 @@ class SearchHotelCard extends StatelessWidget {
   }
 
   Color _getRatingColor(double rating) {
-    if (rating >= 4.5) {
-      return AppColors.success;
-    } else if (rating >= 4.0) {
-      return AppColors.info;
-    } else if (rating >= 3.5) {
-      return AppColors.warning;
-    } else {
-      return AppColors.error;
-    }
+    if (rating >= 4.5) return AppColors.success;
+    if (rating >= 4.0) return AppColors.info;
+    if (rating >= 3.5) return AppColors.warning;
+    return AppColors.error;
   }
 }

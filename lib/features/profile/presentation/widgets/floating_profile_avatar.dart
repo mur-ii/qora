@@ -1,12 +1,12 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/profile_entity.dart';
 
-/// Floating profile avatar with level indicator
-/// Tap to navigate to profile page
+/// Floating profile avatar with level indicator.
+/// Shows user initial; tap navigates to profile page.
 class FloatingProfileAvatar extends StatelessWidget {
   const FloatingProfileAvatar({super.key, required this.profile});
 
@@ -14,6 +14,10 @@ class FloatingProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final initial = profile.fullName.isNotEmpty
+        ? profile.fullName[0].toUpperCase()
+        : '?';
+
     return GestureDetector(
       onTap: () => context.push(AppRoutes.profilePath),
       child: Container(
@@ -22,7 +26,7 @@ class FloatingProfileAvatar extends StatelessWidget {
         margin: const EdgeInsets.only(right: 4),
         child: Stack(
           children: [
-            // Level ring indicator
+            // Level ring
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -39,21 +43,15 @@ class FloatingProfileAvatar extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(1.5),
-                child: ClipOval(
-                  child: CachedNetworkImage(
-                    imageUrl: profile.avatarUrl,
-                    width: 28,
-                    height: 28,
-                    fit: BoxFit.cover,
-                    memCacheHeight: 56,
-                    memCacheWidth: 56,
-                    placeholder: (context, url) => Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.person, size: 18),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      color: Colors.grey[300],
-                      child: const Icon(Icons.person, size: 18),
+                child: CircleAvatar(
+                  radius: 14,
+                  backgroundColor: AppColors.primaryContainer,
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),

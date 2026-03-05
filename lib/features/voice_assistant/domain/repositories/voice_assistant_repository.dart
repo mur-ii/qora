@@ -15,6 +15,7 @@ abstract class VoiceAssistantRepository {
   /// Initialize WebRTC connection with SDP signaling
   Future<void> initializeWebRTC({
     required String clientSecret,
+    String? modelName,
     required Function(ConnectionStateEntity) onConnectionStateChange,
     required Function(String) onTranscript,
     required Function(FunctionCallEntity) onFunctionCall,

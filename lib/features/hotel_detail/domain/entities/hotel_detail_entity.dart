@@ -8,8 +8,8 @@ class RoomTypeEntity extends Equatable {
   final int maxGuests;
   final int size;
   final String bedType;
-  final String imageUrl;
   final List<String> amenities;
+  final int availableRooms;
 
   const RoomTypeEntity({
     required this.id,
@@ -19,21 +19,13 @@ class RoomTypeEntity extends Equatable {
     required this.maxGuests,
     required this.size,
     required this.bedType,
-    required this.imageUrl,
     required this.amenities,
+    this.availableRooms = 0,
   });
 
   @override
   List<Object?> get props => [
-    id,
-    name,
-    description,
-    pricePerNight,
-    maxGuests,
-    size,
-    bedType,
-    imageUrl,
-    amenities,
+    id, name, description, pricePerNight, maxGuests, size, bedType, amenities, availableRooms,
   ];
 }
 
@@ -49,21 +41,19 @@ class FacilityEntity extends Equatable {
 
 class ReviewEntity extends Equatable {
   final String userName;
-  final String userAvatar;
   final double rating;
   final String comment;
   final String date;
 
   const ReviewEntity({
     required this.userName,
-    required this.userAvatar,
     required this.rating,
     required this.comment,
     required this.date,
   });
 
   @override
-  List<Object?> get props => [userName, userAvatar, rating, comment, date];
+  List<Object?> get props => [userName, rating, comment, date];
 }
 
 class PolicyEntity extends Equatable {
@@ -94,8 +84,6 @@ class HotelDetailEntity extends Equatable {
   final int reviewCount;
   final int starRating;
   final double pricePerNight;
-  final String imageUrl;
-  final List<String> gallery;
   final List<FacilityEntity> facilities;
   final PolicyEntity policies;
   final List<RoomTypeEntity> roomTypes;
@@ -112,8 +100,6 @@ class HotelDetailEntity extends Equatable {
     required this.reviewCount,
     required this.starRating,
     required this.pricePerNight,
-    required this.imageUrl,
-    required this.gallery,
     required this.facilities,
     required this.policies,
     required this.roomTypes,
@@ -122,21 +108,7 @@ class HotelDetailEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    name,
-    description,
-    location,
-    city,
-    address,
-    rating,
-    reviewCount,
-    starRating,
-    pricePerNight,
-    imageUrl,
-    gallery,
-    facilities,
-    policies,
-    roomTypes,
-    reviews,
+    id, name, description, location, city, address, rating, reviewCount,
+    starRating, pricePerNight, facilities, policies, roomTypes, reviews,
   ];
 }

@@ -95,7 +95,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2937),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -104,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                     const Text(
                       'Cukup masukkan nama lengkap Anda',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
+                      style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: 40),
 
@@ -184,7 +184,7 @@ class _LoginPageState extends State<LoginPage> {
                       enabled: !isAnyLoading,
                       prefixIcon: const Icon(
                         Icons.badge_outlined,
-                        color: Color(0xFF6B7280),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -205,3 +205,5 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
+

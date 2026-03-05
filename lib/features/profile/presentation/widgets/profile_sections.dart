@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -61,12 +60,17 @@ class ProfileSection extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: 3),
                     ),
-                    child: ClipOval(
-                      child: CachedNetworkImage(
-                        imageUrl: profile.avatarUrl,
-                        fit: BoxFit.cover,
-                        memCacheHeight: 124,
-                        memCacheWidth: 124,
+                    child: CircleAvatar(
+                      radius: 31,
+                      backgroundColor: AppColors.primaryContainer,
+                      child: Text(
+                        profile.fullName.isNotEmpty
+                            ? profile.fullName[0].toUpperCase()
+                            : '?',
+                        style: AppTypography.headlineSmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
@@ -676,11 +680,11 @@ class _MenuItemWithToggle extends StatelessWidget {
               ],
             ),
           ),
-                Switch(
-                  value: value,
-                  onChanged: enabled ? onChanged : null,
-                  activeThumbColor: AppColors.primary,
-                ),
+          Switch(
+            value: value,
+            onChanged: enabled ? onChanged : null,
+            activeThumbColor: AppColors.primary,
+          ),
         ],
       ),
     );

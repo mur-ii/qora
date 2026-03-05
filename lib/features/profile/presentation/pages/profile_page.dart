@@ -75,33 +75,41 @@ class _ProfilePageContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ProfileSection(profile: state.profile),
-                  const SizedBox(height: 20),
-                  PaymentInformationSection(
-                    paymentMethodsCount: state.paymentMethods?.length ?? 0,
-                    transactionsCount: state.transactions?.length ?? 0,
+                  // RepaintBoundary per section: each section has BoxShadow
+                  // (blurRadius up to 16) — isolating them prevents their
+                  // shadows from being re-blurred when siblings change.
+                  RepaintBoundary(
+                    child: ProfileSection(profile: state.profile),
                   ),
                   const SizedBox(height: 20),
-                  const AccountManagementSection(),
-                  const SizedBox(height: 20),
-                  PreferencesSection(
-                    preferences: state.preferences,
-                    onUpdate: (payload) {
-                      context.read<ProfileBloc>().add(
-                            UpdatePreferencesEvent(
-                              language: payload.language,
-                              notificationsEnabled:
-                                  payload.notificationsEnabled,
-                              emailNotifications: payload.emailNotifications,
-                              pushNotifications: payload.pushNotifications,
-                              smsNotifications: payload.smsNotifications,
-                              marketingEmails: payload.marketingEmails,
-                            ),
-                          );
-                    },
+                  RepaintBoundary(
+                    child: PaymentInformationSection(
+                      paymentMethodsCount: state.paymentMethods?.length ?? 0,
+                      transactionsCount: state.transactions?.length ?? 0,
+                    ),
                   ),
                   const SizedBox(height: 20),
-                  const HelpSupportSection(),
+                  const RepaintBoundary(child: AccountManagementSection()),
+                  const SizedBox(height: 20),
+                  RepaintBoundary(
+                    child: PreferencesSection(
+                      preferences: state.preferences,
+                      onUpdate: (payload) {
+                        context.read<ProfileBloc>().add(
+                          UpdatePreferencesEvent(
+                            language: payload.language,
+                            notificationsEnabled: payload.notificationsEnabled,
+                            emailNotifications: payload.emailNotifications,
+                            pushNotifications: payload.pushNotifications,
+                            smsNotifications: payload.smsNotifications,
+                            marketingEmails: payload.marketingEmails,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const RepaintBoundary(child: HelpSupportSection()),
                   const SizedBox(height: 8),
                 ],
               ),

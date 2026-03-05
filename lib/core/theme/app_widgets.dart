@@ -338,27 +338,6 @@ class AppWidgets {
     );
   }
 
-  // ==================== IMAGE PLACEHOLDERS ====================
-
-  /// Image placeholder with shimmer effect hint
-  static Widget imagePlaceholder({
-    double? width,
-    double? height,
-    BorderRadius? borderRadius,
-  }) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: borderRadius,
-      ),
-      child: const Center(
-        child: Icon(Icons.image, size: 48, color: AppColors.border),
-      ),
-    );
-  }
-
   // ==================== SEARCH BAR ====================
 
   /// Search input field

@@ -106,7 +106,7 @@ class _RegisterPageState extends State<RegisterPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -144,7 +144,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F2937),
+                        color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -153,7 +153,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     const Text(
                       'Sign up to get started',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: Color(0xFF6B7280)),
+                      style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
                     ),
                     const SizedBox(height: 40),
 
@@ -166,7 +166,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       enabled: !isLoading,
                       prefixIcon: const Icon(
                         Icons.person_outline,
-                        color: Color(0xFF6B7280),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -181,7 +181,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       enabled: !isLoading,
                       prefixIcon: const Icon(
                         Icons.email_outlined,
-                        color: Color(0xFF6B7280),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -196,7 +196,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       enabled: !isLoading,
                       prefixIcon: const Icon(
                         Icons.lock_outline,
-                        color: Color(0xFF6B7280),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -211,7 +211,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       enabled: !isLoading,
                       prefixIcon: const Icon(
                         Icons.lock_outline,
-                        color: Color(0xFF6B7280),
+                        color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -266,7 +266,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       children: [
                         const Text(
                           'Already have an account? ',
-                          style: TextStyle(color: Color(0xFF6B7280)),
+                          style: TextStyle(color: AppColors.textSecondary),
                         ),
                         TextButton(
                           onPressed: isLoading
@@ -294,3 +294,5 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 }
+
+

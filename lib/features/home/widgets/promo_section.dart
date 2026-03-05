@@ -14,43 +14,34 @@ class PromoSection extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Promo & Penawaran',
-                style: AppTypography.titleLarge.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              TextButton(
-                onPressed: null,
-                child: Text(
-                  'Lihat Semua',
-                  style: AppTypography.labelLarge.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
+          child: Text(
+            'Promo & Penawaran',
+            style: AppTypography.titleLarge.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
         const SizedBox(height: 12),
         SizedBox(
-          height: 170,
+          height: 140,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: _promos.length,
-            itemExtent: 292, // Card width (280) + margin (12)
-            cacheExtent: 900,
-            addAutomaticKeepAlives: false,
-            addRepaintBoundaries: true,
             itemBuilder: (context, index) {
               final promo = _promos[index];
+              // RepaintBoundary isolates each promo card so horizontal-scroll
+              // does not re-rasterize the ones that are off-screen.
               return RepaintBoundary(
-                child: PromoCard(key: ValueKey(promo), imagePath: promo),
+                child: PromoCard(
+                  key: ValueKey(promo['title']),
+                  title: promo['title'] as String,
+                  subtitle: promo['subtitle'] as String,
+                  badge: promo['badge'] as String,
+                  color: promo['color'] as Color,
+                  icon: promo['icon'] as IconData,
+                ),
               );
             },
           ),
@@ -60,9 +51,33 @@ class PromoSection extends StatelessWidget {
   }
 }
 
-const List<String> _promos = [
-  'assets/images/banner-promo-1.webp',
-  'assets/images/banner-promo-2.webp',
-  'assets/images/banner-promo-3.webp',
-  'assets/images/banner-promo-4.webp',
+final List<Map<String, Object>> _promos = [
+  {
+    'title': 'Diskon 30%',
+    'subtitle': 'Hotel berbintang pilihan',
+    'badge': 'HOT DEAL',
+    'color': AppColors.primary,
+    'icon': Icons.local_fire_department_outlined,
+  },
+  {
+    'title': 'Weekend Escape',
+    'subtitle': 'Booking Sabtu–Minggu hemat',
+    'badge': 'WEEKEND',
+    'color': AppColors.success,
+    'icon': Icons.weekend_outlined,
+  },
+  {
+    'title': 'Early Bird',
+    'subtitle': 'Pesan 2 minggu lebih awal',
+    'badge': 'EARLY',
+    'color': AppColors.warning,
+    'icon': Icons.alarm_outlined,
+  },
+  {
+    'title': 'Keluarga Hemat',
+    'subtitle': 'Gratis 1 anak di bawah 12th',
+    'badge': 'FAMILY',
+    'color': const Color(0xFF7C3AED),
+    'icon': Icons.family_restroom_outlined,
+  },
 ];

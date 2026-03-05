@@ -10,7 +10,11 @@ class MainNavigationPage extends StatelessWidget {
   const MainNavigationPage({super.key});
 
   List<Widget> _buildScreens() {
-    return const [HomePage(), BookingListPage(), ProfilePage()];
+    return const [
+      RepaintBoundary(child: HomePage()),
+      RepaintBoundary(child: BookingListPage()),
+      RepaintBoundary(child: ProfilePage()),
+    ];
   }
 
   List<PersistentBottomNavBarItem> _navBarsItems() {

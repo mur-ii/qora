@@ -4,40 +4,41 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/utils/app_logger.dart';
 import '../../data/services/agentic_ai_service.dart';
+import '../../domain/entities/agent_state_entity.dart';
 import '../../domain/entities/function_call_entity.dart';
-import '../../domain/usecases/create_session_usecase.dart';
-import '../../domain/usecases/disconnect_usecase.dart';
-import '../../domain/usecases/initialize_webrtc_usecase.dart';
-import '../../domain/usecases/request_assistant_response_usecase.dart';
-import '../../domain/usecases/send_function_result_usecase.dart';
-import '../../domain/usecases/set_microphone_muted_usecase.dart';
+import '../../voice_assistant_controller.dart';
 import 'voice_assistant_event.dart';
 import 'voice_assistant_state.dart';
 
 class VoiceAssistantBloc
     extends Bloc<VoiceAssistantEvent, VoiceAssistantState> {
-  final CreateSessionUseCase createSessionUseCase;
-  final InitializeWebRTCUseCase initializeWebRTCUseCase;
-  final RequestAssistantResponseUseCase requestAssistantResponseUseCase;
-  final SendFunctionResultUseCase sendFunctionResultUseCase;
-  final DisconnectUseCase disconnectUseCase;
-  final SetMicrophoneMutedUseCase setMicrophoneMutedUseCase;
+  final VoiceAssistantController voiceAssistantController;
   final AgenticAIService agenticAIService;
   final String? defaultModel;
   final Map<String, StringBuffer> _functionArgBuffers = {};
   final Map<String, String> _functionArgNames = {};
 
   String _formatError(Object error) {
-    return error.toString().replaceAll('Exception: ', '').trim();
+    final raw = error.toString().replaceAll('Exception: ', '').trim();
+    final normalized = raw.toLowerCase();
+
+    if (normalized.contains('permission')) {
+      return 'Microphone permission denied';
+    }
+    if (normalized.contains('timeout')) {
+      return 'Network timeout. Please try again.';
+    }
+    if (normalized.contains('failed to create session')) {
+      return 'Failed to create session. Please try again.';
+    }
+    if (normalized.contains('failed to exchange sdp')) {
+      return 'WebRTC negotiation failed. Please retry.';
+    }
+    return raw;
   }
 
   VoiceAssistantBloc({
-    required this.createSessionUseCase,
-    required this.initializeWebRTCUseCase,
-    required this.requestAssistantResponseUseCase,
-    required this.sendFunctionResultUseCase,
-    required this.disconnectUseCase,
-    required this.setMicrophoneMutedUseCase,
+    required this.voiceAssistantController,
     required this.agenticAIService,
     this.defaultModel,
   }) : super(const VoiceAssistantState()) {
@@ -58,25 +59,34 @@ class VoiceAssistantBloc
     Emitter<VoiceAssistantState> emit,
   ) async {
     try {
+      if (state.status != VoiceAssistantStatus.idle ||
+          voiceAssistantController.isBusy) {
+        return;
+      }
+
       emit(
         state.copyWith(
-          connectionStatus: VoiceConnectionStatus.connecting,
+          status: VoiceAssistantStatus.connecting,
+          messages: const [],
+          agentState: const AgentStateEntity(),
+          isProcessing: false,
+          isMuted: false,
           error: null,
         ),
       );
 
+      voiceAssistantController.updateStatus(VoiceAssistantStatus.connecting);
+
+      _functionArgBuffers.clear();
+      _functionArgNames.clear();
+
       // Step 1: Create session
       AppLogger.info('VoiceAssistant', 'Starting voice assistant session');
-      final session = await createSessionUseCase.call(
+      await voiceAssistantController.start(
         model: event.model ?? defaultModel ?? 'gpt-realtime-mini-2025-12-15',
         voice: event.voice ?? 'verse',
         tools: agenticAIService.getFunctionDefinitions(),
         instructions: agenticAIService.getSystemInstructions(),
-      );
-
-      // Step 2: Initialize WebRTC
-      await initializeWebRTCUseCase.call(
-        clientSecret: session.clientSecret,
         onConnectionStateChange: (connectionState) {
           add(ConnectionStateChanged(state: connectionState.name));
         },
@@ -121,10 +131,11 @@ class VoiceAssistantBloc
       );
       emit(
         state.copyWith(
-          connectionStatus: VoiceConnectionStatus.failed,
+          status: VoiceAssistantStatus.idle,
           error: 'Failed to start: ${_formatError(e)}',
         ),
       );
+      voiceAssistantController.updateStatus(VoiceAssistantStatus.idle);
     }
   }
 
@@ -133,13 +144,21 @@ class VoiceAssistantBloc
     Emitter<VoiceAssistantState> emit,
   ) async {
     try {
-      await disconnectUseCase.call();
+      if (state.status == VoiceAssistantStatus.idle ||
+          state.status == VoiceAssistantStatus.disconnecting) {
+        return;
+      }
 
-      emit(
-        const VoiceAssistantState(
-          connectionStatus: VoiceConnectionStatus.disconnected,
-        ),
-      );
+      emit(state.copyWith(status: VoiceAssistantStatus.disconnecting));
+
+      _functionArgBuffers.clear();
+      _functionArgNames.clear();
+
+      await voiceAssistantController.stop();
+
+      emit(const VoiceAssistantState(status: VoiceAssistantStatus.idle));
+
+      voiceAssistantController.updateStatus(VoiceAssistantStatus.idle);
 
       AppLogger.info('VoiceAssistant', 'Voice assistant stopped');
     } catch (e, stackTrace) {
@@ -149,7 +168,13 @@ class VoiceAssistantBloc
         error: e,
         stackTrace: stackTrace,
       );
-      emit(state.copyWith(error: 'Failed to stop: ${_formatError(e)}'));
+      emit(
+        state.copyWith(
+          status: VoiceAssistantStatus.idle,
+          error: 'Failed to stop: ${_formatError(e)}',
+        ),
+      );
+      voiceAssistantController.updateStatus(VoiceAssistantStatus.idle);
     }
   }
 
@@ -158,7 +183,7 @@ class VoiceAssistantBloc
     Emitter<VoiceAssistantState> emit,
   ) async {
     try {
-      await setMicrophoneMutedUseCase.call(isMuted: true);
+      await voiceAssistantController.setMicrophoneMuted(isMuted: true);
       emit(state.copyWith(isMuted: true));
     } catch (e) {
       emit(state.copyWith(error: 'Failed to mute: ${_formatError(e)}'));
@@ -170,7 +195,7 @@ class VoiceAssistantBloc
     Emitter<VoiceAssistantState> emit,
   ) async {
     try {
-      await setMicrophoneMutedUseCase.call(isMuted: false);
+      await voiceAssistantController.setMicrophoneMuted(isMuted: false);
       emit(state.copyWith(isMuted: false));
     } catch (e) {
       emit(state.copyWith(error: 'Failed to unmute: ${_formatError(e)}'));
@@ -183,7 +208,7 @@ class VoiceAssistantBloc
   ) async {
     try {
       final nextMuted = !state.isMuted;
-      await setMicrophoneMutedUseCase.call(isMuted: nextMuted);
+      await voiceAssistantController.setMicrophoneMuted(isMuted: nextMuted);
       emit(state.copyWith(isMuted: nextMuted));
     } catch (e) {
       emit(state.copyWith(error: 'Failed to toggle mute: ${_formatError(e)}'));
@@ -250,7 +275,7 @@ class VoiceAssistantBloc
       final result = await agenticAIService.executeFunction(functionCall);
 
       // Send result back to OpenAI
-      await sendFunctionResultUseCase.call(result);
+      await voiceAssistantController.sendFunctionResult(result);
 
       // Check if automatic disconnect is required (after booking confirmation)
       final resultData = result.result;
@@ -298,6 +323,26 @@ class VoiceAssistantBloc
     // Handle specific events
     final eventType = event.event['type'] as String?;
 
+    voiceAssistantController.handleAgentEvent(event.event);
+
+    if (eventType == 'input_audio_buffer.speech_started') {
+      emit(state.copyWith(status: VoiceAssistantStatus.listening));
+      voiceAssistantController.updateStatus(VoiceAssistantStatus.listening);
+      return;
+    }
+
+    if (eventType == 'input_audio_buffer.speech_stopped') {
+      emit(state.copyWith(status: VoiceAssistantStatus.connected));
+      voiceAssistantController.updateStatus(VoiceAssistantStatus.connected);
+      return;
+    }
+
+    if (eventType == 'response.audio_transcript.delta') {
+      emit(state.copyWith(status: VoiceAssistantStatus.speaking));
+      voiceAssistantController.updateStatus(VoiceAssistantStatus.speaking);
+      return;
+    }
+
     if (eventType == 'response.function_call_arguments.delta') {
       final callId = event.event['call_id'] as String?;
       final delta = event.event['delta'] as String?;
@@ -335,14 +380,25 @@ class VoiceAssistantBloc
       if (transcript != null && transcript.isNotEmpty) {
         add(TranscriptReceived(transcript: transcript, isUser: false));
       }
+      emit(state.copyWith(status: VoiceAssistantStatus.connected));
+      voiceAssistantController.updateStatus(VoiceAssistantStatus.connected);
       return;
     }
 
     if (eventType == 'response.done') {
+      emit(state.copyWith(status: VoiceAssistantStatus.connected));
+      voiceAssistantController.updateStatus(VoiceAssistantStatus.connected);
       return;
     }
 
     if (eventType == 'error') {
+      emit(
+        state.copyWith(
+          status: VoiceAssistantStatus.idle,
+          error: 'Realtime error received. Please retry.',
+        ),
+      );
+      voiceAssistantController.updateStatus(VoiceAssistantStatus.idle);
       return;
     }
   }
@@ -351,35 +407,41 @@ class VoiceAssistantBloc
     ConnectionStateChanged event,
     Emitter<VoiceAssistantState> emit,
   ) async {
-    VoiceConnectionStatus status;
+    VoiceAssistantStatus status;
 
     switch (event.state) {
       case 'connected':
-        status = VoiceConnectionStatus.connected;
+        status = VoiceAssistantStatus.connected;
         break;
       case 'connecting':
-        status = VoiceConnectionStatus.connecting;
+        status = VoiceAssistantStatus.connecting;
         break;
       case 'failed':
-        status = VoiceConnectionStatus.failed;
+        status = VoiceAssistantStatus.idle;
         break;
       default:
-        status = VoiceConnectionStatus.disconnected;
+        status = VoiceAssistantStatus.idle;
     }
+
+    final isUnexpectedDisconnect =
+        event.state == 'disconnected' &&
+        state.status != VoiceAssistantStatus.disconnecting;
 
     emit(
       state.copyWith(
-        connectionStatus: status,
-        isMuted: status == VoiceConnectionStatus.disconnected
-            ? false
-            : state.isMuted,
+        status: status,
+        isMuted: status == VoiceAssistantStatus.idle ? false : state.isMuted,
+        error: isUnexpectedDisconnect
+            ? 'Unexpected disconnection. Please try again.'
+            : state.error,
       ),
     );
-    if (status == VoiceConnectionStatus.connected) {
+    voiceAssistantController.updateStatus(status);
+    if (status == VoiceAssistantStatus.connected) {
       AppLogger.info('VoiceAssistant', 'Connection state: connected');
-    } else if (status == VoiceConnectionStatus.failed) {
+    } else if (event.state == 'failed') {
       AppLogger.warn('VoiceAssistant', 'Connection state: failed');
-    } else if (status == VoiceConnectionStatus.disconnected) {
+    } else if (status == VoiceAssistantStatus.idle) {
       AppLogger.warn('VoiceAssistant', 'Connection state: disconnected');
     }
   }
@@ -389,7 +451,9 @@ class VoiceAssistantBloc
     Emitter<VoiceAssistantState> emit,
   ) async {
     try {
-      await requestAssistantResponseUseCase.call(event.instructions);
+      await voiceAssistantController.requestAssistantResponse(
+        event.instructions,
+      );
     } catch (e, stackTrace) {
       AppLogger.error(
         'VoiceAssistant',

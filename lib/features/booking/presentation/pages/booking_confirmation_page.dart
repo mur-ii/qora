@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -45,7 +44,7 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
       hotelName: widget.booking.hotel.name,
       location: widget.booking.hotel.address,
       roomName: widget.booking.room.name,
-      imageUrl: widget.booking.hotel.imageUrl,
+      imageUrl: '',
       checkIn: checkIn,
       checkOut: checkOut,
       bookingStatus: widget.booking.bookingStatus,
@@ -150,15 +149,19 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(16),
+                          Container(
+                            height: 100,
+                            width: double.infinity,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFDBEAFE),
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(16),
+                              ),
                             ),
-                            child: CachedNetworkImage(
-                              imageUrl: widget.booking.hotel.imageUrl,
-                              height: 150,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
+                            child: const Icon(
+                              Icons.hotel_outlined,
+                              size: 40,
+                              color: Color(0xFF1D4ED8),
                             ),
                           ),
                           Padding(

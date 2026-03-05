@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/agent_state_entity.dart';
 
 class AgentStatusBar extends StatelessWidget {
@@ -17,8 +18,10 @@ class AgentStatusBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        border: Border(bottom: BorderSide(color: Colors.blue.shade100)),
+        color: AppColors.primaryContainer,
+        border: Border(
+          bottom: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
+        ),
       ),
       child: Row(
         children: [
@@ -29,7 +32,7 @@ class AgentStatusBar extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           else
-            Icon(_getStepIcon(), size: 20, color: Colors.blue),
+            Icon(_getStepIcon(), size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -54,7 +57,7 @@ class AgentStatusBar extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: AppColors.primary,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(

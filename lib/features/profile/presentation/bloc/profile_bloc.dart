@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/payment_method_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
+import '../../domain/entities/user_preferences_entity.dart';
 import '../../domain/usecases/get_payment_methods.dart';
 import '../../domain/usecases/get_preferences.dart';
 import '../../domain/usecases/get_profile.dart';
@@ -42,9 +43,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       final transactionsFuture = getTransactions().catchError(
         (_) => const <TransactionEntity>[],
       );
-      final preferencesFuture = getPreferences().catchError(
-        (_) => null,
-      );
+      final preferencesFuture = getPreferences()
+          .then<UserPreferencesEntity?>((v) => v)
+          .catchError((_) => null);
 
       final paymentMethods = await paymentMethodsFuture;
       final transactions = await transactionsFuture;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_toast.dart';
 import '../bloc/voice_assistant_bloc.dart';
 import '../bloc/voice_assistant_event.dart';
@@ -38,7 +39,7 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Voice Assistant'),
-        backgroundColor: Colors.blue,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -47,7 +48,7 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
               return Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Center(
-                  child: _ConnectionIndicator(status: state.connectionStatus),
+                  child: _ConnectionIndicator(status: state.status),
                 ),
               );
             },
@@ -66,7 +67,7 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
           return Column(
             children: [
               // Agent status bar
-              if (state.connectionStatus == VoiceConnectionStatus.connected)
+              if (state.isActive)
                 AgentStatusBar(
                   agentState: state.agentState,
                   isProcessing: state.isProcessing,
@@ -93,8 +94,7 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Info text
-                      if (state.connectionStatus ==
-                          VoiceConnectionStatus.connected)
+                      if (state.isActive)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: Row(
@@ -122,7 +122,7 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
 
                       // Main button
                       ContentChangingButton(
-                        state: _mapConnectionStatus(state.connectionStatus),
+                        state: _mapConnectionStatus(state.status),
                         onPressed: () => _handleButtonPress(context, state),
                       ),
                     ],
@@ -136,26 +136,25 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
     );
   }
 
-  ContentChangingButtonState _mapConnectionStatus(
-    VoiceConnectionStatus status,
-  ) {
+  ContentChangingButtonState _mapConnectionStatus(VoiceAssistantStatus status) {
     switch (status) {
-      case VoiceConnectionStatus.connecting:
+      case VoiceAssistantStatus.connecting:
+      case VoiceAssistantStatus.disconnecting:
         return ContentChangingButtonState.connecting;
-      case VoiceConnectionStatus.connected:
+      case VoiceAssistantStatus.connected:
+      case VoiceAssistantStatus.listening:
+      case VoiceAssistantStatus.speaking:
         return ContentChangingButtonState.connected;
-      case VoiceConnectionStatus.disconnected:
-      case VoiceConnectionStatus.failed:
+      case VoiceAssistantStatus.idle:
         return ContentChangingButtonState.notConnect;
     }
   }
 
   void _handleButtonPress(BuildContext context, VoiceAssistantState state) {
-    if (state.connectionStatus == VoiceConnectionStatus.connected) {
+    if (state.isActive) {
       // Stop
       context.read<VoiceAssistantBloc>().add(const StopVoiceAssistant());
-    } else if (state.connectionStatus == VoiceConnectionStatus.disconnected ||
-        state.connectionStatus == VoiceConnectionStatus.failed) {
+    } else if (state.status == VoiceAssistantStatus.idle) {
       // Start
       context.read<VoiceAssistantBloc>().add(const StartVoiceAssistant());
     }
@@ -163,7 +162,7 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
 }
 
 class _ConnectionIndicator extends StatelessWidget {
-  final VoiceConnectionStatus status;
+  final VoiceAssistantStatus status;
 
   const _ConnectionIndicator({required this.status});
 
@@ -173,19 +172,27 @@ class _ConnectionIndicator extends StatelessWidget {
     String text;
 
     switch (status) {
-      case VoiceConnectionStatus.connected:
+      case VoiceAssistantStatus.connected:
         color = Colors.green;
         text = 'Connected';
         break;
-      case VoiceConnectionStatus.connecting:
+      case VoiceAssistantStatus.listening:
+        color = Colors.green;
+        text = 'Listening';
+        break;
+      case VoiceAssistantStatus.speaking:
+        color = Colors.green;
+        text = 'Speaking';
+        break;
+      case VoiceAssistantStatus.connecting:
         color = Colors.orange;
         text = 'Connecting';
         break;
-      case VoiceConnectionStatus.failed:
-        color = Colors.red;
-        text = 'Failed';
+      case VoiceAssistantStatus.disconnecting:
+        color = Colors.orange;
+        text = 'Disconnecting';
         break;
-      case VoiceConnectionStatus.disconnected:
+      case VoiceAssistantStatus.idle:
         color = Colors.grey;
         text = 'Disconnected';
         break;

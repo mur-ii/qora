@@ -1,13 +1,12 @@
 import 'package:equatable/equatable.dart';
 
-/// User profile entity with level/XP system
+/// User profile entity
 class ProfileEntity extends Equatable {
   const ProfileEntity({
     required this.id,
     required this.fullName,
     required this.email,
     required this.username,
-    required this.avatarUrl,
     required this.currentLevel,
     required this.currentXP,
     required this.xpToNextLevel,
@@ -20,7 +19,6 @@ class ProfileEntity extends Equatable {
   final String fullName;
   final String email;
   final String username;
-  final String avatarUrl;
   final int currentLevel;
   final int currentXP;
   final int xpToNextLevel;
@@ -28,7 +26,7 @@ class ProfileEntity extends Equatable {
   final DateTime joinedDate;
   final String? bio;
 
-  double get levelProgress => currentXP / xpToNextLevel;
+  double get levelProgress => xpToNextLevel > 0 ? currentXP / xpToNextLevel : 0;
 
   String get levelTitle {
     if (currentLevel < 5) return 'Explorer';
@@ -40,16 +38,7 @@ class ProfileEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    fullName,
-    email,
-    username,
-    avatarUrl,
-    currentLevel,
-    currentXP,
-    xpToNextLevel,
-    phoneNumber,
-    joinedDate,
-    bio,
+    id, fullName, email, username, currentLevel, currentXP,
+    xpToNextLevel, phoneNumber, joinedDate, bio,
   ];
 }

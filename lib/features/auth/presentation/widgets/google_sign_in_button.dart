@@ -56,7 +56,7 @@ class GoogleSignInButton extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1F2937),
+                      color: AppColors.textPrimary,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -66,3 +66,5 @@ class GoogleSignInButton extends StatelessWidget {
     );
   }
 }
+
+

@@ -13,7 +13,6 @@ import '../bloc/hotel_detail_bloc.dart';
 import '../bloc/hotel_detail_event.dart';
 import '../bloc/hotel_detail_state.dart';
 import '../widgets/facilities_section.dart';
-import '../widgets/image_gallery.dart';
 import '../widgets/reviews_section.dart';
 import '../widgets/room_types_section.dart';
 
@@ -38,9 +37,9 @@ class _HotelDetailPageState extends State<HotelDetailPage> {
       child: BlocListener<VoiceAssistantBloc, VoiceAssistantState>(
         listenWhen: (previous, current) =>
             previous.agentState != current.agentState ||
-            previous.connectionStatus != current.connectionStatus,
+            previous.status != current.status,
         listener: (context, voiceState) {
-          if (voiceState.connectionStatus != VoiceConnectionStatus.connected) {
+          if (!voiceState.isActive) {
             return;
           }
 
@@ -143,10 +142,17 @@ class _HotelDetailPageContent extends StatelessWidget {
             return CustomScrollView(
               slivers: [
                 SliverAppBar(
-                  expandedHeight: 300,
                   pinned: true,
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: ImageGallery(images: hotel.gallery),
+                  backgroundColor: Colors.white,
+                  foregroundColor: AppColors.textPrimary,
+                  elevation: 0,
+                  surfaceTintColor: Colors.transparent,
+                  leading: IconButton(
+                    onPressed: () => context.pop(),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      size: 20,
+                    ),
                   ),
                 ),
                 SliverToBoxAdapter(

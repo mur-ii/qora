@@ -23,7 +23,6 @@ class AuthMockService {
       id: 'user_${DateTime.now().millisecondsSinceEpoch}',
       email: email,
       name: email.split('@')[0],
-      photoUrl: null,
     );
 
     _currentUser = user;
@@ -38,7 +37,6 @@ class AuthMockService {
       id: 'google_${DateTime.now().millisecondsSinceEpoch}',
       email: 'user@gmail.com',
       name: 'Google User',
-      photoUrl: 'https://lh3.googleusercontent.com/a/default-user',
     );
 
     _currentUser = user;
@@ -57,7 +55,6 @@ class AuthMockService {
       id: 'tester_${DateTime.now().millisecondsSinceEpoch}',
       email: '',
       name: fullName.trim(),
-      photoUrl: null,
     );
 
     _currentUser = user;
@@ -88,7 +85,6 @@ class AuthMockService {
       id: 'user_${DateTime.now().millisecondsSinceEpoch}',
       email: email,
       name: name,
-      photoUrl: null,
     );
 
     _currentUser = user;
