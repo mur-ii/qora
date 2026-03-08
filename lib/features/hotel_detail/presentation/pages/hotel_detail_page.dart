@@ -9,10 +9,15 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
+import '../../domain/entities/hotel_detail_entity.dart';
 import '../bloc/hotel_detail_bloc.dart';
 import '../bloc/hotel_detail_event.dart';
 import '../bloc/hotel_detail_state.dart';
+import '../widgets/booking_bottom_bar.dart';
 import '../widgets/facilities_section.dart';
+import '../widgets/hotel_description_section.dart';
+import '../widgets/hotel_header.dart';
+import '../widgets/hotel_info_section.dart';
 import '../widgets/reviews_section.dart';
 import '../widgets/room_types_section.dart';
 
@@ -99,40 +104,29 @@ class _HotelDetailPageContent extends StatelessWidget {
     required this.onRoomSelected,
   });
 
+  void _handleBackNavigation(BuildContext context) {
+    final router = GoRouter.of(context);
+    if (router.canPop()) {
+      router.pop();
+    } else {
+      router.go(AppRoutes.hotelListPath);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: BlocBuilder<HotelDetailBloc, HotelDetailState>(
         builder: (context, state) {
           if (state is HotelDetailLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const _HotelDetailLoadingView();
           }
 
           if (state is HotelDetailError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Gagal memuat detail hotel',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    state.message,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Kembali'),
-                  ),
-                ],
-              ),
+            return _HotelDetailErrorView(
+              message: state.message,
+              onBackPressed: () => _handleBackNavigation(context),
             );
           }
 
@@ -141,134 +135,36 @@ class _HotelDetailPageContent extends StatelessWidget {
 
             return CustomScrollView(
               slivers: [
-                SliverAppBar(
-                  pinned: true,
-                  backgroundColor: Colors.white,
-                  foregroundColor: AppColors.textPrimary,
-                  elevation: 0,
-                  surfaceTintColor: Colors.transparent,
-                  leading: IconButton(
-                    onPressed: () => context.pop(),
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      size: 20,
-                    ),
+                // Header gambar hotel dengan overlay nama dan bintang.
+                SliverToBoxAdapter(
+                  child: HotelHeader(
+                    hotelName: hotel.name,
+                    starRating: hotel.starRating,
+                    onBackPressed: () => _handleBackNavigation(context),
                   ),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 92),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Hotel Name and Rating
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    hotel.name,
-                                    style: AppTypography.headlineSmall.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: List.generate(
-                                      hotel.starRating,
-                                      (index) => const Icon(
-                                        Icons.star,
-                                        size: 18,
-                                        color: Colors.amber,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF4CAF50),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.star,
-                                    size: 16,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    hotel.rating.toStringAsFixed(1),
-                                    style: AppTypography.labelMedium.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on,
-                              size: 18,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                hotel.address,
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${hotel.reviewCount} ulasan',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textTertiary,
+                        HotelInfoSection(
+                          hotelName: hotel.name,
+                          address: hotel.address,
+                          rating: hotel.rating,
+                          reviewCount: hotel.reviewCount,
+                          formattedPrice: _currencyFormatter.format(
+                            hotel.pricePerNight,
                           ),
                         ),
                         const SizedBox(height: 24),
 
-                        // Description
-                        Text(
-                          'Tentang',
-                          style: AppTypography.titleLarge.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          hotel.description,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Facilities
                         FacilitiesSection(facilities: hotel.facilities),
                         const SizedBox(height: 24),
+                        HotelDescriptionSection(description: hotel.description),
+                        const SizedBox(height: 24),
 
-                        // Room Types
                         RoomTypesSection(
                           roomTypes: hotel.roomTypes,
                           selectedRoomId: selectedRoomId,
@@ -276,44 +172,9 @@ class _HotelDetailPageContent extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
 
-                        // Policies
-                        Text(
-                          'Kebijakan',
-                          style: AppTypography.titleLarge.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _PolicyItem(
-                          icon: Icons.login,
-                          label: 'Check-in',
-                          value: hotel.policies.checkIn,
-                        ),
-                        _PolicyItem(
-                          icon: Icons.logout,
-                          label: 'Check-out',
-                          value: hotel.policies.checkOut,
-                        ),
-                        _PolicyItem(
-                          icon: Icons.pets,
-                          label: 'Hewan Peliharaan',
-                          value: hotel.policies.pets
-                              ? 'Diizinkan'
-                              : 'Tidak diizinkan',
-                        ),
-                        _PolicyItem(
-                          icon: Icons.smoking_rooms,
-                          label: 'Merokok',
-                          value: hotel.policies.smoking
-                              ? 'Diizinkan'
-                              : 'Tidak diizinkan',
-                        ),
+                        _HotelPolicySection(policies: hotel.policies),
                         const SizedBox(height: 24),
-
-                        // Reviews
                         ReviewsSection(reviews: hotel.reviews),
-                        const SizedBox(height: 80),
                       ],
                     ),
                   ),
@@ -322,12 +183,10 @@ class _HotelDetailPageContent extends StatelessWidget {
             );
           }
 
-          return const SizedBox();
+          return const SizedBox.shrink();
         },
       ),
       bottomNavigationBar: BlocBuilder<HotelDetailBloc, HotelDetailState>(
-        buildWhen: (previous, current) =>
-            previous.runtimeType != current.runtimeType,
         builder: (context, state) {
           if (state is HotelDetailLoaded) {
             double displayPrice = state.hotel.pricePerNight;
@@ -348,107 +207,154 @@ class _HotelDetailPageContent extends StatelessWidget {
               }
             }
 
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            priceLabel,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
-                          Text(
-                            _currencyFormatter.format(displayPrice),
-                            style: AppTypography.titleLarge.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          Text(
-                            'per malam',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: selectedRoomId == null
-                            ? null
-                            : () {
-                                final now = DateTime.now();
-                                final checkIn = DateTime(
-                                  now.year,
-                                  now.month,
-                                  now.day + 1,
-                                );
-                                final checkOut = DateTime(
-                                  now.year,
-                                  now.month,
-                                  now.day + 2,
-                                );
+            return BookingBottomBar(
+              priceLabel: priceLabel,
+              formattedPrice: _currencyFormatter.format(displayPrice),
+              buttonLabel: selectedRoomId == null
+                  ? 'Pilih Kamar'
+                  : 'Pesan Sekarang',
+              onBookPressed: selectedRoomId == null
+                  ? null
+                  : () {
+                      final now = DateTime.now();
+                      final checkIn = DateTime(
+                        now.year,
+                        now.month,
+                        now.day + 1,
+                      );
+                      final checkOut = DateTime(
+                        now.year,
+                        now.month,
+                        now.day + 2,
+                      );
 
-                                context.push(
-                                  Uri(
-                                    path: AppRoutes.bookingSummaryPath,
-                                    queryParameters: {
-                                      'hotelId': state.hotel.id,
-                                      'roomId': selectedRoomId!,
-                                      'checkIn': checkIn.toIso8601String(),
-                                      'checkOut': checkOut.toIso8601String(),
-                                      'guests': maxGuests.toString(),
-                                      'rooms': '1',
-                                    },
-                                  ).toString(),
-                                );
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                          disabledBackgroundColor: Colors.grey[300],
-                        ),
-                        child: Text(
-                          selectedRoomId == null
-                              ? 'Pilih Kamar'
-                              : 'Pesan Sekarang',
-                          style: AppTypography.labelLarge.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                      context.push(
+                        Uri(
+                          path: AppRoutes.bookingSummaryPath,
+                          queryParameters: {
+                            'hotelId': state.hotel.id,
+                            'roomId': selectedRoomId!,
+                            'checkIn': checkIn.toIso8601String(),
+                            'checkOut': checkOut.toIso8601String(),
+                            'guests': maxGuests.toString(),
+                            'rooms': '1',
+                          },
+                        ).toString(),
+                      );
+                    },
             );
           }
-          return const SizedBox();
+          return const SizedBox.shrink();
         },
+      ),
+    );
+  }
+}
+
+class _HotelDetailLoadingView extends StatelessWidget {
+  const _HotelDetailLoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: CircularProgressIndicator(color: AppColors.primary),
+    );
+  }
+}
+
+class _HotelDetailErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onBackPressed;
+
+  const _HotelDetailErrorView({
+    required this.message,
+    required this.onBackPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            const SizedBox(height: 16),
+            Text(
+              'Gagal memuat detail hotel',
+              style: AppTypography.titleLarge.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: onBackPressed,
+              child: const Text('Kembali'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HotelPolicySection extends StatelessWidget {
+  final PolicyEntity policies;
+
+  const _HotelPolicySection({required this.policies});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Kebijakan Hotel',
+            style: AppTypography.titleLarge.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _PolicyItem(
+            icon: Icons.login,
+            label: 'Waktu check-in',
+            value: policies.checkIn,
+          ),
+          _PolicyItem(
+            icon: Icons.logout,
+            label: 'Waktu check-out',
+            value: policies.checkOut,
+          ),
+          _PolicyItem(
+            icon: Icons.pets,
+            label: 'Hewan Peliharaan',
+            value: policies.pets ? 'Diizinkan' : 'Tidak diizinkan',
+          ),
+          _PolicyItem(
+            icon: Icons.smoking_rooms,
+            label: 'Merokok',
+            value: policies.smoking ? 'Diizinkan' : 'Tidak diizinkan',
+          ),
+        ],
       ),
     );
   }
@@ -468,16 +374,26 @@ class _PolicyItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppColors.textTertiary),
-          const SizedBox(width: 12),
-          Text(
-            '$label: ',
-            style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary,
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: AppColors.neutral100,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: AppColors.textSecondary),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           Text(

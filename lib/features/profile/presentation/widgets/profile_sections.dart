@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/entities/user_preferences_entity.dart';
 
@@ -58,7 +55,10 @@ class ProfileSection extends StatelessWidget {
                     height: 62,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 3),
+                      border: Border.all(
+                        color: AppColors.surfaceWhite,
+                        width: 3,
+                      ),
                     ),
                     child: CircleAvatar(
                       radius: 31,
@@ -199,7 +199,7 @@ class ProfileSection extends StatelessWidget {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.surfaceWhite,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -225,11 +225,11 @@ class ProfileSection extends StatelessWidget {
   }
 
   Color _getLevelColor(int level) {
-    if (level < 5) return const Color(0xFF42A5F5);
-    if (level < 10) return const Color(0xFF43A047);
-    if (level < 20) return const Color(0xFF8E24AA);
-    if (level < 30) return const Color(0xFFF4511E);
-    return const Color(0xFFF57C00);
+    if (level < 5) return AppColors.primaryOrange;
+    if (level < 10) return AppColors.brandGreen;
+    if (level < 20) return AppColors.promoGold;
+    if (level < 30) return AppColors.primaryOrange;
+    return AppColors.primaryOrange;
   }
 }
 
@@ -327,11 +327,10 @@ class AccountManagementSection extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {
                       Navigator.pop(ctx);
-                      context.read<AuthBloc>().add(LogoutEvent());
                       context.go(AppRoutes.loginPath);
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE57373),
+                      backgroundColor: AppColors.error,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -342,7 +341,7 @@ class AccountManagementSection extends StatelessWidget {
               ),
             );
           },
-          iconColor: const Color(0xFFE57373),
+          iconColor: AppColors.error,
           showChevron: false,
         ),
       ],

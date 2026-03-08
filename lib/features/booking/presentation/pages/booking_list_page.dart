@@ -27,7 +27,7 @@ class BookingListPage extends StatelessWidget {
           backgroundColor: AppColors.background,
           appBar: AppBar(
             elevation: 0,
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.surfaceWhite,
             title: Text(
               'Booking Saya',
               style: AppTypography.titleLarge.copyWith(
@@ -39,11 +39,11 @@ class BookingListPage extends StatelessWidget {
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(48),
               child: Container(
-                color: Colors.white,
+                color: AppColors.surfaceWhite,
                 child: TabBar(
-                  indicatorColor: AppColors.primary,
+                  indicatorColor: AppColors.brandGreen,
                   indicatorWeight: 3,
-                  labelColor: AppColors.primary,
+                  labelColor: AppColors.brandGreen,
                   unselectedLabelColor: AppColors.textTertiary,
                   labelStyle: const TextStyle(
                     fontSize: 15,
@@ -205,11 +205,11 @@ class _BookingCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: AppColors.deepBlack.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -227,11 +227,11 @@ class _BookingCard extends StatelessWidget {
                 child: Container(
                   height: 100,
                   width: double.infinity,
-                  color: const Color(0xFFDBEAFE),
+                  color: AppColors.primaryContainer,
                   child: const Icon(
                     Icons.hotel_outlined,
                     size: 40,
-                    color: Color(0xFF1D4ED8),
+                    color: AppColors.primaryOrange,
                   ),
                 ),
               ),
@@ -249,8 +249,8 @@ class _BookingCard extends StatelessWidget {
                   ),
                   child: Text(
                     status,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: AppColors.textOnPrimary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),

@@ -39,10 +39,7 @@ class PromoCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(8),
@@ -50,7 +47,7 @@ class PromoCard extends StatelessWidget {
                 child: Text(
                   badge,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.surfaceWhite,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.5,

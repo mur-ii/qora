@@ -187,7 +187,7 @@ class _VoiceHighlight extends StatelessWidget {
             return DecoratedBox(
               decoration: BoxDecoration(
                 color: Color.lerp(
-                  Colors.transparent,
+                  AppColors.transparent,
                   AppColors.primary.withValues(alpha: 0.12),
                   phase.clamp(0.0, 1.0),
                 ),
@@ -256,7 +256,7 @@ class _DateRangeFieldState extends State<_DateRangeField> {
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surfaceWhite,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -334,7 +334,7 @@ class _RoomGuestFieldState extends State<_RoomGuestField> {
     showModalBottomSheet(
       useSafeArea: true,
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surfaceWhite,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -356,7 +356,7 @@ class _RoomGuestFieldState extends State<_RoomGuestField> {
                       height: 4,
                       margin: const EdgeInsets.only(bottom: 16),
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: AppColors.border,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -403,7 +403,7 @@ class _RoomGuestFieldState extends State<_RoomGuestField> {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
+                          foregroundColor: AppColors.surfaceWhite,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -487,13 +487,13 @@ class _BookingCounterRow extends StatelessWidget {
         ),
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
+            border: Border.all(color: AppColors.border),
             borderRadius: BorderRadius.circular(4),
           ),
           child: Row(
             children: [
               Material(
-                color: Colors.transparent,
+                color: AppColors.transparent,
                 child: InkWell(
                   onTap: onDecrement,
                   borderRadius: const BorderRadius.horizontal(
@@ -505,13 +505,15 @@ class _BookingCounterRow extends StatelessWidget {
                     alignment: Alignment.center,
                     child: Icon(
                       Icons.remove,
-                      color: count > 0 ? AppColors.primary : Colors.grey[400],
+                      color: count > 0
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
                       size: 20,
                     ),
                   ),
                 ),
               ),
-              Container(width: 1, height: 44, color: Colors.grey[300]),
+              Container(width: 1, height: 44, color: AppColors.border),
               Container(
                 width: 44,
                 height: 44,
@@ -524,9 +526,9 @@ class _BookingCounterRow extends StatelessWidget {
                   ),
                 ),
               ),
-              Container(width: 1, height: 44, color: Colors.grey[300]),
+              Container(width: 1, height: 44, color: AppColors.border),
               Material(
-                color: Colors.transparent,
+                color: AppColors.transparent,
                 child: InkWell(
                   onTap: onIncrement,
                   borderRadius: const BorderRadius.horizontal(
@@ -561,7 +563,7 @@ class _SearchButton extends StatelessWidget {
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
+          foregroundColor: AppColors.surfaceWhite,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -688,7 +690,7 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
@@ -699,7 +701,7 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
             height: 4,
             margin: const EdgeInsets.only(top: 12, bottom: 16),
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: AppColors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -727,7 +729,7 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
-                            color: Colors.grey[600],
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ),
@@ -758,10 +760,10 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surfaceWhite,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: AppColors.deepBlack.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -2),
                     ),
@@ -789,8 +791,8 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
                             : null,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          disabledBackgroundColor: Colors.grey[300],
+                          foregroundColor: AppColors.surfaceWhite,
+                          disabledBackgroundColor: AppColors.border,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -956,7 +958,7 @@ class _DayCellState extends State<_DayCell> {
                 ? AppColors.primary
                 : _inRange
                 ? AppColors.primary.withValues(alpha: 0.2)
-                : Colors.transparent,
+                : AppColors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           alignment: Alignment.center,
@@ -966,10 +968,10 @@ class _DayCellState extends State<_DayCell> {
               fontSize: 14,
               fontWeight: _selected ? FontWeight.w600 : FontWeight.normal,
               color: widget.isPast
-                  ? Colors.grey[400]
+                  ? AppColors.textSecondary
                   : _selected
-                  ? Colors.white
-                  : Colors.black87,
+                  ? AppColors.surfaceWhite
+                  : AppColors.textPrimary,
             ),
           ),
         ),

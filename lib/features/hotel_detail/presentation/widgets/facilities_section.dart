@@ -15,46 +15,111 @@ class FacilitiesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Fasilitas',
+          'Fasilitas Hotel',
           style: AppTypography.titleLarge.copyWith(
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
+        const SizedBox(height: 4),
+        Text(
+          'Nikmati fasilitas unggulan untuk pengalaman menginap yang nyaman.',
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
         const SizedBox(height: 16),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: facilities.map((facility) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final crossAxisCount = constraints.maxWidth >= 360 ? 3 : 2;
+            return GridView.builder(
+              itemCount: facilities.length,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1.1,
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _getIconData(facility.icon),
-                    size: 18,
-                    color: AppColors.primary,
+              itemBuilder: (context, index) {
+                final facility = facilities[index];
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceWhite,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppColors.border),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.deepBlack.withValues(alpha: 0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    facility.name,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          _getIconData(facility.icon),
+                          size: 20,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _translateFacilityName(facility.name),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             );
-          }).toList(),
+          },
         ),
       ],
     );
+  }
+
+  String _translateFacilityName(String name) {
+    final normalized = name.toLowerCase();
+    const dictionary = {
+      'free wifi': 'WiFi Gratis',
+      'wifi gratis': 'WiFi Gratis',
+      'swimming pool': 'Kolam Renang',
+      'infinity pool': 'Kolam Renang',
+      'pool': 'Kolam Renang',
+      'fitness center': 'Pusat Kebugaran',
+      'gym': 'Pusat Kebugaran',
+      'restaurant': 'Restoran',
+      'beachfront restaurant': 'Restoran Pantai',
+      'spa & wellness': 'Spa dan Wellness',
+      '24/7 room service': 'Layanan Kamar 24 Jam',
+      'room service': 'Layanan Kamar',
+      'free parking': 'Parkir Gratis',
+      'parking': 'Parkir',
+      'airport shuttle': 'Antar Jemput Bandara',
+      'private beach': 'Pantai Pribadi',
+      'sunset bar': 'Bar Sunset',
+      'business center': 'Pusat Bisnis',
+      'meeting rooms': 'Ruang Rapat',
+    };
+    return dictionary[normalized] ?? name;
   }
 
   IconData _getIconData(String iconName) {
@@ -79,6 +144,10 @@ class FacilitiesSection extends StatelessWidget {
         return Icons.beach_access;
       case 'local_bar':
         return Icons.local_bar;
+      case 'business_center':
+        return Icons.business_center;
+      case 'meeting_room':
+        return Icons.meeting_room;
       default:
         return Icons.check_circle;
     }

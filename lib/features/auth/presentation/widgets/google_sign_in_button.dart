@@ -20,8 +20,8 @@ class GoogleSignInButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
-          side: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+          backgroundColor: AppColors.surfaceWhite,
+          side: const BorderSide(color: AppColors.border, width: 1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -46,7 +46,7 @@ class GoogleSignInButton extends StatelessWidget {
                       return const Icon(
                         Icons.g_mobiledata,
                         size: 24,
-                        color: Color(0xFF4285F4),
+                        color: AppColors.brandGreen,
                       );
                     },
                   ),
@@ -66,5 +66,3 @@ class GoogleSignInButton extends StatelessWidget {
     );
   }
 }
-
-

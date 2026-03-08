@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
+
 enum ContentChangingButtonState { connecting, connected, notConnect }
 
 class ContentChangingButton extends StatelessWidget {
@@ -14,7 +16,7 @@ class ContentChangingButton extends StatelessWidget {
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: _getBackgroundColor(),
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.surfaceWhite,
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         elevation: 4,
@@ -28,7 +30,9 @@ class ContentChangingButton extends StatelessWidget {
               height: 20,
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppColors.surfaceWhite,
+                ),
               ),
             )
           else
@@ -46,11 +50,11 @@ class ContentChangingButton extends StatelessWidget {
   Color _getBackgroundColor() {
     switch (state) {
       case ContentChangingButtonState.connecting:
-        return Colors.orange;
+        return AppColors.primaryOrange;
       case ContentChangingButtonState.connected:
-        return Colors.red;
+        return AppColors.error;
       case ContentChangingButtonState.notConnect:
-        return Colors.green;
+        return AppColors.brandGreen;
     }
   }
 

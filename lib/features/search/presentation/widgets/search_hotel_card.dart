@@ -75,7 +75,7 @@ class SearchHotelCard extends StatelessWidget {
                       child: const Text(
                         'PROMO',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.surfaceWhite,
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
@@ -136,13 +136,13 @@ class SearchHotelCard extends StatelessWidget {
                             const Icon(
                               Icons.star_rounded,
                               size: 11,
-                              color: Colors.white,
+                              color: AppColors.surfaceWhite,
                             ),
                             const SizedBox(width: 3),
                             Text(
                               hotel.rating.toStringAsFixed(1),
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppColors.surfaceWhite,
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),

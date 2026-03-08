@@ -40,7 +40,7 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
       appBar: AppBar(
         title: const Text('Voice Assistant'),
         backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.surfaceWhite,
         elevation: 0,
         actions: [
           BlocBuilder<VoiceAssistantBloc, VoiceAssistantState>(
@@ -80,10 +80,10 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surfaceWhite,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
+                      color: AppColors.deepBlack.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),
@@ -104,7 +104,7 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
                                 width: 8,
                                 height: 8,
                                 decoration: const BoxDecoration(
-                                  color: Colors.red,
+                                  color: AppColors.error,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -112,7 +112,7 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
                               const Text(
                                 'Listening...',
                                 style: TextStyle(
-                                  color: Colors.grey,
+                                  color: AppColors.textSecondary,
                                   fontSize: 14,
                                 ),
                               ),
@@ -173,27 +173,27 @@ class _ConnectionIndicator extends StatelessWidget {
 
     switch (status) {
       case VoiceAssistantStatus.connected:
-        color = Colors.green;
+        color = AppColors.brandGreen;
         text = 'Connected';
         break;
       case VoiceAssistantStatus.listening:
-        color = Colors.green;
+        color = AppColors.brandGreen;
         text = 'Listening';
         break;
       case VoiceAssistantStatus.speaking:
-        color = Colors.green;
+        color = AppColors.brandGreen;
         text = 'Speaking';
         break;
       case VoiceAssistantStatus.connecting:
-        color = Colors.orange;
+        color = AppColors.primaryOrange;
         text = 'Connecting';
         break;
       case VoiceAssistantStatus.disconnecting:
-        color = Colors.orange;
+        color = AppColors.primaryOrange;
         text = 'Disconnecting';
         break;
       case VoiceAssistantStatus.idle:
-        color = Colors.grey;
+        color = AppColors.textSecondary;
         text = 'Disconnected';
         break;
     }

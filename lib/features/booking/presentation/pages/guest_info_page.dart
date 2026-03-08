@@ -13,13 +13,13 @@ class GuestInfoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.backgroundGrey,
       appBar: AppBar(
         title: const Text(
           'Informasi Tamu',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surfaceWhite,
         elevation: 0,
       ),
       body: Padding(
@@ -40,7 +40,10 @@ class GuestInfoPage extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'Fitur informasi tamu dinonaktifkan. Anda dapat langsung melanjutkan ke pembayaran.',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[800]),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                   ),
                 ],
@@ -55,7 +58,7 @@ class GuestInfoPage extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.textOnPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

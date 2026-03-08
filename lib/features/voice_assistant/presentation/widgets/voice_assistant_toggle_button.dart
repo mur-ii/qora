@@ -104,7 +104,7 @@ class _VoiceAssistantToggleButtonState
 
     if (isFailed) return theme.colorScheme.error;
     if (isConnecting) return theme.colorScheme.tertiary;
-    if (isActive && isMuted) return Colors.orange.shade600;
+    if (isActive && isMuted) return AppColors.primaryOrange;
     if (isActive) return theme.colorScheme.primary;
     return theme.colorScheme.outline;
   }

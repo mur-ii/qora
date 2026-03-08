@@ -7,7 +7,6 @@ class HotelModel extends HotelEntity {
     required super.location,
     required super.pricePerNight,
     required super.rating,
-    required super.isPromo,
     required super.amenities,
   });
 
@@ -18,7 +17,6 @@ class HotelModel extends HotelEntity {
       location: json['location'] as String,
       pricePerNight: (json['pricePerNight'] as num).toDouble(),
       rating: (json['rating'] as num).toDouble(),
-      isPromo: json['isPromo'] as bool? ?? false,
       amenities:
           (json['amenities'] as List<dynamic>?)
               ?.map((amenity) => amenity.toString())
@@ -34,7 +32,6 @@ class HotelModel extends HotelEntity {
       'location': location,
       'pricePerNight': pricePerNight,
       'rating': rating,
-      'isPromo': isPromo,
       'amenities': amenities,
     };
   }

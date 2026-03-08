@@ -59,7 +59,10 @@ class _AuthTextFieldState extends State<AuthTextField> {
           validator: widget.validator,
           decoration: InputDecoration(
             hintText: widget.hintText,
-            hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+            hintStyle: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14,
+            ),
             prefixIcon: widget.prefixIcon,
             suffixIcon: widget.isPassword
                 ? IconButton(
@@ -75,14 +78,14 @@ class _AuthTextFieldState extends State<AuthTextField> {
                   )
                 : null,
             filled: true,
-            fillColor: const Color(0xFFF9FAFB),
+            fillColor: AppColors.backgroundGrey,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+              borderSide: const BorderSide(color: AppColors.border, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+              borderSide: const BorderSide(color: AppColors.border, width: 1),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -90,11 +93,11 @@ class _AuthTextFieldState extends State<AuthTextField> {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1),
+              borderSide: const BorderSide(color: AppColors.error, width: 1),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFEF4444), width: 2),
+              borderSide: const BorderSide(color: AppColors.error, width: 2),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,

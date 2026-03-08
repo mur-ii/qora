@@ -77,7 +77,7 @@ final List<Map<String, Object>> _promos = [
     'title': 'Keluarga Hemat',
     'subtitle': 'Gratis 1 anak di bawah 12th',
     'badge': 'FAMILY',
-    'color': const Color(0xFF7C3AED),
+    'color': AppColors.promoGold,
     'icon': Icons.family_restroom_outlined,
   },
 ];

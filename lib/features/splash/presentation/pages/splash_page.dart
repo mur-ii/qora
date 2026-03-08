@@ -2,15 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/utils/lottie_loader.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
-import '../../../auth/presentation/bloc/auth_event.dart';
-import '../../../auth/presentation/bloc/auth_state.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -27,7 +23,6 @@ class _SplashPageState extends State<SplashPage> {
   void initState() {
     super.initState();
     _lottieCompositionFuture = _loadLottieComposition();
-    context.read<AuthBloc>().add(const CheckAuthStatusEvent());
     _navigationTimer = Timer(const Duration(seconds: 2), _handleNavigation);
   }
 
@@ -47,11 +42,7 @@ class _SplashPageState extends State<SplashPage> {
       return;
     }
 
-    final authState = context.read<AuthBloc>().state;
-    final target = authState is AuthAuthenticated
-      ? AppRoutes.homeName
-      : AppRoutes.loginName;
-    context.goNamed(target);
+    context.goNamed(AppRoutes.loginName);
   }
 
   @override

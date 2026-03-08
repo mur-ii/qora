@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../features/auth/presentation/pages/auth_home_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
-import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/booking/domain/entities/booking_entity.dart';
 import '../../features/booking/presentation/pages/booking_confirmation_page.dart';
 import '../../features/booking/presentation/pages/booking_summary_page.dart';
@@ -31,16 +29,6 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.loginPath,
       name: AppRoutes.loginName,
       builder: (context, state) => const LoginPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.registerPath,
-      name: AppRoutes.registerName,
-      builder: (context, state) => const RegisterPage(),
-    ),
-    GoRoute(
-      path: AppRoutes.authHomePath,
-      name: AppRoutes.authHomeName,
-      builder: (context, state) => const AuthHomePage(),
     ),
     GoRoute(
       path: AppRoutes.homePath,

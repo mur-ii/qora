@@ -3,10 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 import 'core/config/env_config.dart';
-import 'core/di/auth_injection.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/booking/data/models/booking_record.dart';
 import 'features/voice_assistant/di/voice_assistant_injection.dart';
 import 'features/voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
@@ -43,9 +41,6 @@ class MyApp extends StatelessWidget {
 
     return MultiBlocProvider(
       providers: [
-        BlocProvider<AuthBloc>(
-          create: (context) => AuthInjection.getAuthBloc(),
-        ),
         BlocProvider<VoiceAssistantBloc>(
           create: (context) =>
               VoiceAssistantInjection.provideVoiceAssistantBloc(

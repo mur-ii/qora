@@ -15,7 +15,7 @@ class ProfileQuickSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -27,7 +27,7 @@ class ProfileQuickSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: AppColors.border,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -44,9 +44,9 @@ class ProfileQuickSheet extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Colors.grey.withValues(alpha: 0),
-                    Colors.grey.withValues(alpha: 0.3),
-                    Colors.grey.withValues(alpha: 0),
+                    AppColors.textSecondary.withValues(alpha: 0),
+                    AppColors.textSecondary.withValues(alpha: 0.3),
+                    AppColors.textSecondary.withValues(alpha: 0),
                   ],
                 ),
               ),
@@ -111,7 +111,7 @@ class ProfileQuickSheet extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
+                  foregroundColor: AppColors.surfaceWhite,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -148,14 +148,14 @@ class ProfileQuickSheet extends StatelessWidget {
                 child: CircularProgressIndicator(
                   value: profile.levelProgress,
                   strokeWidth: 4,
-                  backgroundColor: Colors.grey[200],
+                  backgroundColor: AppColors.border,
                   valueColor: AlwaysStoppedAnimation<Color>(_getLevelColor()),
                 ),
               ),
               // Avatar
               CircleAvatar(
                 radius: 36,
-                backgroundColor: const Color(0xFFDBEAFE),
+                backgroundColor: AppColors.primaryContainer,
                 child: Text(
                   profile.fullName.isNotEmpty
                       ? profile.fullName[0].toUpperCase()
@@ -163,7 +163,7 @@ class ProfileQuickSheet extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1D4ED8),
+                    color: AppColors.brandGreen,
                   ),
                 ),
               ),
@@ -178,7 +178,7 @@ class ProfileQuickSheet extends StatelessWidget {
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF1A1A1A),
+              color: AppColors.deepBlack,
             ),
           ),
 
@@ -223,11 +223,17 @@ class ProfileQuickSheet extends StatelessWidget {
                 children: [
                   Text(
                     '${profile.currentXP} XP',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   Text(
                     '${profile.xpToNextLevel} XP',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -237,7 +243,7 @@ class ProfileQuickSheet extends StatelessWidget {
                 child: LinearProgressIndicator(
                   value: profile.levelProgress,
                   minHeight: 6,
-                  backgroundColor: Colors.grey[200],
+                  backgroundColor: AppColors.border,
                   valueColor: AlwaysStoppedAnimation<Color>(_getLevelColor()),
                 ),
               ),
@@ -249,11 +255,11 @@ class ProfileQuickSheet extends StatelessWidget {
   }
 
   Color _getLevelColor() {
-    if (profile.currentLevel < 5) return const Color(0xFF42A5F5);
-    if (profile.currentLevel < 10) return const Color(0xFF43A047);
-    if (profile.currentLevel < 20) return const Color(0xFF8E24AA);
-    if (profile.currentLevel < 30) return const Color(0xFFF4511E);
-    return const Color(0xFFF57C00);
+    if (profile.currentLevel < 5) return AppColors.primaryOrange;
+    if (profile.currentLevel < 10) return AppColors.brandGreen;
+    if (profile.currentLevel < 20) return AppColors.promoGold;
+    if (profile.currentLevel < 30) return AppColors.primaryOrange;
+    return AppColors.primaryOrange;
   }
 }
 
@@ -276,9 +282,9 @@ class _QuickShortcut extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.grey[50],
+          color: AppColors.surfaceWhite,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
+          border: Border.all(color: AppColors.border),
         ),
         child: Row(
           children: [
@@ -297,11 +303,11 @@ class _QuickShortcut extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF1A1A1A),
+                  color: AppColors.deepBlack,
                 ),
               ),
             ),
-            Icon(Icons.chevron_right, size: 20, color: Colors.grey[400]),
+            Icon(Icons.chevron_right, size: 20, color: AppColors.textSecondary),
           ],
         ),
       ),

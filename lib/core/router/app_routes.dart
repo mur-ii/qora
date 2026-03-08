@@ -3,8 +3,6 @@ class AppRoutes {
 
   static const String splashName = 'splash';
   static const String loginName = 'login';
-  static const String registerName = 'register';
-  static const String authHomeName = 'auth-home';
   static const String homeName = 'home';
   static const String notificationsName = 'notifications';
   static const String hotelListName = 'hotel-list';
@@ -17,20 +15,18 @@ class AppRoutes {
   static const String bookingConfirmationName = 'booking-confirmation';
   static const String profileName = 'profile';
 
-    static const String screenHome = 'home';
-    static const String screenHotelList = 'hotel_list';
-    static const String screenHotelDetail = 'hotel_detail';
-    static const String screenBookingSummary = 'booking_summary';
-    static const String screenBookingGuestInfo = 'booking_guest_info';
-    static const String screenBookingPayment = 'booking_payment';
-    static const String screenBookingConfirmation = 'booking_confirmation';
-    static const String screenSearch = 'search';
-    static const String screenNotifications = 'notifications';
+  static const String screenHome = 'home';
+  static const String screenHotelList = 'hotel_list';
+  static const String screenHotelDetail = 'hotel_detail';
+  static const String screenBookingSummary = 'booking_summary';
+  static const String screenBookingGuestInfo = 'booking_guest_info';
+  static const String screenBookingPayment = 'booking_payment';
+  static const String screenBookingConfirmation = 'booking_confirmation';
+  static const String screenSearch = 'search';
+  static const String screenNotifications = 'notifications';
 
   static const String splashPath = '/splash';
   static const String loginPath = '/login';
-  static const String registerPath = '/register';
-  static const String authHomePath = '/auth-home';
   static const String homePath = '/';
   static const String notificationsPath = '/notifications';
   static const String hotelListPath = '/hotel-list';

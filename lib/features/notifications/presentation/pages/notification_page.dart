@@ -31,7 +31,7 @@ class _NotificationPageContent extends StatelessWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surfaceWhite,
         title: Text(
           'Notifikasi',
           style: AppTypography.titleLarge.copyWith(
@@ -48,8 +48,8 @@ class _NotificationPageContent extends StatelessWidget {
               return TextButton(
                 onPressed: state.hasUnread
                     ? () => context.read<NotificationBloc>().add(
-                          const MarkAllReadEvent(),
-                        )
+                        const MarkAllReadEvent(),
+                      )
                     : null,
                 child: Text(
                   'Tandai Semua',
@@ -141,7 +141,7 @@ class _NotificationItem extends StatelessWidget {
       decoration: BoxDecoration(
         color: item.isUnread
             ? AppColors.primary.withValues(alpha: 0.05)
-            : Colors.white,
+            : AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: item.isUnread
@@ -154,8 +154,8 @@ class _NotificationItem extends StatelessWidget {
         onTap: () {
           if (item.isUnread) {
             context.read<NotificationBloc>().add(
-                  MarkNotificationReadEvent(item.id),
-                );
+              MarkNotificationReadEvent(item.id),
+            );
           }
         },
         borderRadius: BorderRadius.circular(12),

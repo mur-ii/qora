@@ -14,10 +14,7 @@ class HotelCard extends StatelessWidget {
   String _formatPrice(double price) {
     final formatted = price
         .toStringAsFixed(0)
-        .replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (m) => '${m[1]}.',
-        );
+        .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.');
     return 'Rp $formatted';
   }
 
@@ -30,9 +27,6 @@ class HotelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final originalPrice =
-        hotel.isPromo ? hotel.pricePerNight * 1.4 : null;
-
     return GestureDetector(
       onTap: () => context.push(AppRoutes.hotelDetailPathFor(hotel.id)),
       child: Container(
@@ -97,7 +91,7 @@ class HotelCard extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: Colors.white,
+                            color: AppColors.surfaceWhite,
                           ),
                         ),
                       ),
@@ -127,54 +121,26 @@ class HotelCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   // Price
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      if (hotel.isPromo) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.warning.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            'PROMO',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.warning,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 9,
-                            ),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: _formatPrice(hotel.pricePerNight),
+                          style: AppTypography.titleSmall.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        if (originalPrice != null)
-                          Text(
-                            _formatPrice(originalPrice),
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.textTertiary,
-                              decoration: TextDecoration.lineThrough,
-                            ),
+                        TextSpan(
+                          text: ' /malam',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textTertiary,
                           ),
-                        const SizedBox(width: 4),
+                        ),
                       ],
-                      Text(
-                        _formatPrice(hotel.pricePerNight),
-                        style: AppTypography.titleSmall.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        '/malam',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

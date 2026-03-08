@@ -39,7 +39,7 @@ class FloatingProfileAvatar extends StatelessWidget {
               padding: const EdgeInsets.all(2),
               child: Container(
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surfaceWhite,
                   shape: BoxShape.circle,
                 ),
                 padding: const EdgeInsets.all(1.5),
@@ -66,12 +66,12 @@ class FloatingProfileAvatar extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(colors: _getLevelGradientColors()),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white, width: 1),
+                  border: Border.all(color: AppColors.surfaceWhite, width: 1),
                 ),
                 child: Text(
                   '${profile.currentLevel}',
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.surfaceWhite,
                     fontSize: 8,
                     fontWeight: FontWeight.bold,
                   ),
@@ -86,14 +86,14 @@ class FloatingProfileAvatar extends StatelessWidget {
 
   List<Color> _getLevelGradientColors() {
     if (profile.currentLevel < 5) {
-      return [const Color(0xFF64B5F6), const Color(0xFF42A5F5)];
+      return [AppColors.primaryOrange, AppColors.primaryOrange];
     } else if (profile.currentLevel < 10) {
-      return [const Color(0xFF66BB6A), const Color(0xFF43A047)];
+      return [AppColors.brandGreen, AppColors.brandGreen];
     } else if (profile.currentLevel < 20) {
-      return [const Color(0xFFAB47BC), const Color(0xFF8E24AA)];
+      return [AppColors.promoGold, AppColors.promoGold];
     } else if (profile.currentLevel < 30) {
-      return [const Color(0xFFFF7043), const Color(0xFFF4511E)];
+      return [AppColors.primaryOrange, AppColors.primaryOrange];
     }
-    return [const Color(0xFFFFB300), const Color(0xFFF57C00)];
+    return [AppColors.promoGold, AppColors.primaryOrange];
   }
 }

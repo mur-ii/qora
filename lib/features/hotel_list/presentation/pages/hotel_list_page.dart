@@ -162,7 +162,6 @@ class _HotelListPageContent extends StatelessWidget {
                     icon: Icons.map_outlined,
                     label: 'Peta',
                     onTap: () {
-         
                       AppToast.showInfo(context, 'Peta akan segera hadir');
                     },
                   ),
@@ -316,7 +315,7 @@ class _HotelListPageContent extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surfaceWhite,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -634,7 +633,7 @@ class _HotelListPageContent extends StatelessWidget {
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.surfaceWhite,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -673,7 +672,7 @@ class _HotelListPageContent extends StatelessWidget {
     final hotelListBloc = context.read<HotelListBloc>();
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surfaceWhite,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -749,7 +748,7 @@ class _FilterButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey[300]!),
+          border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -797,7 +796,7 @@ class _FilterChip extends StatelessWidget {
         fontSize: 13,
       ),
       side: BorderSide(
-        color: isSelected ? AppColors.primary : Colors.grey[300]!,
+        color: isSelected ? AppColors.primary : AppColors.border,
       ),
     );
   }

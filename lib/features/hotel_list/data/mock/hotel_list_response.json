@@ -7,7 +7,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
       "pricePerNight": 1500000,
       "rating": 4.8,
-      "isPromo": true,
       "amenities": ["Free WiFi", "Swimming Pool", "Fitness Center", "Restaurant"]
     },
     {
@@ -17,7 +16,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800",
       "pricePerNight": 1200000,
       "rating": 4.4,
-      "isPromo": false,
       "amenities": ["Free WiFi", "Swimming Pool", "Business Center"]
     },
     {
@@ -27,7 +25,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
       "pricePerNight": 980000,
       "rating": 4.3,
-      "isPromo": true,
       "amenities": ["Free WiFi", "Gym", "Restaurant", "Parking"]
     },
     {
@@ -37,7 +34,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
       "pricePerNight": 1350000,
       "rating": 4.6,
-      "isPromo": false,
       "amenities": ["Free WiFi", "Business Center", "Meeting Rooms", "Restaurant"]
     },
     {
@@ -47,7 +43,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?w=800",
       "pricePerNight": 1600000,
       "rating": 4.7,
-      "isPromo": true,
       "amenities": ["Free WiFi", "Swimming Pool", "Fitness Center", "Rooftop Bar"]
     },
     {
@@ -57,7 +52,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800",
       "pricePerNight": 890000,
       "rating": 4.2,
-      "isPromo": false,
       "amenities": ["Free WiFi", "Garden", "Cafe", "Parking"]
     },
     {
@@ -67,7 +61,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
       "pricePerNight": 1750000,
       "rating": 4.9,
-      "isPromo": true,
       "amenities": ["Free WiFi", "Swimming Pool", "Spa", "Restaurant"]
     },
     {
@@ -77,7 +70,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?w=800",
       "pricePerNight": 1050000,
       "rating": 4.1,
-      "isPromo": false,
       "amenities": ["Free WiFi", "Business Center", "Laundry Service"]
     },
     {
@@ -87,7 +79,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=800",
       "pricePerNight": 1450000,
       "rating": 4.5,
-      "isPromo": true,
       "amenities": ["Free WiFi", "Swimming Pool", "Tennis Court", "Restaurant"]
     },
     {
@@ -97,7 +88,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
       "pricePerNight": 990000,
       "rating": 4.0,
-      "isPromo": false,
       "amenities": ["Free WiFi", "Gym", "Restaurant", "Airport Shuttle"]
     },
     {
@@ -107,7 +97,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
       "pricePerNight": 820000,
       "rating": 4.2,
-      "isPromo": true,
       "amenities": ["Free WiFi", "Kids Club", "Restaurant", "Parking"]
     },
     {
@@ -117,7 +106,6 @@
       "imageUrl": "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800",
       "pricePerNight": 1300000,
       "rating": 4.4,
-      "isPromo": false,
       "amenities": ["Free WiFi", "Ocean View", "Restaurant", "Swimming Pool"]
     }
   ]

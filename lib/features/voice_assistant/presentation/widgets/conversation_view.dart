@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../bloc/voice_assistant_state.dart';
 
 class ConversationView extends StatelessWidget {
@@ -14,12 +15,12 @@ class ConversationView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.mic_none, size: 80, color: Colors.grey),
+            Icon(Icons.mic_none, size: 80, color: AppColors.textSecondary),
             SizedBox(height: 16),
             Text(
               'Tap the button to start\nyour voice assistant',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
             ),
           ],
         ),
@@ -57,10 +58,10 @@ class _MessageBubble extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isUser
-              ? Colors.blue
+              ? AppColors.brandGreen
               : isFunction
-              ? Colors.purple.shade100
-              : Colors.grey.shade200,
+              ? AppColors.brandGreen.withValues(alpha: 0.15)
+              : AppColors.backgroundGrey,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -72,14 +73,18 @@ class _MessageBubble extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.functions, size: 14, color: Colors.purple),
+                    const Icon(
+                      Icons.functions,
+                      size: 14,
+                      color: AppColors.brandGreen,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       message.functionName!,
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
-                        color: Colors.purple,
+                        color: AppColors.brandGreen,
                       ),
                     ),
                   ],
@@ -88,7 +93,7 @@ class _MessageBubble extends StatelessWidget {
             Text(
               message.text,
               style: TextStyle(
-                color: isUser ? Colors.white : Colors.black87,
+                color: isUser ? AppColors.surfaceWhite : AppColors.textPrimary,
                 fontSize: 15,
               ),
             ),
@@ -96,7 +101,9 @@ class _MessageBubble extends StatelessWidget {
             Text(
               _formatTime(message.timestamp),
               style: TextStyle(
-                color: isUser ? Colors.white70 : Colors.black45,
+                color: isUser
+                    ? AppColors.surfaceWhite.withValues(alpha: 0.8)
+                    : AppColors.textSecondary,
                 fontSize: 11,
               ),
             ),

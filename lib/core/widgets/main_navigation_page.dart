@@ -47,11 +47,11 @@ class MainNavigationPage extends StatelessWidget {
       screens: _buildScreens(),
       items: _navBarsItems(),
       navBarStyle: NavBarStyle.style3,
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.surfaceWhite,
       decoration: NavBarDecoration(
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.deepBlack.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

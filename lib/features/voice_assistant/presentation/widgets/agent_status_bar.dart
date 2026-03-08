@@ -48,7 +48,10 @@ class AgentStatusBar extends StatelessWidget {
                 if (agentState.currentScreen != null)
                   Text(
                     'Screen: ${agentState.currentScreen}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
               ],
             ),
@@ -63,7 +66,7 @@ class AgentStatusBar extends StatelessWidget {
               child: Text(
                 '${agentState.userConstraints.length} filters',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppColors.surfaceWhite,
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),

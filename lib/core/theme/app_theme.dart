@@ -37,17 +37,18 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      primaryColor: AppColors.primaryOrange,
 
       // Color Scheme
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
+        seedColor: AppColors.primaryOrange,
         brightness: Brightness.light,
-        primary: AppColors.primary,
+        primary: AppColors.primaryOrange,
         onPrimary: AppColors.textOnPrimary,
-        secondary: AppColors.secondary,
+        secondary: AppColors.brandGreen,
         onSecondary: AppColors.textOnDark,
         error: AppColors.error,
-        surface: AppColors.surface,
+        surface: AppColors.surfaceWhite,
         onSurface: AppColors.textPrimary,
         outline: AppColors.border,
         shadow: AppColors.shadowMedium,
@@ -57,14 +58,23 @@ class AppTheme {
       ),
 
       // Scaffold background
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: AppColors.backgroundGrey,
 
       // Typography
       fontFamily: AppTypography.fontFamily,
-      textTheme: AppTypography.getTextTheme().apply(
-        bodyColor: AppColors.textPrimary,
-        displayColor: AppColors.textPrimary,
-      ),
+      textTheme: AppTypography.getTextTheme()
+          .apply(
+            bodyColor: AppColors.textPrimary,
+            displayColor: AppColors.textPrimary,
+          )
+          .copyWith(
+            bodySmall: AppTypography.getTextTheme().bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            labelSmall: AppTypography.getTextTheme().labelSmall?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
 
       // ==================== COMPONENT THEMES ====================
 
@@ -73,29 +83,29 @@ class AppTheme {
         centerTitle: true,
         elevation: elevationNone,
         scrolledUnderElevation: elevationSmall,
-        backgroundColor: AppColors.surface,
-        foregroundColor: AppColors.textPrimary,
-        surfaceTintColor: Colors.transparent,
+        backgroundColor: AppColors.brandGreen,
+        foregroundColor: AppColors.textOnPrimary,
+        surfaceTintColor: AppColors.transparent,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarBrightness: Brightness.light,
           statusBarIconBrightness: Brightness.dark,
-          statusBarColor: Colors.transparent,
+          statusBarColor: AppColors.transparent,
         ),
         titleTextStyle: TextStyle(
           fontFamily: AppTypography.fontFamily,
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          color: AppColors.textOnPrimary,
           letterSpacing: 0,
         ),
-        iconTheme: IconThemeData(color: AppColors.textPrimary, size: 24),
+        iconTheme: IconThemeData(color: AppColors.textOnPrimary, size: 24),
       ),
 
       // Card Theme
       cardTheme: CardThemeData(
         elevation: elevationSmall,
         color: AppColors.cardLight,
-        surfaceTintColor: Colors.transparent,
+        surfaceTintColor: AppColors.transparent,
         shadowColor: AppColors.shadowLight,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(radiusMedium),
@@ -107,7 +117,7 @@ class AppTheme {
       // Elevated Button Theme (Primary CTA)
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: AppColors.primaryOrange,
           foregroundColor: AppColors.textOnPrimary,
           elevation: elevationSmall,
           shadowColor: AppColors.shadowMedium,
@@ -246,10 +256,10 @@ class AppTheme {
 
       // Bottom Navigation Bar Theme
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.primary,
+        backgroundColor: AppColors.surfaceWhite,
+        selectedItemColor: AppColors.brandGreen,
         unselectedItemColor: AppColors.textTertiary,
-        selectedIconTheme: IconThemeData(color: AppColors.primary, size: 26),
+        selectedIconTheme: IconThemeData(color: AppColors.brandGreen, size: 26),
         unselectedIconTheme: IconThemeData(
           color: AppColors.textTertiary,
           size: 22,
@@ -270,8 +280,8 @@ class AppTheme {
 
       // Navigation Bar Theme (Material 3)
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: AppColors.surface,
-        indicatorColor: AppColors.primary.withValues(alpha: 0.15),
+        backgroundColor: AppColors.surfaceWhite,
+        indicatorColor: AppColors.brandGreen.withValues(alpha: 0.15),
         height: 70,
         elevation: elevationMedium,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
@@ -280,7 +290,7 @@ class AppTheme {
               fontFamily: AppTypography.fontFamily,
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: AppColors.primary,
+              color: AppColors.brandGreen,
             );
           }
           return const TextStyle(
@@ -292,7 +302,7 @@ class AppTheme {
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const IconThemeData(color: AppColors.primary, size: 28);
+            return const IconThemeData(color: AppColors.brandGreen, size: 28);
           }
           return const IconThemeData(color: AppColors.textTertiary, size: 24);
         }),
@@ -387,7 +397,7 @@ class AppTheme {
           if (states.contains(WidgetState.selected)) {
             return AppColors.primary;
           }
-          return Colors.transparent;
+          return AppColors.transparent;
         }),
         checkColor: const WidgetStatePropertyAll(AppColors.textOnPrimary),
         side: const BorderSide(color: AppColors.border, width: 2),
@@ -409,7 +419,7 @@ class AppTheme {
         activeTrackColor: AppColors.primary,
         inactiveTrackColor: AppColors.border,
         thumbColor: AppColors.primary,
-        overlayColor: Color(0x1FFF2D2D),
+        overlayColor: AppColors.primaryOverlay,
         valueIndicatorColor: AppColors.primary,
         valueIndicatorTextStyle: TextStyle(
           fontFamily: AppTypography.fontFamily,
@@ -467,9 +477,9 @@ class AppTheme {
 
       // TabBar Theme
       tabBarTheme: const TabBarThemeData(
-        labelColor: AppColors.primary,
+        labelColor: AppColors.brandGreen,
         unselectedLabelColor: AppColors.textSecondary,
-        indicatorColor: AppColors.primary,
+        indicatorColor: AppColors.brandGreen,
         indicatorSize: TabBarIndicatorSize.tab,
         labelStyle: TextStyle(
           fontFamily: AppTypography.fontFamily,
@@ -480,6 +490,28 @@ class AppTheme {
           fontFamily: AppTypography.fontFamily,
           fontSize: 14,
           fontWeight: FontWeight.w400,
+        ),
+      ),
+
+      // Navigation Rail Theme
+      navigationRailTheme: const NavigationRailThemeData(
+        backgroundColor: AppColors.surfaceWhite,
+        selectedIconTheme: IconThemeData(color: AppColors.brandGreen, size: 26),
+        unselectedIconTheme: IconThemeData(
+          color: AppColors.textTertiary,
+          size: 22,
+        ),
+        selectedLabelTextStyle: TextStyle(
+          fontFamily: AppTypography.fontFamily,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: AppColors.brandGreen,
+        ),
+        unselectedLabelTextStyle: TextStyle(
+          fontFamily: AppTypography.fontFamily,
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          color: AppColors.textTertiary,
         ),
       ),
 
