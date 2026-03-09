@@ -241,7 +241,6 @@ class _HomeContentList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.only(bottom: 24),
-      cacheExtent: 900,
       children: const [
         SearchSection(),
         SizedBox(height: 24),

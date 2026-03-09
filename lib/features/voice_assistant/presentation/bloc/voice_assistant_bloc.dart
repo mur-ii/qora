@@ -17,6 +17,12 @@ class VoiceAssistantBloc
   final String? defaultModel;
   final Map<String, StringBuffer> _functionArgBuffers = {};
   final Map<String, String> _functionArgNames = {};
+  static const Duration _speakingDeltaThrottle = Duration(milliseconds: 160);
+  static const Duration _functionArgsDeltaThrottle = Duration(
+    milliseconds: 250,
+  );
+  DateTime? _lastSpeakingDeltaEmit;
+  DateTime? _lastFunctionArgsDeltaEmit;
 
   String _formatError(Object error) {
     final raw = error.toString().replaceAll('Exception: ', '').trim();
@@ -338,8 +344,17 @@ class VoiceAssistantBloc
     }
 
     if (eventType == 'response.audio_transcript.delta') {
-      emit(state.copyWith(status: VoiceAssistantStatus.speaking));
-      voiceAssistantController.updateStatus(VoiceAssistantStatus.speaking);
+      final now = DateTime.now();
+      final canEmitSpeaking =
+          state.status != VoiceAssistantStatus.speaking ||
+          _lastSpeakingDeltaEmit == null ||
+          now.difference(_lastSpeakingDeltaEmit!) >= _speakingDeltaThrottle;
+
+      if (canEmitSpeaking) {
+        _lastSpeakingDeltaEmit = now;
+        emit(state.copyWith(status: VoiceAssistantStatus.speaking));
+        voiceAssistantController.updateStatus(VoiceAssistantStatus.speaking);
+      }
       return;
     }
 
@@ -363,11 +378,22 @@ class VoiceAssistantBloc
       final currentName = _functionArgNames[callId];
       if (currentName != 'search_hotels') return;
 
+      final now = DateTime.now();
+      if (_lastFunctionArgsDeltaEmit != null &&
+          now.difference(_lastFunctionArgsDeltaEmit!) <
+              _functionArgsDeltaThrottle) {
+        return;
+      }
+
       try {
         final parsed = jsonDecode(buffer.toString());
         if (parsed is Map<String, dynamic>) {
+          _lastFunctionArgsDeltaEmit = now;
           agenticAIService.previewUserConstraints(parsed);
-          emit(state.copyWith(agentState: agenticAIService.agentState));
+          final nextAgentState = agenticAIService.agentState;
+          if (nextAgentState != state.agentState) {
+            emit(state.copyWith(agentState: nextAgentState));
+          }
         }
       } catch (_) {
         // Ignore until JSON is complete.

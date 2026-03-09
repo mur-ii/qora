@@ -111,7 +111,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(radiusMedium),
         ),
         margin: const EdgeInsets.all(spacingSmall),
-        clipBehavior: Clip.antiAlias,
+        clipBehavior: Clip.hardEdge,
       ),
 
       // Elevated Button Theme (Primary CTA)
@@ -350,7 +350,7 @@ class AppTheme {
             top: Radius.circular(radiusLarge),
           ),
         ),
-        clipBehavior: Clip.antiAlias,
+        clipBehavior: Clip.hardEdge,
       ),
 
       // Snackbar Theme

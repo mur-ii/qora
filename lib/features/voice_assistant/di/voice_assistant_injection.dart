@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../../../core/services/navigation_service.dart';
@@ -23,7 +24,7 @@ class VoiceAssistantInjection {
     required String openAiApiKey,
     required NavigationService navigationService,
     String? model,
-    bool enableFileLogging = true,
+    bool enableFileLogging = kDebugMode,
   }) {
     _navigationService = navigationService;
 
@@ -32,8 +33,10 @@ class VoiceAssistantInjection {
       modelName: model,
       tokenTracker: _sessionTokenTracker,
     );
-    if (enableFileLogging) {
+    if (enableFileLogging && kDebugMode) {
       _conversationLogger!.enableFileLogging();
+    } else {
+      _conversationLogger!.disableFileLogging();
     }
 
     // Data sources

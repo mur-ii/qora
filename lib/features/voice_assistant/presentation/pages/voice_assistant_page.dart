@@ -4,6 +4,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_toast.dart';
+import '../../domain/entities/agent_state_entity.dart';
 import '../bloc/voice_assistant_bloc.dart';
 import '../bloc/voice_assistant_event.dart';
 import '../bloc/voice_assistant_state.dart';
@@ -43,19 +44,22 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
         foregroundColor: AppColors.surfaceWhite,
         elevation: 0,
         actions: [
-          BlocBuilder<VoiceAssistantBloc, VoiceAssistantState>(
-            builder: (context, state) {
+          BlocSelector<
+            VoiceAssistantBloc,
+            VoiceAssistantState,
+            VoiceAssistantStatus
+          >(
+            selector: (state) => state.status,
+            builder: (context, status) {
               return Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: Center(
-                  child: _ConnectionIndicator(status: state.status),
-                ),
+                child: Center(child: _ConnectionIndicator(status: status)),
               );
             },
           ),
         ],
       ),
-      body: BlocConsumer<VoiceAssistantBloc, VoiceAssistantState>(
+      body: BlocListener<VoiceAssistantBloc, VoiceAssistantState>(
         listenWhen: (previous, current) =>
             previous.error != current.error && current.error != null,
         listener: (context, state) {
@@ -63,75 +67,112 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
             AppToast.showError(context, state.error!);
           }
         },
-        builder: (context, state) {
-          return Column(
-            children: [
-              // Agent status bar
-              if (state.isActive)
-                AgentStatusBar(
-                  agentState: state.agentState,
-                  isProcessing: state.isProcessing,
-                ),
+        child: Column(
+          children: [
+            BlocSelector<VoiceAssistantBloc, VoiceAssistantState, bool>(
+              selector: (state) => state.isActive,
+              builder: (context, isActive) {
+                if (!isActive) {
+                  return const SizedBox.shrink();
+                }
 
-              // Conversation view
-              Expanded(child: ConversationView(messages: state.messages)),
-
-              // Bottom controls
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceWhite,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.deepBlack.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
-                ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Info text
-                      if (state.isActive)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.error,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Listening...',
-                                style: TextStyle(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      // Main button
-                      ContentChangingButton(
-                        state: _mapConnectionStatus(state.status),
-                        onPressed: () => _handleButtonPress(context, state),
-                      ),
-                    ],
+                return BlocSelector<
+                  VoiceAssistantBloc,
+                  VoiceAssistantState,
+                  ({AgentStateEntity agentState, bool isProcessing})
+                >(
+                  selector: (state) => (
+                    agentState: state.agentState,
+                    isProcessing: state.isProcessing,
                   ),
-                ),
+                  builder: (context, data) {
+                    return AgentStatusBar(
+                      agentState: data.agentState,
+                      isProcessing: data.isProcessing,
+                    );
+                  },
+                );
+              },
+            ),
+            Expanded(
+              child:
+                  BlocSelector<
+                    VoiceAssistantBloc,
+                    VoiceAssistantState,
+                    List<ConversationMessage>
+                  >(
+                    selector: (state) => state.messages,
+                    builder: (context, messages) {
+                      return ConversationView(messages: messages);
+                    },
+                  ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceWhite,
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.deepBlack.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
               ),
-            ],
-          );
-        },
+              child: SafeArea(
+                child:
+                    BlocSelector<
+                      VoiceAssistantBloc,
+                      VoiceAssistantState,
+                      ({VoiceAssistantStatus status, bool isActive})
+                    >(
+                      selector: (state) =>
+                          (status: state.status, isActive: state.isActive),
+                      builder: (context, data) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (data.isActive)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.error,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'Listening...',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ContentChangingButton(
+                              state: _mapConnectionStatus(data.status),
+                              onPressed: () => _handleButtonPress(
+                                context,
+                                status: data.status,
+                                isActive: data.isActive,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -150,11 +191,15 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
     }
   }
 
-  void _handleButtonPress(BuildContext context, VoiceAssistantState state) {
-    if (state.isActive) {
+  void _handleButtonPress(
+    BuildContext context, {
+    required VoiceAssistantStatus status,
+    required bool isActive,
+  }) {
+    if (isActive) {
       // Stop
       context.read<VoiceAssistantBloc>().add(const StopVoiceAssistant());
-    } else if (state.status == VoiceAssistantStatus.idle) {
+    } else if (status == VoiceAssistantStatus.idle) {
       // Start
       context.read<VoiceAssistantBloc>().add(const StartVoiceAssistant());
     }
