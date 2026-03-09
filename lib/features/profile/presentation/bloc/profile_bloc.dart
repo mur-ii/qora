@@ -1,8 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/entities/payment_method_entity.dart';
-import '../../domain/entities/transaction_entity.dart';
-import '../../domain/entities/user_preferences_entity.dart';
 import '../../domain/usecases/get_payment_methods.dart';
 import '../../domain/usecases/get_preferences.dart';
 import '../../domain/usecases/get_profile.dart';
@@ -24,54 +21,28 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     required this.getPreferences,
     required this.getTransactions,
     required this.updatePreferences,
-  }) : super(const ProfileInitial()) {
-    on<LoadProfileEvent>(_onLoadProfile);
+  }) : super(
+         ProfileLoaded(
+           profile: getProfile(),
+           paymentMethods: _nullableList(getPaymentMethods()),
+           transactions: _nullableList(getTransactions()),
+           preferences: getPreferences(),
+         ),
+       ) {
     on<UpdatePreferencesEvent>(_onUpdatePreferences);
   }
 
-  Future<void> _onLoadProfile(
-    LoadProfileEvent event,
-    Emitter<ProfileState> emit,
-  ) async {
-    emit(const ProfileLoading());
-
-    try {
-      final profile = await getProfile();
-      final paymentMethodsFuture = getPaymentMethods().catchError(
-        (_) => const <PaymentMethodEntity>[],
-      );
-      final transactionsFuture = getTransactions().catchError(
-        (_) => const <TransactionEntity>[],
-      );
-      final preferencesFuture = getPreferences()
-          .then<UserPreferencesEntity?>((v) => v)
-          .catchError((_) => null);
-
-      final paymentMethods = await paymentMethodsFuture;
-      final transactions = await transactionsFuture;
-      final preferences = await preferencesFuture;
-
-      emit(
-        ProfileLoaded(
-          profile: profile,
-          paymentMethods: paymentMethods.isEmpty
-              ? null
-              : List<PaymentMethodEntity>.from(paymentMethods),
-          transactions: transactions.isEmpty
-              ? null
-              : List<TransactionEntity>.from(transactions),
-          preferences: preferences,
-        ),
-      );
-    } catch (e) {
-      emit(ProfileError(e.toString().replaceAll('Exception: ', '')));
+  static List<T>? _nullableList<T>(List<T> value) {
+    if (value.isEmpty) {
+      return null;
     }
+    return List<T>.from(value);
   }
 
-  Future<void> _onUpdatePreferences(
+  void _onUpdatePreferences(
     UpdatePreferencesEvent event,
     Emitter<ProfileState> emit,
-  ) async {
+  ) {
     if (state is! ProfileLoaded) return;
     final current = state as ProfileLoaded;
     final preferences = current.preferences;
@@ -87,7 +58,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     );
 
     try {
-      final updated = await updatePreferences(nextPreferences);
+      final updated = updatePreferences(nextPreferences);
       emit(current.copyWith(preferences: updated));
     } catch (_) {
       emit(current.copyWith(preferences: nextPreferences));

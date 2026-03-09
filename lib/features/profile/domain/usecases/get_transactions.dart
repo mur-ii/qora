@@ -6,7 +6,7 @@ class GetTransactions {
 
   GetTransactions(this.repository);
 
-  Future<List<TransactionEntity>> call() {
+  List<TransactionEntity> call() {
     return repository.getTransactions();
   }
 }

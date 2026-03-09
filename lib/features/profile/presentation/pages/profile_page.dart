@@ -9,7 +9,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../bloc/profile_bloc.dart';
-import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -18,8 +17,7 @@ class ProfilePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          ProfileInjection.createBloc()..add(const LoadProfileEvent()),
+      create: (context) => ProfileInjection.createBloc(),
       child: const _ProfilePageContent(),
     );
   }
@@ -46,10 +44,6 @@ class _ProfilePageContent extends StatelessWidget {
       ),
       body: BlocBuilder<ProfileBloc, ProfileState>(
         builder: (context, state) {
-          if (state is ProfileLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
           if (state is ProfileError) {
             return Center(
               child: Column(

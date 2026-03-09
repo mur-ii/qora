@@ -6,7 +6,7 @@ class GetProfile {
 
   GetProfile(this.repository);
 
-  Future<ProfileEntity> call() async {
-    return await repository.getProfile();
+  ProfileEntity call() {
+    return repository.getProfile();
   }
 }

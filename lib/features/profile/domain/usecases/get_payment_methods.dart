@@ -6,7 +6,7 @@ class GetPaymentMethods {
 
   GetPaymentMethods(this.repository);
 
-  Future<List<PaymentMethodEntity>> call() async {
-    return await repository.getPaymentMethods();
+  List<PaymentMethodEntity> call() {
+    return repository.getPaymentMethods();
   }
 }

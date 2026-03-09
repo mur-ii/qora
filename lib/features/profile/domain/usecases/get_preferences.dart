@@ -6,7 +6,7 @@ class GetPreferences {
 
   GetPreferences(this.repository);
 
-  Future<UserPreferencesEntity> call() {
+  UserPreferencesEntity call() {
     return repository.getPreferences();
   }
 }

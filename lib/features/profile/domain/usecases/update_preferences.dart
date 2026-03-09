@@ -6,7 +6,7 @@ class UpdatePreferences {
 
   UpdatePreferences(this.repository);
 
-  Future<UserPreferencesEntity> call(UserPreferencesEntity preferences) async {
-    return await repository.updatePreferences(preferences);
+  UserPreferencesEntity call(UserPreferencesEntity preferences) {
+    return repository.updatePreferences(preferences);
   }
 }

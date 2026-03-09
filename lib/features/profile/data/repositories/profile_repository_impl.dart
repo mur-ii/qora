@@ -11,20 +11,18 @@ class ProfileRepositoryImpl implements ProfileRepository {
   ProfileRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<ProfileEntity> getProfile() async {
-    return await remoteDataSource.getProfile();
+  ProfileEntity getProfile() {
+    return remoteDataSource.getProfile();
   }
 
   @override
-  Future<ProfileEntity> updateProfile(ProfileEntity profile) async {
-    // Simulate update
-    await Future.delayed(const Duration(milliseconds: 500));
+  ProfileEntity updateProfile(ProfileEntity profile) {
     return profile;
   }
 
   @override
-  Future<List<PaymentMethodEntity>> getPaymentMethods() async {
-    final response = await remoteDataSource.getPaymentMethods();
+  List<PaymentMethodEntity> getPaymentMethods() {
+    final response = remoteDataSource.getPaymentMethods();
     final List<dynamic> data = response['data'] as List<dynamic>;
 
     return data.map((json) {
@@ -40,8 +38,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<List<TransactionEntity>> getTransactions() async {
-    final response = await remoteDataSource.getTransactions();
+  List<TransactionEntity> getTransactions() {
+    final response = remoteDataSource.getTransactions();
     final List<dynamic> data = response['data'] as List<dynamic>;
 
     return data.map((json) {
@@ -58,8 +56,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<UserPreferencesEntity> getPreferences() async {
-    final response = await remoteDataSource.getPreferences();
+  UserPreferencesEntity getPreferences() {
+    final response = remoteDataSource.getPreferences();
     final data = response['data'] as Map<String, dynamic>;
 
     return UserPreferencesEntity(
@@ -74,20 +72,13 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<UserPreferencesEntity> updatePreferences(
-    UserPreferencesEntity preferences,
-  ) async {
-    await Future.delayed(const Duration(milliseconds: 500));
+  UserPreferencesEntity updatePreferences(UserPreferencesEntity preferences) {
     return preferences;
   }
 
   @override
-  Future<void> changePassword(String oldPassword, String newPassword) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-  }
+  void changePassword(String oldPassword, String newPassword) {}
 
   @override
-  Future<void> logout() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-  }
+  void logout() {}
 }

@@ -7,10 +7,6 @@ abstract class ProfileEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadProfileEvent extends ProfileEvent {
-  const LoadProfileEvent();
-}
-
 class UpdatePreferencesEvent extends ProfileEvent {
   const UpdatePreferencesEvent({
     this.language,
