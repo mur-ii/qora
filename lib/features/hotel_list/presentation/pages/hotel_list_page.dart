@@ -317,30 +317,25 @@ class _HotelListPageContent extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: AppColors.surfaceWhite,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
-          return Container(
-            padding: const EdgeInsets.all(24),
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.8,
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Filter',
-                      style: AppTypography.titleLarge.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    TextButton(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.85,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const _BottomSheetHandle(),
+                  _BottomSheetHeader(
+                    title: 'Filter',
+                    trailing: TextButton(
                       onPressed: () {
                         setState(() {
                           selectedBudgetKey = null;
@@ -348,275 +343,280 @@ class _HotelListPageContent extends StatelessWidget {
                           selectedAmenities.clear();
                         });
                       },
-                      child: const Text('Reset'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Budget Filter
-                        Text(
-                          'Budget',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _FilterChip(
-                              label: '< Rp 200.000',
-                              isSelected: selectedBudgetKey == 'lt_200k',
-                              onSelected: (selected) {
-                                setState(() {
-                                  selectedBudgetKey = selected
-                                      ? 'lt_200k'
-                                      : null;
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'Rp 200.000 - Rp 500.000',
-                              isSelected: selectedBudgetKey == '200_500k',
-                              onSelected: (selected) {
-                                setState(() {
-                                  selectedBudgetKey = selected
-                                      ? '200_500k'
-                                      : null;
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'Rp 500.000 - Rp 1.000.000',
-                              isSelected: selectedBudgetKey == '500_1000k',
-                              onSelected: (selected) {
-                                setState(() {
-                                  selectedBudgetKey = selected
-                                      ? '500_1000k'
-                                      : null;
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: '> Rp 1.000.000',
-                              isSelected: selectedBudgetKey == 'gt_1000k',
-                              onSelected: (selected) {
-                                setState(() {
-                                  selectedBudgetKey = selected
-                                      ? 'gt_1000k'
-                                      : null;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Accommodation Type Filter
-                        Text(
-                          'Tipe Akomodasi',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _FilterChip(
-                              label: 'Hotel',
-                              isSelected: selectedTypes.contains('hotel'),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedTypes.add('hotel');
-                                  } else {
-                                    selectedTypes.remove('hotel');
-                                  }
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'Apartemen',
-                              isSelected: selectedTypes.contains('apartemen'),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedTypes.add('apartemen');
-                                  } else {
-                                    selectedTypes.remove('apartemen');
-                                  }
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'Guest House',
-                              isSelected: selectedTypes.contains('guest_house'),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedTypes.add('guest_house');
-                                  } else {
-                                    selectedTypes.remove('guest_house');
-                                  }
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'Villa',
-                              isSelected: selectedTypes.contains('villa'),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedTypes.add('villa');
-                                  } else {
-                                    selectedTypes.remove('villa');
-                                  }
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'Resort',
-                              isSelected: selectedTypes.contains('resort'),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedTypes.add('resort');
-                                  } else {
-                                    selectedTypes.remove('resort');
-                                  }
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Room Facilities Filter
-                        Text(
-                          'Fasilitas Kamar',
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _FilterChip(
-                              label: 'WiFi Gratis',
-                              isSelected: selectedAmenities.contains('wifi'),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedAmenities.add('wifi');
-                                  } else {
-                                    selectedAmenities.remove('wifi');
-                                  }
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'AC',
-                              isSelected: selectedAmenities.contains(
-                                'air conditioning',
-                              ),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedAmenities.add('air conditioning');
-                                  } else {
-                                    selectedAmenities.remove(
-                                      'air conditioning',
-                                    );
-                                  }
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'TV',
-                              isSelected: selectedAmenities.contains('tv'),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedAmenities.add('tv');
-                                  } else {
-                                    selectedAmenities.remove('tv');
-                                  }
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'Kamar Mandi Dalam',
-                              isSelected: selectedAmenities.contains(
-                                'bathroom',
-                              ),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedAmenities.add('bathroom');
-                                  } else {
-                                    selectedAmenities.remove('bathroom');
-                                  }
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'Breakfast',
-                              isSelected: selectedAmenities.contains(
-                                'restaurant',
-                              ),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedAmenities.add('restaurant');
-                                  } else {
-                                    selectedAmenities.remove('restaurant');
-                                  }
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'Kolam Renang',
-                              isSelected: selectedAmenities.contains('pool'),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedAmenities.add('pool');
-                                  } else {
-                                    selectedAmenities.remove('pool');
-                                  }
-                                });
-                              },
-                            ),
-                            _FilterChip(
-                              label: 'Parkir',
-                              isSelected: selectedAmenities.contains('parking'),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    selectedAmenities.add('parking');
-                                  } else {
-                                    selectedAmenities.remove('parking');
-                                  }
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                      ),
+                      child: const Text(
+                        'Reset',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _BottomSheetSection(
+                            title: 'Budget',
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _FilterChip(
+                                  label: '< Rp 200.000',
+                                  isSelected: selectedBudgetKey == 'lt_200k',
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      selectedBudgetKey = selected
+                                          ? 'lt_200k'
+                                          : null;
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'Rp 200.000 - Rp 500.000',
+                                  isSelected: selectedBudgetKey == '200_500k',
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      selectedBudgetKey = selected
+                                          ? '200_500k'
+                                          : null;
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'Rp 500.000 - Rp 1.000.000',
+                                  isSelected: selectedBudgetKey == '500_1000k',
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      selectedBudgetKey = selected
+                                          ? '500_1000k'
+                                          : null;
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: '> Rp 1.000.000',
+                                  isSelected: selectedBudgetKey == 'gt_1000k',
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      selectedBudgetKey = selected
+                                          ? 'gt_1000k'
+                                          : null;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Divider(height: 32, color: AppColors.divider),
+                          _BottomSheetSection(
+                            title: 'Tipe Akomodasi',
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _FilterChip(
+                                  label: 'Hotel',
+                                  isSelected: selectedTypes.contains('hotel'),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedTypes.add('hotel');
+                                      } else {
+                                        selectedTypes.remove('hotel');
+                                      }
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'Apartemen',
+                                  isSelected: selectedTypes.contains(
+                                    'apartemen',
+                                  ),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedTypes.add('apartemen');
+                                      } else {
+                                        selectedTypes.remove('apartemen');
+                                      }
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'Guest House',
+                                  isSelected: selectedTypes.contains(
+                                    'guest_house',
+                                  ),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedTypes.add('guest_house');
+                                      } else {
+                                        selectedTypes.remove('guest_house');
+                                      }
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'Villa',
+                                  isSelected: selectedTypes.contains('villa'),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedTypes.add('villa');
+                                      } else {
+                                        selectedTypes.remove('villa');
+                                      }
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'Resort',
+                                  isSelected: selectedTypes.contains('resort'),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedTypes.add('resort');
+                                      } else {
+                                        selectedTypes.remove('resort');
+                                      }
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Divider(height: 32, color: AppColors.divider),
+                          _BottomSheetSection(
+                            title: 'Fasilitas Kamar',
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                _FilterChip(
+                                  label: 'WiFi Gratis',
+                                  isSelected: selectedAmenities.contains(
+                                    'wifi',
+                                  ),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedAmenities.add('wifi');
+                                      } else {
+                                        selectedAmenities.remove('wifi');
+                                      }
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'AC',
+                                  isSelected: selectedAmenities.contains(
+                                    'air conditioning',
+                                  ),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedAmenities.add(
+                                          'air conditioning',
+                                        );
+                                      } else {
+                                        selectedAmenities.remove(
+                                          'air conditioning',
+                                        );
+                                      }
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'TV',
+                                  isSelected: selectedAmenities.contains('tv'),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedAmenities.add('tv');
+                                      } else {
+                                        selectedAmenities.remove('tv');
+                                      }
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'Kamar Mandi Dalam',
+                                  isSelected: selectedAmenities.contains(
+                                    'bathroom',
+                                  ),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedAmenities.add('bathroom');
+                                      } else {
+                                        selectedAmenities.remove('bathroom');
+                                      }
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'Breakfast',
+                                  isSelected: selectedAmenities.contains(
+                                    'restaurant',
+                                  ),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedAmenities.add('restaurant');
+                                      } else {
+                                        selectedAmenities.remove('restaurant');
+                                      }
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'Kolam Renang',
+                                  isSelected: selectedAmenities.contains(
+                                    'pool',
+                                  ),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedAmenities.add('pool');
+                                      } else {
+                                        selectedAmenities.remove('pool');
+                                      }
+                                    });
+                                  },
+                                ),
+                                _FilterChip(
+                                  label: 'Parkir',
+                                  isSelected: selectedAmenities.contains(
+                                    'parking',
+                                  ),
+                                  onSelected: (selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        selectedAmenities.add('parking');
+                                      } else {
+                                        selectedAmenities.remove('parking');
+                                      }
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                      ),
+                    ),
+                  ),
+                  _BottomSheetActionButton(
+                    label: 'Terapkan Filter',
                     onPressed: () {
                       final filters = HotelListFilters(
                         budgetKey: selectedBudgetKey,
@@ -631,24 +631,9 @@ class _HotelListPageContent extends StatelessWidget {
                       }
                       Navigator.pop(context);
                     },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.surfaceWhite,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Terapkan Filter',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -670,59 +655,62 @@ class _HotelListPageContent extends StatelessWidget {
 
   void _showSortOptions(BuildContext context) {
     final hotelListBloc = context.read<HotelListBloc>();
+    final currentState = hotelListBloc.state;
+    final activeFilter = currentState is HotelListLoaded
+        ? currentState.activeFilter
+        : null;
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: AppColors.surfaceWhite,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Urutkan Berdasarkan',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _SortOption(
-              title: 'Harga: Rendah ke Tinggi',
-              icon: Icons.arrow_upward,
-              onTap: () {
-                hotelListBloc.add(const FilterHotelListEvent('lowest_price'));
-                Navigator.pop(context);
-              },
-            ),
-            _SortOption(
-              title: 'Harga: Tinggi ke Rendah',
-              icon: Icons.arrow_downward,
-              onTap: () {
-                hotelListBloc.add(const FilterHotelListEvent('highest_price'));
-                Navigator.pop(context);
-              },
-            ),
-            _SortOption(
-              title: 'Rating: Tinggi ke Rendah',
-              icon: Icons.star,
-              onTap: () {
-                hotelListBloc.add(const FilterHotelListEvent('highest_rating'));
-                Navigator.pop(context);
-              },
-            ),
-            _SortOption(
-              title: 'Populer',
-              icon: Icons.trending_up,
-              onTap: () {
-                hotelListBloc.add(const FilterHotelListEvent('popular'));
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        ),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const _BottomSheetHandle(),
+          const _BottomSheetHeader(title: 'Urutkan'),
+          const Divider(height: 1, color: AppColors.divider),
+          _SortOption(
+            title: 'Harga: Rendah ke Tinggi',
+            icon: Icons.arrow_upward_rounded,
+            isActive: activeFilter == 'lowest_price',
+            onTap: () {
+              hotelListBloc.add(const FilterHotelListEvent('lowest_price'));
+              Navigator.pop(context);
+            },
+          ),
+          _SortOption(
+            title: 'Harga: Tinggi ke Rendah',
+            icon: Icons.arrow_downward_rounded,
+            isActive: activeFilter == 'highest_price',
+            onTap: () {
+              hotelListBloc.add(const FilterHotelListEvent('highest_price'));
+              Navigator.pop(context);
+            },
+          ),
+          _SortOption(
+            title: 'Rating: Tinggi ke Rendah',
+            icon: Icons.star_rounded,
+            isActive: activeFilter == 'highest_rating',
+            onTap: () {
+              hotelListBloc.add(const FilterHotelListEvent('highest_rating'));
+              Navigator.pop(context);
+            },
+          ),
+          _SortOption(
+            title: 'Populer',
+            icon: Icons.trending_up_rounded,
+            isActive: activeFilter == 'popular',
+            onTap: () {
+              hotelListBloc.add(const FilterHotelListEvent('popular'));
+              Navigator.pop(context);
+            },
+          ),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }
@@ -806,11 +794,13 @@ class _FilterChip extends StatelessWidget {
 class _SortOption extends StatelessWidget {
   final String title;
   final IconData icon;
+  final bool isActive;
   final VoidCallback onTap;
 
   const _SortOption({
     required this.title,
     required this.icon,
+    required this.isActive,
     required this.onTap,
   });
 
@@ -818,19 +808,42 @@ class _SortOption extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         child: Row(
           children: [
-            Icon(icon, size: 22, color: AppColors.textSecondary),
-            const SizedBox(width: 16),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 15,
-                color: AppColors.textPrimary,
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: isActive
+                    ? AppColors.primaryContainer
+                    : AppColors.surfaceVariant,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                size: 20,
+                color: isActive ? AppColors.primary : AppColors.textSecondary,
               ),
             ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            if (isActive)
+              const Icon(
+                Icons.check_circle_rounded,
+                size: 20,
+                color: AppColors.primary,
+              ),
           ],
         ),
       ),
@@ -928,6 +941,119 @@ class _SkeletonBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(8),
+      ),
+    );
+  }
+}
+
+// ─── Bottom Sheet Helper Widgets ─────────────────────────────────────────────
+
+class _BottomSheetHandle extends StatelessWidget {
+  const _BottomSheetHandle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12, bottom: 4),
+      child: Container(
+        width: 40,
+        height: 4,
+        decoration: BoxDecoration(
+          color: AppColors.neutral300,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+    );
+  }
+}
+
+class _BottomSheetHeader extends StatelessWidget {
+  final String title;
+  final Widget? trailing;
+
+  const _BottomSheetHeader({required this.title, this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: AppTypography.titleLarge.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          if (trailing != null) trailing!,
+        ],
+      ),
+    );
+  }
+}
+
+class _BottomSheetSection extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _BottomSheetSection({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: AppTypography.titleSmall.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        child,
+      ],
+    );
+  }
+}
+
+class _BottomSheetActionButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+
+  const _BottomSheetActionButton({
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceWhite,
+        border: Border(top: BorderSide(color: AppColors.divider)),
+      ),
+      child: SizedBox(
+        height: 52,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.textOnPrimary,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+        ),
       ),
     );
   }

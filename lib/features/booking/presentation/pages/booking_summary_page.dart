@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/di/booking_injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_toast.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_event.dart';
@@ -147,7 +148,38 @@ class _BookingSummaryPageContentState
 
           return Scaffold(
             backgroundColor: AppColors.backgroundGrey,
-            appBar: const BookingSummaryHeader(),
+            appBar: AppBar(
+              backgroundColor: AppColors.surface,
+              elevation: 0,
+              automaticallyImplyLeading: false,
+              leading: IconButton(
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: AppColors.textPrimary,
+                ),
+                tooltip: 'Kembali',
+                onPressed: () {
+                  final router = GoRouter.of(context);
+                  if (router.canPop()) {
+                    router.pop();
+                  } else {
+                    router.go(AppRoutes.homePath);
+                  }
+                },
+              ),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Ringkasan Pemesanan',
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
             body: _buildContent(state, booking, currencyFormat),
             bottomNavigationBar: booking != null && currencyFormat != null
                 ? PaymentBottomBar(
@@ -224,30 +256,6 @@ class _BookingSummaryPageContentState
   }
 }
 
-class BookingSummaryHeader extends StatelessWidget
-    implements PreferredSizeWidget {
-  const BookingSummaryHeader({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      title: const Text(
-        'Ringkasan Pemesanan',
-        style: TextStyle(fontWeight: FontWeight.w700),
-      ),
-      centerTitle: true,
-      backgroundColor: AppColors.surfaceWhite,
-      foregroundColor: AppColors.textPrimary,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: AppColors.transparent,
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-}
-
 class HotelSummaryCard extends StatelessWidget {
   final BookingEntity booking;
 
@@ -320,30 +328,67 @@ class HotelSummaryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.promoGoldLight,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.star_rounded,
-                  size: 16,
-                  color: AppColors.rating,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  '${booking.hotel.rating.toStringAsFixed(1)} / 5',
-                  style: textTheme.labelLarge?.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                decoration: BoxDecoration(
+                  color: AppColors.promoGoldLight,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: AppColors.rating,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${booking.hotel.rating.toStringAsFixed(1)} / 5',
+                      style: textTheme.labelLarge?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceVariant,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.king_bed_rounded,
+                      size: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      booking.room.name,
+                      style: textTheme.labelLarge?.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -364,27 +409,35 @@ class BookingDetailSection extends StatelessWidget {
         children: [
           const _SectionTitle(title: 'Detail Pemesanan'),
           const SizedBox(height: 16),
-          _LabelValueRow(
+          _IconDetailRow(
+            icon: Icons.login_rounded,
             label: 'Check-in',
             value: _formatDateLabel(booking.bookingDetails.checkIn),
           ),
-          const SizedBox(height: 12),
-          _LabelValueRow(
+          const _RowDivider(),
+          _IconDetailRow(
+            icon: Icons.logout_rounded,
             label: 'Check-out',
             value: _formatDateLabel(booking.bookingDetails.checkOut),
           ),
-          const SizedBox(height: 12),
-          _LabelValueRow(
+          const _RowDivider(),
+          _IconDetailRow(
+            icon: Icons.nights_stay_rounded,
             label: 'Durasi Menginap',
             value: '${booking.bookingDetails.nights} malam',
           ),
-          const SizedBox(height: 12),
-          _LabelValueRow(
+          const _RowDivider(),
+          _IconDetailRow(
+            icon: Icons.people_alt_rounded,
             label: 'Jumlah Tamu',
             value: '${booking.bookingDetails.guests} orang',
           ),
-          const SizedBox(height: 12),
-          _LabelValueRow(label: 'Tipe Kamar', value: booking.room.name),
+          const _RowDivider(),
+          _IconDetailRow(
+            icon: Icons.king_bed_rounded,
+            label: 'Tipe Kamar',
+            value: booking.room.name,
+          ),
         ],
       ),
     );
@@ -704,12 +757,26 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Text(
-      title,
-      style: textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
-      ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Container(
+          width: 3,
+          height: 18,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -805,6 +872,70 @@ String _formatDateLabel(String dateStr) {
   }
 
   return DateFormat('dd-MM-yyyy').format(date);
+}
+
+class _RowDivider extends StatelessWidget {
+  const _RowDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 10),
+      child: Divider(height: 1, color: AppColors.divider),
+    );
+  }
+}
+
+class _IconDetailRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _IconDetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Row(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: AppColors.primaryContainer,
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Icon(icon, size: 17, color: AppColors.primary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+            style: textTheme.bodyMedium?.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 DateTime? _parseBookingDate(String rawValue) {
