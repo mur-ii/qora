@@ -1,5 +1,3 @@
-import 'package:hive/hive.dart';
-
 class TestSessionPreferences {
   TestSessionPreferences._();
 
@@ -10,29 +8,29 @@ class TestSessionPreferences {
   static const String methodGui = 'gui';
   static const String methodVui = 'vui';
 
-  static Box<String> get _box => Hive.box<String>('app_meta');
+  static final Map<String, String> _store = <String, String>{};
 
   static String getScenarioId() {
-    return _box.get(scenarioKey) ?? 'scenario_1';
+    return _store[scenarioKey] ?? 'scenario_1';
   }
 
   static String getMethodValue() {
-    return _box.get(methodKey) ?? methodAuto;
+    return _store[methodKey] ?? methodAuto;
   }
 
   static Future<void> setScenarioId(String scenarioId) async {
-    await _box.put(scenarioKey, scenarioId);
+    _store[scenarioKey] = scenarioId;
   }
 
   static Future<void> setMethodValue(String methodValue) async {
-    await _box.put(methodKey, methodValue);
+    _store[methodKey] = methodValue;
   }
 
   static bool getPendingEndSession() {
-    return _box.get(pendingEndSessionKey) == 'true';
+    return _store[pendingEndSessionKey] == 'true';
   }
 
   static Future<void> setPendingEndSession(bool pending) async {
-    await _box.put(pendingEndSessionKey, pending ? 'true' : 'false');
+    _store[pendingEndSessionKey] = pending ? 'true' : 'false';
   }
 }

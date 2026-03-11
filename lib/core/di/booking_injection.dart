@@ -1,8 +1,5 @@
-import 'package:hive/hive.dart';
-
 import '../../features/booking/data/datasources/booking_local_datasource.dart';
 import '../../features/booking/data/datasources/booking_remote_datasource.dart';
-import '../../features/booking/data/models/booking_record.dart';
 import '../../features/booking/data/repositories/booking_local_repository_impl.dart';
 import '../../features/booking/data/repositories/booking_repository_impl.dart';
 import '../../features/booking/domain/repositories/booking_local_repository.dart';
@@ -24,8 +21,7 @@ class BookingInjection {
   }
 
   static BookingLocalRepository createLocalRepository() {
-    final box = Hive.box<BookingRecord>('booking_box');
-    final localDataSource = BookingLocalDataSource(box: box);
+    final localDataSource = BookingLocalDataSource();
     return BookingLocalRepositoryImpl(localDataSource: localDataSource);
   }
 }

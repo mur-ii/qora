@@ -1,0 +1,44 @@
+{
+  "success": true,
+  "message": "Data beranda berhasil diambil",
+  "data": {
+    "promos": [
+      {
+        "title": "Diskon 30%",
+        "subtitle": "Hotel berbintang pilihan",
+        "badge": "HOT DEAL",
+        "colorKey": "primary",
+        "iconKey": "fire"
+      },
+      {
+        "title": "Weekend Escape",
+        "subtitle": "Booking Sabtu–Minggu hemat",
+        "badge": "WEEKEND",
+        "colorKey": "success",
+        "iconKey": "weekend"
+      },
+      {
+        "title": "Early Bird",
+        "subtitle": "Pesan 2 minggu lebih awal",
+        "badge": "EARLY",
+        "colorKey": "warning",
+        "iconKey": "alarm"
+      },
+      {
+        "title": "Keluarga Hemat",
+        "subtitle": "Gratis 1 anak di bawah 12th",
+        "badge": "FAMILY",
+        "colorKey": "gold",
+        "iconKey": "family"
+      }
+    ],
+    "popularDestinations": [
+      { "name": "Bali",       "iconKey": "beach"    },
+      { "name": "Jakarta",    "iconKey": "city"     },
+      { "name": "Bandung",    "iconKey": "mountain" },
+      { "name": "Yogyakarta", "iconKey": "culture"  },
+      { "name": "Surabaya",   "iconKey": "city"     },
+      { "name": "Lombok",     "iconKey": "island"   }
+    ]
+  }
+}

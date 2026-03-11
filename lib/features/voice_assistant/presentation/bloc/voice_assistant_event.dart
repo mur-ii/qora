@@ -23,16 +23,6 @@ class StopVoiceAssistant extends VoiceAssistantEvent {
   const StopVoiceAssistant();
 }
 
-/// Mute voice assistant microphone
-class MuteVoiceAssistant extends VoiceAssistantEvent {
-  const MuteVoiceAssistant();
-}
-
-/// Unmute voice assistant microphone
-class UnmuteVoiceAssistant extends VoiceAssistantEvent {
-  const UnmuteVoiceAssistant();
-}
-
 /// Toggle voice assistant mute state
 class ToggleVoiceAssistantMute extends VoiceAssistantEvent {
   const ToggleVoiceAssistantMute();

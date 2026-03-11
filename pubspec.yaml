@@ -23,8 +23,6 @@ dependencies:
   get_it: ^7.7.0                     
 
   # Storage & Data
-  hive_flutter: ^1.1.0
-  hive: ^2.2.3
   csv: ^6.0.0
   flutter_dotenv: ^5.2.1
 
@@ -48,8 +46,6 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^5.0.0
-  build_runner: ^2.4.13
-  hive_generator: ^2.0.1
 
   # Code Generation Tools
   freezed: ^2.5.2                    
@@ -63,7 +59,7 @@ flutter:
   assets:
     - .env
     - assets/lotties/
-    - lib/features/home/mock/
+    - lib/features/home/data/mock/
     - lib/features/search/mock/
     - lib/features/hotel_detail/mock/
     - lib/features/booking/mock/

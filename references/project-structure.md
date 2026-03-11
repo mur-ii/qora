@@ -78,8 +78,6 @@ dependencies:
   get_it: ^7.7.0                     
 
   # Storage & Data
-  hive_flutter: ^1.1.0
-  hive: ^2.2.3
   csv: ^6.0.0
   flutter_dotenv: ^5.2.1
 
@@ -104,7 +102,6 @@ dev_dependencies:
 
   flutter_lints: ^5.0.0
   build_runner: ^2.4.13
-  hive_generator: ^2.0.1
   freezed: ^2.5.2                   
   json_serializable: ^6.8.0          
 
@@ -131,9 +128,6 @@ void main() async {
   // Load environment variables (.env) untuk keamanan API Key AI
   await dotenv.load(fileName: ".env");
 
-  // Inisialisasi Storage (Hive)
-  await Hive.initFlutter();
-  
   // Inisialisasi Dependency Injection (GetIt)
   await di.init(); 
 

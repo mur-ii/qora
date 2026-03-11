@@ -3,17 +3,17 @@ import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/utils/app_logger.dart';
-import '../../data/services/agentic_ai_service.dart';
 import '../../domain/entities/agent_state_entity.dart';
 import '../../domain/entities/function_call_entity.dart';
-import '../../voice_assistant_controller.dart';
+import '../../domain/usecases/agentic_ai_usecase.dart';
+import '../../domain/usecases/voice_session_usecase.dart';
 import 'voice_assistant_event.dart';
 import 'voice_assistant_state.dart';
 
 class VoiceAssistantBloc
     extends Bloc<VoiceAssistantEvent, VoiceAssistantState> {
-  final VoiceAssistantController voiceAssistantController;
-  final AgenticAIService agenticAIService;
+  final VoiceSessionUseCase voiceSessionUseCase;
+  final AgenticAiUseCase agenticAiUseCase;
   final String? defaultModel;
   final Map<String, StringBuffer> _functionArgBuffers = {};
   final Map<String, String> _functionArgNames = {};
@@ -44,14 +44,12 @@ class VoiceAssistantBloc
   }
 
   VoiceAssistantBloc({
-    required this.voiceAssistantController,
-    required this.agenticAIService,
+    required this.voiceSessionUseCase,
+    required this.agenticAiUseCase,
     this.defaultModel,
   }) : super(const VoiceAssistantState()) {
     on<StartVoiceAssistant>(_onStartVoiceAssistant);
     on<StopVoiceAssistant>(_onStopVoiceAssistant);
-    on<MuteVoiceAssistant>(_onMuteVoiceAssistant);
-    on<UnmuteVoiceAssistant>(_onUnmuteVoiceAssistant);
     on<ToggleVoiceAssistantMute>(_onToggleVoiceAssistantMute);
     on<TranscriptReceived>(_onTranscriptReceived);
     on<FunctionCallReceived>(_onFunctionCallReceived);
@@ -66,7 +64,7 @@ class VoiceAssistantBloc
   ) async {
     try {
       if (state.status != VoiceAssistantStatus.idle ||
-          voiceAssistantController.isBusy) {
+          voiceSessionUseCase.isBusy) {
         return;
       }
 
@@ -81,18 +79,18 @@ class VoiceAssistantBloc
         ),
       );
 
-      voiceAssistantController.updateStatus(VoiceAssistantStatus.connecting);
+      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.connecting);
 
       _functionArgBuffers.clear();
       _functionArgNames.clear();
 
       // Step 1: Create session
       AppLogger.info('VoiceAssistant', 'Starting voice assistant session');
-      await voiceAssistantController.start(
+      await voiceSessionUseCase.start(
         model: event.model ?? defaultModel ?? 'gpt-realtime-mini-2025-12-15',
         voice: event.voice ?? 'verse',
-        tools: agenticAIService.getFunctionDefinitions(),
-        instructions: agenticAIService.getSystemInstructions(),
+        tools: agenticAiUseCase.getFunctionDefinitions(),
+        instructions: agenticAiUseCase.getSystemInstructions(),
         onConnectionStateChange: (connectionState) {
           add(ConnectionStateChanged(state: connectionState.name));
         },
@@ -141,7 +139,7 @@ class VoiceAssistantBloc
           error: 'Failed to start: ${_formatError(e)}',
         ),
       );
-      voiceAssistantController.updateStatus(VoiceAssistantStatus.idle);
+      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.idle);
     }
   }
 
@@ -160,11 +158,11 @@ class VoiceAssistantBloc
       _functionArgBuffers.clear();
       _functionArgNames.clear();
 
-      await voiceAssistantController.stop();
+      await voiceSessionUseCase.stop();
 
       emit(const VoiceAssistantState(status: VoiceAssistantStatus.idle));
 
-      voiceAssistantController.updateStatus(VoiceAssistantStatus.idle);
+      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.idle);
 
       AppLogger.info('VoiceAssistant', 'Voice assistant stopped');
     } catch (e, stackTrace) {
@@ -180,31 +178,7 @@ class VoiceAssistantBloc
           error: 'Failed to stop: ${_formatError(e)}',
         ),
       );
-      voiceAssistantController.updateStatus(VoiceAssistantStatus.idle);
-    }
-  }
-
-  Future<void> _onMuteVoiceAssistant(
-    MuteVoiceAssistant event,
-    Emitter<VoiceAssistantState> emit,
-  ) async {
-    try {
-      await voiceAssistantController.setMicrophoneMuted(isMuted: true);
-      emit(state.copyWith(isMuted: true));
-    } catch (e) {
-      emit(state.copyWith(error: 'Failed to mute: ${_formatError(e)}'));
-    }
-  }
-
-  Future<void> _onUnmuteVoiceAssistant(
-    UnmuteVoiceAssistant event,
-    Emitter<VoiceAssistantState> emit,
-  ) async {
-    try {
-      await voiceAssistantController.setMicrophoneMuted(isMuted: false);
-      emit(state.copyWith(isMuted: false));
-    } catch (e) {
-      emit(state.copyWith(error: 'Failed to unmute: ${_formatError(e)}'));
+      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.idle);
     }
   }
 
@@ -214,7 +188,7 @@ class VoiceAssistantBloc
   ) async {
     try {
       final nextMuted = !state.isMuted;
-      await voiceAssistantController.setMicrophoneMuted(isMuted: nextMuted);
+      await voiceSessionUseCase.setMicrophoneMuted(isMuted: nextMuted);
       emit(state.copyWith(isMuted: nextMuted));
     } catch (e) {
       emit(state.copyWith(error: 'Failed to toggle mute: ${_formatError(e)}'));
@@ -248,10 +222,10 @@ class VoiceAssistantBloc
       _functionArgNames.remove(event.callId);
 
       if (event.name == 'search_hotels') {
-        agenticAIService.previewUserConstraints(event.arguments);
+        agenticAiUseCase.previewUserConstraints(event.arguments);
         emit(
           state.copyWith(
-            agentState: agenticAIService.agentState,
+            agentState: agenticAiUseCase.agentState,
             isProcessing: true,
           ),
         );
@@ -278,10 +252,10 @@ class VoiceAssistantBloc
         arguments: event.arguments,
       );
 
-      final result = await agenticAIService.executeFunction(functionCall);
+      final result = await agenticAiUseCase.executeFunction(functionCall);
 
       // Send result back to OpenAI
-      await voiceAssistantController.sendFunctionResult(result);
+      await voiceSessionUseCase.sendFunctionResult(result);
 
       // Check if automatic disconnect is required (after booking confirmation)
       final resultData = result.result;
@@ -302,7 +276,7 @@ class VoiceAssistantBloc
       // Update agent state
       emit(
         state.copyWith(
-          agentState: agenticAIService.agentState,
+          agentState: agenticAiUseCase.agentState,
           isProcessing: false,
         ),
       );
@@ -329,17 +303,17 @@ class VoiceAssistantBloc
     // Handle specific events
     final eventType = event.event['type'] as String?;
 
-    voiceAssistantController.handleAgentEvent(event.event);
+    voiceSessionUseCase.handleAgentEvent(event.event);
 
     if (eventType == 'input_audio_buffer.speech_started') {
       emit(state.copyWith(status: VoiceAssistantStatus.listening));
-      voiceAssistantController.updateStatus(VoiceAssistantStatus.listening);
+      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.listening);
       return;
     }
 
     if (eventType == 'input_audio_buffer.speech_stopped') {
       emit(state.copyWith(status: VoiceAssistantStatus.connected));
-      voiceAssistantController.updateStatus(VoiceAssistantStatus.connected);
+      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.connected);
       return;
     }
 
@@ -353,7 +327,7 @@ class VoiceAssistantBloc
       if (canEmitSpeaking) {
         _lastSpeakingDeltaEmit = now;
         emit(state.copyWith(status: VoiceAssistantStatus.speaking));
-        voiceAssistantController.updateStatus(VoiceAssistantStatus.speaking);
+        voiceSessionUseCase.updateStatus(VoiceAssistantStatus.speaking);
       }
       return;
     }
@@ -389,8 +363,8 @@ class VoiceAssistantBloc
         final parsed = jsonDecode(buffer.toString());
         if (parsed is Map<String, dynamic>) {
           _lastFunctionArgsDeltaEmit = now;
-          agenticAIService.previewUserConstraints(parsed);
-          final nextAgentState = agenticAIService.agentState;
+          agenticAiUseCase.previewUserConstraints(parsed);
+          final nextAgentState = agenticAiUseCase.agentState;
           if (nextAgentState != state.agentState) {
             emit(state.copyWith(agentState: nextAgentState));
           }
@@ -407,13 +381,13 @@ class VoiceAssistantBloc
         add(TranscriptReceived(transcript: transcript, isUser: false));
       }
       emit(state.copyWith(status: VoiceAssistantStatus.connected));
-      voiceAssistantController.updateStatus(VoiceAssistantStatus.connected);
+      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.connected);
       return;
     }
 
     if (eventType == 'response.done') {
       emit(state.copyWith(status: VoiceAssistantStatus.connected));
-      voiceAssistantController.updateStatus(VoiceAssistantStatus.connected);
+      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.connected);
       return;
     }
 
@@ -424,7 +398,7 @@ class VoiceAssistantBloc
           error: 'Realtime error received. Please retry.',
         ),
       );
-      voiceAssistantController.updateStatus(VoiceAssistantStatus.idle);
+      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.idle);
       return;
     }
   }
@@ -462,7 +436,7 @@ class VoiceAssistantBloc
             : state.error,
       ),
     );
-    voiceAssistantController.updateStatus(status);
+    voiceSessionUseCase.updateStatus(status);
     if (status == VoiceAssistantStatus.connected) {
       AppLogger.info('VoiceAssistant', 'Connection state: connected');
     } else if (event.state == 'failed') {
@@ -477,9 +451,7 @@ class VoiceAssistantBloc
     Emitter<VoiceAssistantState> emit,
   ) async {
     try {
-      await voiceAssistantController.requestAssistantResponse(
-        event.instructions,
-      );
+      await voiceSessionUseCase.requestAssistantResponse(event.instructions);
     } catch (e, stackTrace) {
       AppLogger.error(
         'VoiceAssistant',

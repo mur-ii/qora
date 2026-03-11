@@ -6,7 +6,7 @@ import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../domain/entities/connection_state_entity.dart';
 import '../../domain/entities/function_call_entity.dart';
-import '../../voice_logger.dart';
+import '../../domain/usecases/voice_conversation_logger.dart';
 
 class WebRTCService {
   RTCPeerConnection? _peerConnection;

@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
 import 'core/config/env_config.dart';
+import 'core/di/voice_assistant_injection.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
-import 'features/booking/data/models/booking_record.dart';
-import 'features/voice_assistant/di/voice_assistant_injection.dart';
 import 'features/voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 
 void main() async {
@@ -17,13 +15,6 @@ void main() async {
 
   // Validate required environment variables
   EnvConfig.validate();
-
-  await Hive.initFlutter();
-  if (!Hive.isAdapterRegistered(bookingRecordTypeId)) {
-    Hive.registerAdapter(BookingRecordAdapter());
-  }
-  await Hive.openBox<BookingRecord>('booking_box');
-  await Hive.openBox<String>('app_meta');
 
   // Initialize navigation service with router
   final navigationService = VoiceAssistantInjection.getNavigationService();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../features/booking/presentation/pages/booking_list_page.dart';
-import '../../features/home/pages/home_page.dart';
+import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../theme/app_colors.dart';
 
@@ -78,7 +78,7 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
             items: _navBarItems(),
             type: BottomNavigationBarType.fixed,
             backgroundColor: AppColors.surfaceWhite,
-            selectedItemColor: AppColors.primary,
+            selectedItemColor: AppColors.brandGreen,
             unselectedItemColor: AppColors.textTertiary,
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),

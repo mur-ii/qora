@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import '../../features/voice_assistant/di/voice_assistant_injection.dart';
+import '../di/voice_assistant_injection.dart';
 import 'app_routes.dart';
 
 class VoiceAssistantNavigationObserver extends NavigatorObserver {

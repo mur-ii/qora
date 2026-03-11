@@ -1,15 +1,9 @@
 import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/agent_state_entity.dart';
+import '../../domain/entities/voice_assistant_status.dart';
 
-enum VoiceAssistantStatus {
-  idle,
-  connecting,
-  connected,
-  listening,
-  speaking,
-  disconnecting,
-}
+export '../../domain/entities/voice_assistant_status.dart';
 
 class VoiceAssistantState extends Equatable {
   final VoiceAssistantStatus status;
