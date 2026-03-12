@@ -150,9 +150,7 @@ class _SearchPageContentState extends State<_SearchPageContent> {
             child: BlocBuilder<SearchBloc, SearchState>(
               builder: (context, state) {
                 if (state is SearchLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
-                  );
+                  return const SizedBox.shrink();
                 }
 
                 if (state is SearchError) {

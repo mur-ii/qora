@@ -256,9 +256,7 @@ class _HotelDetailLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(color: AppColors.primary),
-    );
+    return const SizedBox.shrink();
   }
 }
 

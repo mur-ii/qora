@@ -90,8 +90,8 @@ class _BookingSummaryPageContentState
         '${booking.bookingDetails.guests} tamu, '
         '${booking.bookingDetails.rooms} kamar. '
         'Total pembayaran ${currencyFormat.format(booking.pricing.grandTotal)} dan dibayar lunas saat pemesanan. '
-        'Jika sudah benar, mohon konfirmasi dan arahkan ke halaman pembayaran. '
-        'Jika pengguna setuju, panggil fungsi navigate_to_screen dengan screen_name "booking_payment".';
+        'Apakah Anda ingin melanjutkan ke halaman Pembayaran sekarang? '
+        'Jika pengguna menjawab setuju, panggil fungsi navigate_to_screen dengan screen_name "booking_payment".';
 
     context.read<VoiceAssistantBloc>().add(
       RequestAssistantResponse(instructions: prompt),
@@ -206,7 +206,7 @@ class _BookingSummaryPageContentState
     NumberFormat? currencyFormat,
   ) {
     if (state is BookingLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const SizedBox.shrink();
     }
 
     if (booking == null || currencyFormat == null) {

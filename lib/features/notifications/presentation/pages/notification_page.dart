@@ -67,7 +67,7 @@ class _NotificationPageContent extends StatelessWidget {
       body: BlocBuilder<NotificationBloc, NotificationState>(
         builder: (context, state) {
           if (state.status == NotificationStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
+            return const SizedBox.shrink();
           }
 
           if (state.status == NotificationStatus.failure) {

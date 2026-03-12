@@ -5,19 +5,29 @@ import 'app_routes.dart';
 
 class VoiceAssistantNavigationObserver extends NavigatorObserver {
   static const String _closingMessage =
-      'Baik, saya sudah membantu sampai tahap pemesanan. '
-      'Untuk proses pembayaran silakan pilih metode pembayaran di layar. '
-      'Saya tidak dapat membantu proses pembayaran, jadi sesi voice assistant '
-      'akan saya akhiri di sini.';
+      'Anda sudah berada di halaman Pembayaran. '
+      'Silakan klik salah satu metode pembayaran yang tersedia, lalu klik tombol Bayar untuk melanjutkan. '
+      'Saya hanya bisa membantu sampai halaman pembayaran ini karena tidak diizinkan mengakses payment gateway. '
+      'Sesi voice assistant akan saya akhiri sekarang.';
+
+  bool _isPaymentRoute(Route<dynamic>? route) {
+    final routeName = route?.settings.name ?? '';
+    return routeName == AppRoutes.bookingPaymentName ||
+        routeName == AppRoutes.bookingGuestInfoName ||
+        routeName == AppRoutes.bookingPaymentPath ||
+        routeName == AppRoutes.bookingGuestInfoPath ||
+        routeName.contains(AppRoutes.bookingPaymentPath) ||
+        routeName.contains(AppRoutes.bookingGuestInfoPath);
+  }
 
   void _handleRoute(Route<dynamic>? route) {
-    final name = route?.settings.name;
-    if (name == AppRoutes.bookingPaymentName ||
-        name == AppRoutes.bookingGuestInfoName) {
+    if (_isPaymentRoute(route)) {
       try {
         final controller =
             VoiceAssistantInjection.getVoiceAssistantController();
-        controller.endSessionWithMessage(_closingMessage);
+        if (controller.isConnected) {
+          controller.endSessionWithMessage(_closingMessage);
+        }
       } on StateError {
         // Controller not initialized; ignore.
       }

@@ -79,7 +79,7 @@ class OngoingBookingsTab extends StatelessWidget {
     return BlocBuilder<BookingHistoryBloc, BookingHistoryState>(
       builder: (context, state) {
         if (state is BookingHistoryLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const SizedBox.shrink();
         }
 
         if (state is BookingHistoryLoaded) {
@@ -112,7 +112,7 @@ class OngoingBookingsTab extends StatelessWidget {
           );
         }
 
-        return const Center(child: CircularProgressIndicator());
+        return const SizedBox.shrink();
       },
     );
   }
@@ -127,7 +127,7 @@ class HistoryBookingsTab extends StatelessWidget {
     return BlocBuilder<BookingHistoryBloc, BookingHistoryState>(
       builder: (context, state) {
         if (state is BookingHistoryLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const SizedBox.shrink();
         }
 
         if (state is BookingHistoryLoaded) {
@@ -158,7 +158,7 @@ class HistoryBookingsTab extends StatelessWidget {
           );
         }
 
-        return const Center(child: CircularProgressIndicator());
+        return const SizedBox.shrink();
       },
     );
   }

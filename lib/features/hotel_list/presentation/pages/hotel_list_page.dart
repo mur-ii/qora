@@ -8,6 +8,8 @@ import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_toast.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_event.dart';
 import '../bloc/hotel_list_bloc.dart';
 import '../bloc/hotel_list_event.dart';
 import '../bloc/hotel_list_state.dart';
@@ -100,203 +102,264 @@ class _HotelListPageContent extends StatelessWidget {
     this.guests,
   });
 
+  int _parsePositiveInt(String? rawValue, int fallback) {
+    final parsed = int.tryParse(rawValue ?? '');
+    if (parsed == null || parsed <= 0) {
+      return fallback;
+    }
+    return parsed;
+  }
+
+  String _formatDateForVoice(String? rawValue) {
+    if (rawValue == null || rawValue.trim().isEmpty) {
+      return 'sesuai tanggal yang dipilih sebelumnya';
+    }
+
+    final parsed = DateTime.tryParse(rawValue);
+    if (parsed == null) {
+      return rawValue;
+    }
+
+    return DateFormat('dd MMM yyyy').format(parsed);
+  }
+
+  void _offerAlternativeLocation(BuildContext context) {
+    final locationLabel = (location != null && location!.trim().isNotEmpty)
+        ? location!
+        : 'lokasi yang dipilih';
+    final checkInText = _formatDateForVoice(checkIn);
+    final checkOutText = _formatDateForVoice(checkOut);
+    final guestsCount = _parsePositiveInt(guests, 2);
+    final roomsCount = _parsePositiveInt(rooms, 1);
+    final checkInParam = (checkIn != null && checkIn!.trim().isNotEmpty)
+        ? checkIn!.trim()
+        : DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final checkOutParam = (checkOut != null && checkOut!.trim().isNotEmpty)
+        ? checkOut!.trim()
+        : DateFormat(
+            'yyyy-MM-dd',
+          ).format(DateTime.now().add(const Duration(days: 1)));
+
+    final prompt =
+        'Saya belum menemukan hotel yang cocok di $locationLabel. '
+        'Apakah Anda ingin ganti lokasi lain? '
+        'Check-in $checkInText, check-out $checkOutText, jumlah tamu $guestsCount, dan kamar $roomsCount akan tetap sama. '
+        'Jika pengguna menyebut lokasi baru, panggil fungsi search_hotels dengan location lokasi baru, '
+        'check_in "$checkInParam", check_out "$checkOutParam", guests $guestsCount, dan rooms $roomsCount.';
+
+    context.read<VoiceAssistantBloc>().add(
+      RequestAssistantResponse(instructions: prompt),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          tooltip: 'Kembali',
-          onPressed: () {
-            final router = GoRouter.of(context);
-            if (router.canPop()) {
-              router.pop();
-            } else {
-              router.go(AppRoutes.homePath);
-            }
-          },
+    return BlocListener<HotelListBloc, HotelListState>(
+      listenWhen: (previous, current) =>
+          current is HotelListEmpty && previous is! HotelListEmpty,
+      listener: (context, state) {
+        final voiceState = context.read<VoiceAssistantBloc>().state;
+        if (voiceState.isActive) {
+          _offerAlternativeLocation(context);
+        }
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          elevation: 0,
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            tooltip: 'Kembali',
+            onPressed: () {
+              final router = GoRouter.of(context);
+              if (router.canPop()) {
+                router.pop();
+              } else {
+                router.go(AppRoutes.homePath);
+              }
+            },
+          ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${location ?? 'Hotel'} · ${_formatDateRangeShort()}',
+                style: AppTypography.titleMedium.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        body: Column(
           children: [
-            Text(
-              '${location ?? 'Hotel'} · ${_formatDateRangeShort()}',
-              style: AppTypography.titleMedium.copyWith(
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
+            // Filter buttons row
+            Container(
+              color: AppColors.surface,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _FilterButton(
+                      icon: Icons.sort,
+                      label: 'Sortir',
+                      onTap: () => _showSortOptions(context),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _FilterButton(
+                      icon: Icons.tune,
+                      label: 'Filter',
+                      onTap: () => _showFilterOptions(context),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _FilterButton(
+                      icon: Icons.map_outlined,
+                      label: 'Peta',
+                      onTap: () {
+                        AppToast.showInfo(context, 'Peta akan segera hadir');
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Accommodation count
+            BlocBuilder<HotelListBloc, HotelListState>(
+              buildWhen: (previous, current) =>
+                  previous.runtimeType != current.runtimeType ||
+                  (current is HotelListLoaded &&
+                      previous is HotelListLoaded &&
+                      current.hotels.length != previous.hotels.length),
+              builder: (context, state) {
+                if (state is HotelListLoaded) {
+                  return Container(
+                    width: double.infinity,
+                    color: AppColors.surface,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: Text(
+                      '${state.hotels.length} akomodasi',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+            Expanded(
+              child: BlocBuilder<HotelListBloc, HotelListState>(
+                buildWhen: (previous, current) {
+                  // Only rebuild when state type changes or hotel list changes
+                  if (previous.runtimeType != current.runtimeType) return true;
+                  if (current is HotelListLoaded &&
+                      previous is HotelListLoaded) {
+                    return current.hotels != previous.hotels;
+                  }
+                  return false;
+                },
+                builder: (context, state) {
+                  if (state is HotelListLoading) {
+                    return const _HotelListLoadingView();
+                  }
+
+                  if (state is HotelListError) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: AppColors.error,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Gagal memuat hotel',
+                            style: AppTypography.titleLarge.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            state.message,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              context.read<HotelListBloc>().add(
+                                LoadHotelListEvent(location: location),
+                              );
+                            },
+                            child: const Text('Coba Lagi'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  if (state is HotelListEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.hotel_outlined,
+                            size: 64,
+                            color: AppColors.textTertiary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Tidak ada hotel ditemukan',
+                            style: AppTypography.titleLarge.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Coba sesuaikan pencarian atau filter Anda',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  if (state is HotelListLoaded) {
+                    final hotels = state.hotels;
+                    return ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: hotels.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        final hotel = hotels[index];
+                        return HotelCard(key: ValueKey(hotel.id), hotel: hotel);
+                      },
+                    );
+                  }
+
+                  return const SizedBox();
+                },
               ),
             ),
           ],
         ),
-      ),
-      body: Column(
-        children: [
-          // Filter buttons row
-          Container(
-            color: AppColors.surface,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _FilterButton(
-                    icon: Icons.sort,
-                    label: 'Sortir',
-                    onTap: () => _showSortOptions(context),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _FilterButton(
-                    icon: Icons.tune,
-                    label: 'Filter',
-                    onTap: () => _showFilterOptions(context),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _FilterButton(
-                    icon: Icons.map_outlined,
-                    label: 'Peta',
-                    onTap: () {
-                      AppToast.showInfo(context, 'Peta akan segera hadir');
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Accommodation count
-          BlocBuilder<HotelListBloc, HotelListState>(
-            buildWhen: (previous, current) =>
-                previous.runtimeType != current.runtimeType ||
-                (current is HotelListLoaded &&
-                    previous is HotelListLoaded &&
-                    current.hotels.length != previous.hotels.length),
-            builder: (context, state) {
-              if (state is HotelListLoaded) {
-                return Container(
-                  width: double.infinity,
-                  color: AppColors.surface,
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: Text(
-                    '${state.hotels.length} akomodasi',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-          Expanded(
-            child: BlocBuilder<HotelListBloc, HotelListState>(
-              buildWhen: (previous, current) {
-                // Only rebuild when state type changes or hotel list changes
-                if (previous.runtimeType != current.runtimeType) return true;
-                if (current is HotelListLoaded && previous is HotelListLoaded) {
-                  return current.hotels != previous.hotels;
-                }
-                return false;
-              },
-              builder: (context, state) {
-                if (state is HotelListLoading) {
-                  return const _HotelListLoadingView();
-                }
-
-                if (state is HotelListError) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64,
-                          color: AppColors.error,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Gagal memuat hotel',
-                          style: AppTypography.titleLarge.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          state.message,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () {
-                            context.read<HotelListBloc>().add(
-                              LoadHotelListEvent(location: location),
-                            );
-                          },
-                          child: const Text('Coba Lagi'),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (state is HotelListEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.hotel_outlined,
-                          size: 64,
-                          color: AppColors.textTertiary,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Tidak ada hotel ditemukan',
-                          style: AppTypography.titleLarge.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Coba sesuaikan pencarian atau filter Anda',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (state is HotelListLoaded) {
-                  final hotels = state.hotels;
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: hotels.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      final hotel = hotels[index];
-                      return HotelCard(key: ValueKey(hotel.id), hotel: hotel);
-                    },
-                  );
-                }
-
-                return const SizedBox();
-              },
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -858,11 +921,6 @@ class _HotelListLoadingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const LinearProgressIndicator(
-          color: AppColors.primary,
-          backgroundColor: AppColors.surface,
-          minHeight: 2,
-        ),
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),

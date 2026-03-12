@@ -141,15 +141,13 @@ class ProfileQuickSheet extends StatelessWidget {
           Stack(
             alignment: Alignment.center,
             children: [
-              // Level progress ring
-              SizedBox(
+              // Level ring (static)
+              Container(
                 width: 88,
                 height: 88,
-                child: CircularProgressIndicator(
-                  value: profile.levelProgress,
-                  strokeWidth: 4,
-                  backgroundColor: AppColors.border,
-                  valueColor: AlwaysStoppedAnimation<Color>(_getLevelColor()),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: _getLevelColor(), width: 4),
                 ),
               ),
               // Avatar
@@ -238,13 +236,25 @@ class ProfileQuickSheet extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: profile.levelProgress,
-                  minHeight: 6,
-                  backgroundColor: AppColors.border,
-                  valueColor: AlwaysStoppedAnimation<Color>(_getLevelColor()),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: _getLevelColor().withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _getLevelColor().withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    'Progress level ditampilkan numerik',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: _getLevelColor(),
+                    ),
+                  ),
                 ),
               ),
             ],

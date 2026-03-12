@@ -96,8 +96,17 @@ class AgenticAiContext {
 
   String buildHotelListSpeech(List<Map<String, dynamic>> hotels, String city) {
     if (hotels.isEmpty) {
+      final checkIn = _agentState.userConstraints['check_in']?.toString();
+      final checkOut = _agentState.userConstraints['check_out']?.toString();
+      final guests = (_agentState.userConstraints['guests'] ?? 2).toString();
+      final rooms = (_agentState.userConstraints['rooms'] ?? 1).toString();
+      final scheduleText = (checkIn != null && checkOut != null)
+          ? 'dengan check-in $checkIn dan check-out $checkOut'
+          : 'dengan tanggal yang sama seperti sebelumnya';
+
       return 'Maaf, saya tidak menemukan hotel yang sesuai di $city. '
-          'Apakah Anda ingin mengubah tanggal atau fasilitas?';
+          'Apakah Anda ingin ganti lokasi lain? '
+          'Saya akan tetap gunakan $scheduleText, $guests tamu, dan $rooms kamar.';
     }
 
     final buffer = StringBuffer();
@@ -256,6 +265,7 @@ class AgenticAiContext {
   Aturan ringkas:
   1) Jangan bertele-tele. Maksimal 1 pertanyaan per respons.
   2) Setelah detail hotel ditampilkan, jelaskan singkat lalu tawarkan tipe kamar.
+  2a) Jika hotel tidak ditemukan, tawarkan ganti lokasi lain dengan check-in, check-out, jumlah tamu, dan kamar tetap sama.
   3) Saat user menyebut tipe kamar, panggil `select_room` untuk menandai pilihan.
   4) Setelah `select_room`, katakan kamar dipilih dan tanya lanjut booking.
   5) Jika user setuju, panggil `create_booking` (navigasi ke ringkasan).

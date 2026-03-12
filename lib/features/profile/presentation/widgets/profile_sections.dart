@@ -40,14 +40,12 @@ class ProfileSection extends StatelessWidget {
               Stack(
                 alignment: Alignment.center,
                 children: [
-                  SizedBox(
+                  Container(
                     width: 76,
                     height: 76,
-                    child: CircularProgressIndicator(
-                      value: profile.levelProgress,
-                      strokeWidth: 4,
-                      backgroundColor: AppColors.surfaceVariant,
-                      valueColor: AlwaysStoppedAnimation<Color>(levelColor),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: levelColor, width: 4),
                     ),
                   ),
                   Container(
@@ -159,13 +157,22 @@ class ProfileSection extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: profile.levelProgress,
-                  minHeight: 6,
-                  backgroundColor: AppColors.surfaceVariant,
-                  valueColor: AlwaysStoppedAnimation<Color>(levelColor),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: levelColor.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: levelColor.withValues(alpha: 0.25)),
+                ),
+                child: Center(
+                  child: Text(
+                    'Progress level ditampilkan sebagai data numerik',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: levelColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 6),

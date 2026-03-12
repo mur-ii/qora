@@ -20,8 +20,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => HomeInjection.createBloc()
-        ..add(const HomeDataRequested()),
+      create: (_) => HomeInjection.createBloc()..add(const HomeDataRequested()),
       child: BlocListener<VoiceAssistantBloc, VoiceAssistantState>(
         listenWhen: (prev, curr) =>
             prev.agentState.userConstraints !=
@@ -107,14 +106,6 @@ class _HomeContentList extends StatelessWidget {
         BlocSelector<HomeBloc, HomeState, HomeState>(
           selector: (state) => state,
           builder: (context, state) {
-            if (state.dataStatus == HomeDataStatus.loading) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 32),
-                  child: CircularProgressIndicator(),
-                ),
-              );
-            }
             if (state.homeData == null) return const SizedBox.shrink();
             return Column(
               children: [

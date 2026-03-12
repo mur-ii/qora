@@ -98,25 +98,16 @@ class AppWidgets {
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.textOnPrimary,
         ),
-        child: isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.textOnPrimary,
-                ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 20),
-                    const SizedBox(width: AppTheme.spacingSmall),
-                  ],
-                  Text(text),
-                ],
-              ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 20),
+              const SizedBox(width: AppTheme.spacingSmall),
+            ],
+            Text(text),
+          ],
+        ),
       ),
     );
   }
@@ -299,9 +290,7 @@ class AppWidgets {
 
   /// Loading indicator
   static Widget loadingIndicator() {
-    return const Center(
-      child: CircularProgressIndicator(color: AppColors.primary),
-    );
+    return const SizedBox.shrink();
   }
 
   /// Empty state message

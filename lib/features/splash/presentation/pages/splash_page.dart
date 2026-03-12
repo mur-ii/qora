@@ -74,11 +74,17 @@ class _SplashPageState extends State<SplashPage> {
         future: _lottieCompositionFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return SizedBox(
+            return Container(
               width: 220,
               height: 220,
-              child: Center(
-                child: CircularProgressIndicator(color: colorScheme.primary),
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.hotel_rounded,
+                size: 100,
+                color: colorScheme.primary,
               ),
             );
           }

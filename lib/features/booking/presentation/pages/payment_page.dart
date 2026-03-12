@@ -1,13 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/di/booking_injection.dart';
+import '../../../../core/di/voice_assistant_injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_toast.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../bloc/booking_bloc.dart';
 import '../bloc/booking_event.dart';
@@ -67,6 +72,42 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
   ];
 
   String _selectedPaymentMethod = _paymentMethods.first.key;
+  bool _hasVoiceGuidedOnPaymentPage = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _guideAndCloseVoiceAssistant();
+    });
+  }
+
+  void _guideAndCloseVoiceAssistant() {
+    if (_hasVoiceGuidedOnPaymentPage) {
+      return;
+    }
+
+    final voiceState = context.read<VoiceAssistantBloc>().state;
+    if (!voiceState.isActive) {
+      return;
+    }
+
+    final controller = VoiceAssistantInjection.tryGetVoiceAssistantController();
+    if (controller == null || !controller.isConnected) {
+      return;
+    }
+
+    _hasVoiceGuidedOnPaymentPage = true;
+
+    const closingPrompt =
+        'Anda sudah berada di halaman Pembayaran. '
+        'Silakan klik salah satu metode pembayaran yang tersedia, lalu klik tombol Bayar untuk melanjutkan. '
+        'Saya hanya bisa membantu sampai halaman pembayaran ini karena tidak diizinkan mengakses payment gateway. '
+        'Sesi voice assistant akan saya akhiri sekarang.';
+
+    unawaited(controller.endSessionWithMessage(closingPrompt));
+  }
 
   void _processPayment() {
     context.read<BookingBloc>().add(
@@ -110,7 +151,7 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Konfirmasi Pemesanan',
+              'Pembayaran',
               style: AppTypography.titleMedium.copyWith(
                 fontWeight: FontWeight.w500,
                 color: AppColors.textPrimary,
@@ -119,14 +160,30 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
           ],
         ),
       ),
-      body: BlocListener<BookingBloc, BookingState>(
-        listener: (context, state) {
-          if (state is BookingError) {
-            AppToast.showError(context, state.message);
-          } else if (state is BookingConfirmed) {
-            context.go(AppRoutes.bookingConfirmationPath, extra: state.booking);
-          }
-        },
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<BookingBloc, BookingState>(
+            listener: (context, state) {
+              if (state is BookingError) {
+                AppToast.showError(context, state.message);
+              } else if (state is BookingConfirmed) {
+                context.go(
+                  AppRoutes.bookingConfirmationPath,
+                  extra: state.booking,
+                );
+              }
+            },
+          ),
+          BlocListener<VoiceAssistantBloc, VoiceAssistantState>(
+            listenWhen: (previous, current) =>
+                previous.status != current.status,
+            listener: (context, state) {
+              if (state.isActive) {
+                _guideAndCloseVoiceAssistant();
+              }
+            },
+          ),
+        ],
         child: Column(
           children: [
             Expanded(
@@ -599,24 +656,10 @@ class PaymentBottomBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            child: isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        AppColors.textOnPrimary,
-                      ),
-                    ),
-                  )
-                : Text(
-                    buttonLabel,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+            child: Text(
+              buttonLabel,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
           ),
         ),
       ),
