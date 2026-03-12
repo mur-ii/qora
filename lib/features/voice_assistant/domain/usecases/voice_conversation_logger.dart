@@ -1,94 +1,85 @@
 import 'dart:async';
-import 'dart:io';
-
-import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/utils/app_logger.dart';
-import 'session_token_tracker.dart';
+import '../entities/conversation_log.dart';
+import '../repositories/conversation_repository.dart';
+import 'calculate_session_cost.dart';
+import 'log_conversation.dart';
+import 'token_estimator.dart';
 
 class VoiceTokenUsage {
   final int inputTokens;
-  final int cachedInputTokens;
+  final int cachedTokens;
   final int outputTokens;
   final int totalTokens;
 
   const VoiceTokenUsage({
     required this.inputTokens,
-    required this.cachedInputTokens,
+    required this.cachedTokens,
     required this.outputTokens,
     required this.totalTokens,
   });
 
   const VoiceTokenUsage.empty()
     : inputTokens = 0,
-      cachedInputTokens = 0,
+      cachedTokens = 0,
       outputTokens = 0,
       totalTokens = 0;
-
-  Map<String, dynamic> toJson() {
-    return {
-      'input_tokens': inputTokens,
-      'cached_input_tokens': cachedInputTokens,
-      'output_tokens': outputTokens,
-      'total_tokens': totalTokens,
-    };
-  }
 }
 
-class VoiceConversationTurnLog {
-  final DateTime timestamp;
-  final String modelName;
-  final String userTranscript;
-  final String assistantResponse;
-  final VoiceTokenUsage tokenUsage;
-  final int? audioDurationMs;
-
-  const VoiceConversationTurnLog({
-    required this.timestamp,
-    required this.modelName,
-    required this.userTranscript,
-    required this.assistantResponse,
-    required this.tokenUsage,
-    this.audioDurationMs,
-  });
-}
-
-/// Reusable logger for Realtime voice conversations.
 class VoiceConversationLogger {
   VoiceConversationLogger({
+    required LogConversation logConversationUseCase,
+    required CalculateSessionCost calculateSessionCostUseCase,
+    required ConversationRepository conversationRepository,
+    TokenEstimator? tokenEstimator,
     String? modelName,
-    SessionTokenTracker? tokenTracker,
-  }) : _modelName = _normalizeModel(modelName ?? 'unknown'),
-       _tokenTracker = tokenTracker;
+    String? sessionId,
+  }) : _logConversationUseCase = logConversationUseCase,
+       _calculateSessionCostUseCase = calculateSessionCostUseCase,
+       _conversationRepository = conversationRepository,
+       _tokenEstimator = tokenEstimator ?? TokenEstimator(),
+       _modelName = _normalizeModel(modelName ?? 'unknown'),
+       _sessionId = _normalizeSessionId(sessionId ?? _buildDefaultSessionId());
+
+  static const double _inputCostPerM = 0.60;
+  static const double _cachedCostPerM = 0.06;
+  static const double _outputCostPerM = 2.40;
+  static const int _oneMillion = 1000000;
+
+  final LogConversation _logConversationUseCase;
+  final CalculateSessionCost _calculateSessionCostUseCase;
+  final ConversationRepository _conversationRepository;
+  final TokenEstimator _tokenEstimator;
 
   String _modelName;
-  final SessionTokenTracker? _tokenTracker;
+  String _sessionId;
 
   String? _pendingUserTranscript;
   DateTime? _pendingUserTimestamp;
   StringBuffer? _assistantBuffer;
   String? _pendingAssistantTranscript;
   VoiceTokenUsage? _pendingUsage;
-  int? _pendingAudioDurationMs;
   bool _responseDoneSeen = false;
-
-  DateTime? _pendingAudioStart;
-
-  bool _fileLoggingEnabled = false;
-  File? _logFile;
-  String _logFileName = 'voice_conversation.log';
+  bool _isFinalizing = false;
 
   String get modelName => _modelName;
+  String get sessionId => _sessionId;
 
-  void enableFileLogging({String fileName = 'voice_conversation.log'}) {
-    _logFileName = fileName;
-    _fileLoggingEnabled = true;
-    unawaited(_ensureLogFile());
+  void setSessionId(String value) {
+    _sessionId = _normalizeSessionId(value);
   }
 
-  void disableFileLogging() {
-    _fileLoggingEnabled = false;
-    _logFile = null;
+  Future<double> calculateSessionCost(String sessionId) {
+    return _calculateSessionCostUseCase(sessionId);
+  }
+
+  Future<List<ConversationLog>> getConversationLogsBySession(String sessionId) {
+    return _conversationRepository.getConversationLogsBySession(sessionId);
+  }
+
+  Future<void> clearSessionLogs(String sessionId) {
+    return _conversationRepository.clearSessionLogs(sessionId);
   }
 
   void setModelName(String? value) {
@@ -100,22 +91,23 @@ class VoiceConversationLogger {
   void logLifecycle(String message) {
     scheduleMicrotask(() {
       AppLogger.info('VoiceLifecycle', message);
-      _appendToFile('[LIFECYCLE] $message');
     });
   }
 
   void logError(String message, {Object? error}) {
     scheduleMicrotask(() {
       AppLogger.error('VoiceLifecycle', message, error: error);
-      _appendToFile('[ERROR] $message');
     });
   }
 
-  void logSessionSummary() {
-    if (_tokenTracker == null) return;
-    final summary = _tokenTracker.buildSummary();
-    AppLogger.info('VoiceSession', summary);
-    _appendToFile(summary);
+  Future<void> logSessionSummary() async {
+    final totalCost = await calculateSessionCost(_sessionId);
+    final summary = StringBuffer()
+      ..writeln('[Session Summary]')
+      ..writeln('Session: $_sessionId')
+      ..writeln('Model: $_modelName')
+      ..writeln('Total Cost (USD): ${totalCost.toStringAsFixed(6)}');
+    AppLogger.info('VoiceSession', summary.toString());
   }
 
   void logRealtimeEvent(Map<String, dynamic> event) {
@@ -135,21 +127,6 @@ class VoiceConversationLogger {
             _pendingUsage = null;
             _responseDoneSeen = false;
           }
-          break;
-
-        case 'input_audio_buffer.speech_started':
-          _pendingAudioStart = DateTime.now().toUtc();
-          _pendingAudioDurationMs = null;
-          logLifecycle('Audio chunk sent');
-          break;
-
-        case 'input_audio_buffer.speech_stopped':
-          final start = _pendingAudioStart;
-          if (start != null) {
-            final duration = DateTime.now().toUtc().difference(start);
-            _pendingAudioDurationMs = duration.inMilliseconds;
-          }
-          _pendingAudioStart = null;
           break;
 
         case 'response.audio_transcript.delta':
@@ -172,15 +149,13 @@ class VoiceConversationLogger {
             _pendingAssistantTranscript = resolvedTranscript;
           }
           logLifecycle('Assistant response received');
-          _tryFinalizeTurn();
+          unawaited(_tryFinalizeTurn());
           break;
 
         case 'response.done':
-          final usage = _parseUsage(event) ?? const VoiceTokenUsage.empty();
-          _pendingUsage = usage;
+          _pendingUsage = _parseUsage(event);
           _responseDoneSeen = true;
-          _logTokenUsageSummary(usage: usage);
-          _tryFinalizeTurn();
+          unawaited(_tryFinalizeTurn());
           break;
 
         default:
@@ -189,7 +164,8 @@ class VoiceConversationLogger {
     });
   }
 
-  void _tryFinalizeTurn() {
+  Future<void> _tryFinalizeTurn() async {
+    if (_isFinalizing) return;
     if (_pendingUserTranscript == null || _pendingAssistantTranscript == null) {
       return;
     }
@@ -198,17 +174,38 @@ class VoiceConversationLogger {
       return;
     }
 
-    final entry = VoiceConversationTurnLog(
-      timestamp: _pendingUserTimestamp ?? DateTime.now().toUtc(),
-      modelName: _modelName,
-      userTranscript: _pendingUserTranscript!,
-      assistantResponse: _pendingAssistantTranscript!,
-      tokenUsage: _pendingUsage ?? const VoiceTokenUsage.empty(),
-      audioDurationMs: _pendingAudioDurationMs,
-    );
+    _isFinalizing = true;
 
-    _printEntry(entry);
-    _resetPending();
+    final userMessage = _pendingUserTranscript!;
+    final assistantMessage = _pendingAssistantTranscript!;
+    final usage = _pendingUsage;
+
+    final estimatedInput = _tokenEstimator.estimateTokens(userMessage);
+    final estimatedOutput = _tokenEstimator.estimateTokens(assistantMessage);
+
+    final inputTokens = usage?.inputTokens ?? estimatedInput;
+    final outputTokens = usage?.outputTokens ?? estimatedOutput;
+    final cachedTokens = usage?.cachedTokens ?? 0;
+    final fallbackTotal = inputTokens + outputTokens + cachedTokens;
+    final totalTokens = (usage == null || usage.totalTokens <= 0)
+        ? fallbackTotal
+        : usage.totalTokens;
+
+    try {
+      await logConversation(
+        sessionId: _sessionId,
+        userMessage: userMessage,
+        assistantMessage: assistantMessage,
+        inputTokens: inputTokens,
+        outputTokens: outputTokens,
+        cachedTokens: cachedTokens,
+        timestamp: _pendingUserTimestamp,
+        totalTokensOverride: totalTokens,
+      );
+    } finally {
+      _resetPending();
+      _isFinalizing = false;
+    }
   }
 
   void _resetPending() {
@@ -217,21 +214,18 @@ class VoiceConversationLogger {
     _assistantBuffer = null;
     _pendingAssistantTranscript = null;
     _pendingUsage = null;
-    _pendingAudioDurationMs = null;
     _responseDoneSeen = false;
-    _pendingAudioStart = null;
+    _isFinalizing = false;
   }
 
   void _updateModelFromEvent(Map<String, dynamic> event) {
     final session = event['session'];
     if (session is Map) {
       setModelName(session['model']?.toString());
-      _tokenTracker?.setModelName(session['model']?.toString());
       return;
     }
 
     setModelName(event['model']?.toString());
-    _tokenTracker?.setModelName(event['model']?.toString());
   }
 
   VoiceTokenUsage? _parseUsage(Map<String, dynamic> event) {
@@ -248,7 +242,7 @@ class VoiceConversationLogger {
 
       return VoiceTokenUsage(
         inputTokens: inputTokens,
-        cachedInputTokens: cachedTokens,
+        cachedTokens: cachedTokens,
         outputTokens: outputTokens,
         totalTokens: totalTokens,
       );
@@ -258,6 +252,9 @@ class VoiceConversationLogger {
   }
 
   int _parseCachedTokens(Map usage) {
+    final direct = _parseInt(usage['cached_tokens']);
+    if (direct > 0) return direct;
+
     final details = usage['input_tokens_details'];
     if (details is Map) {
       return _parseInt(details['cached_tokens']);
@@ -273,111 +270,62 @@ class VoiceConversationLogger {
     return 0;
   }
 
-  void _printEntry(VoiceConversationTurnLog entry) {
-    final timestamp = _formatTimestamp(entry.timestamp.toUtc());
-    final userBlock = _formatConversationBlock(
-      timestamp: timestamp,
-      role: 'USER',
-      transcript: entry.userTranscript,
-      audioDurationMs: entry.audioDurationMs,
-    );
-    final assistantBlock = _formatConversationBlock(
-      timestamp: timestamp,
-      role: 'ASSISTANT',
-      transcript: entry.assistantResponse,
-      audioDurationMs: null,
-    );
-
-    AppLogger.info('VoiceConversation', userBlock);
-    AppLogger.info('VoiceConversation', assistantBlock);
-    _appendToFile(userBlock);
-    _appendToFile(assistantBlock);
-  }
-
-  void _logTokenUsageSummary({required VoiceTokenUsage usage}) {
-    _tokenTracker?.recordUsage(
-      inputTokens: usage.inputTokens,
-      cachedInputTokens: usage.cachedInputTokens,
-      outputTokens: usage.outputTokens,
-      modelName: _modelName,
-    );
-
-    final perResponseCost = _calculateCost(usage);
-
-    final buffer = StringBuffer()
-      ..writeln('[Realtime Usage]')
-      ..writeln('Model: $_modelName')
-      ..writeln('Input Tokens: ${usage.inputTokens}')
-      ..writeln('Cached Tokens: ${usage.cachedInputTokens}')
-      ..writeln('Output Tokens: ${usage.outputTokens}')
-      ..writeln('Estimated Cost: ${perResponseCost.toStringAsFixed(6)}');
-
-    AppLogger.info('VoiceUsage', buffer.toString());
-    _appendToFile(buffer.toString());
-    logLifecycle('Token usage logged');
-  }
-
-  double _calculateCost(VoiceTokenUsage usage) {
-    final inputCost = usage.inputTokens * (0.60 / 1000000);
-    final cachedCost = usage.cachedInputTokens * (0.06 / 1000000);
-    final outputCost = usage.outputTokens * (2.40 / 1000000);
+  double _calculateCost({
+    required int inputTokens,
+    required int cachedTokens,
+    required int outputTokens,
+  }) {
+    final inputCost = inputTokens * (_inputCostPerM / _oneMillion);
+    final cachedCost = cachedTokens * (_cachedCostPerM / _oneMillion);
+    final outputCost = outputTokens * (_outputCostPerM / _oneMillion);
     return inputCost + cachedCost + outputCost;
   }
 
-  String _formatConversationBlock({
-    required String timestamp,
-    required String role,
-    required String transcript,
-    int? audioDurationMs,
-  }) {
-    final buffer = StringBuffer()
-      ..writeln('[$timestamp]')
-      ..writeln('$role:')
-      ..writeln('"$transcript"');
+  Future<void> logConversation({
+    required String sessionId,
+    required String userMessage,
+    required String assistantMessage,
+    required int inputTokens,
+    required int outputTokens,
+    required int cachedTokens,
+    DateTime? timestamp,
+    int? totalTokensOverride,
+  }) async {
+    final totalTokens =
+        totalTokensOverride ?? inputTokens + outputTokens + cachedTokens;
+    final estimatedCostUsd = _calculateCost(
+      inputTokens: inputTokens,
+      cachedTokens: cachedTokens,
+      outputTokens: outputTokens,
+    );
 
-    if (audioDurationMs != null) {
-      buffer.writeln('Audio Duration: ${audioDurationMs}ms');
-    }
+    final entry = ConversationLog(
+      sessionId: sessionId,
+      timestamp: (timestamp ?? DateTime.now()).toUtc(),
+      userMessage: userMessage,
+      assistantMessage: assistantMessage,
+      inputTokens: inputTokens,
+      outputTokens: outputTokens,
+      cachedTokens: cachedTokens,
+      totalTokens: totalTokens,
+      estimatedCostUsd: estimatedCostUsd,
+    );
 
-    return buffer.toString();
-  }
+    await _logConversationUseCase(entry);
 
-  String _formatTimestamp(DateTime timestamp) {
-    final year = timestamp.year.toString().padLeft(4, '0');
-    final month = timestamp.month.toString().padLeft(2, '0');
-    final day = timestamp.day.toString().padLeft(2, '0');
-    final hour = timestamp.hour.toString().padLeft(2, '0');
-    final minute = timestamp.minute.toString().padLeft(2, '0');
-    final second = timestamp.second.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute:$second';
-  }
+    final message = StringBuffer()
+      ..writeln('[Conversation Logged]')
+      ..writeln('Session: ${entry.sessionId}')
+      ..writeln('Timestamp: ${entry.timestamp.toIso8601String()}')
+      ..writeln('Input Tokens: ${entry.inputTokens}')
+      ..writeln('Output Tokens: ${entry.outputTokens}')
+      ..writeln('Cached Tokens: ${entry.cachedTokens}')
+      ..writeln('Total Tokens: ${entry.totalTokens}')
+      ..writeln(
+        'Estimated Cost (USD): ${entry.estimatedCostUsd.toStringAsFixed(6)}',
+      );
 
-  Future<void> _ensureLogFile() async {
-    if (!_fileLoggingEnabled || _logFile != null) return;
-    try {
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath =
-          '${directory.path}${Platform.pathSeparator}$_logFileName';
-      _logFile = File(filePath);
-    } catch (e) {
-      AppLogger.warn('VoiceLog', 'Failed to initialize log file: $e');
-    }
-  }
-
-  void _appendToFile(String message) {
-    if (!_fileLoggingEnabled) return;
-    unawaited(_appendToFileInternal(message));
-  }
-
-  Future<void> _appendToFileInternal(String message) async {
-    await _ensureLogFile();
-    final file = _logFile;
-    if (file == null) return;
-    try {
-      await file.writeAsString('$message\n', mode: FileMode.append);
-    } catch (_) {
-      // Ignore file write errors to avoid impacting runtime.
-    }
+    AppLogger.info('VoiceConversation', message.toString());
   }
 
   void reset() {
@@ -387,5 +335,21 @@ class VoiceConversationLogger {
 
   static String _normalizeModel(String value) {
     return value.trim().isEmpty ? 'unknown' : value.trim();
+  }
+
+  static String _normalizeSessionId(String value) {
+    final normalized = value.trim();
+    return normalized.isEmpty ? _buildDefaultSessionId() : normalized;
+  }
+
+  static String _buildDefaultSessionId() {
+    final now = DateTime.now().toUtc();
+    final year = now.year.toString().padLeft(4, '0');
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    final second = now.second.toString().padLeft(2, '0');
+    return 'booking_$year$month${day}_$hour$minute$second';
   }
 }

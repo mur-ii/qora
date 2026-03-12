@@ -7,6 +7,8 @@ import '../../../../core/di/profile_injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_state.dart';
@@ -73,6 +75,8 @@ class _ProfilePageContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _CompactProfileCard(profile: state.profile),
+                  const SizedBox(height: 12),
+                  const _VoiceSessionMetricsPanel(),
                   const SizedBox(height: 12),
                   _CompactMenuSection(
                     onTapProfile: () => _onMenuTap(context, 'Profil Saya'),
@@ -213,6 +217,63 @@ class _InfoRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _VoiceSessionMetricsPanel extends StatelessWidget {
+  const _VoiceSessionMetricsPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<
+      VoiceAssistantBloc,
+      VoiceAssistantState,
+      ({String? sessionId, int totalTokens, double totalCostUsd})
+    >(
+      selector: (state) => (
+        sessionId: state.currentSessionId,
+        totalTokens: state.totalLoggedTokens,
+        totalCostUsd: state.sessionEstimatedCostUsd,
+      ),
+      builder: (context, metrics) {
+        final sessionLabel =
+            (metrics.sessionId == null || metrics.sessionId!.isEmpty)
+            ? '-'
+            : metrics.sessionId!;
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceWhite,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Voice Session (Realtime)',
+                style: AppTypography.titleSmall.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              _InfoRow(label: 'Session ID', value: sessionLabel),
+              _InfoRow(
+                label: 'Total Token',
+                value: NumberFormat('#,###').format(metrics.totalTokens),
+              ),
+              _InfoRow(
+                label: 'Estimated Cost',
+                value: '\$${metrics.totalCostUsd.toStringAsFixed(6)}',
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

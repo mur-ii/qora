@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +8,9 @@ import '../../domain/entities/agent_state_entity.dart';
 import '../../domain/entities/function_call_entity.dart';
 import '../../domain/usecases/agentic_ai_usecase.dart';
 import '../../domain/usecases/voice_session_usecase.dart';
+import 'conversation_bloc.dart';
+import 'conversation_event.dart';
+import 'conversation_state.dart';
 import 'voice_assistant_event.dart';
 import 'voice_assistant_state.dart';
 
@@ -14,6 +18,7 @@ class VoiceAssistantBloc
     extends Bloc<VoiceAssistantEvent, VoiceAssistantState> {
   final VoiceSessionUseCase voiceSessionUseCase;
   final AgenticAiUseCase agenticAiUseCase;
+  final ConversationBloc conversationBloc;
   final String? defaultModel;
   final Map<String, StringBuffer> _functionArgBuffers = {};
   final Map<String, String> _functionArgNames = {};
@@ -21,6 +26,7 @@ class VoiceAssistantBloc
   static const Duration _functionArgsDeltaThrottle = Duration(
     milliseconds: 250,
   );
+  StreamSubscription<ConversationState>? _conversationSubscription;
   DateTime? _lastSpeakingDeltaEmit;
   DateTime? _lastFunctionArgsDeltaEmit;
 
@@ -46,8 +52,24 @@ class VoiceAssistantBloc
   VoiceAssistantBloc({
     required this.voiceSessionUseCase,
     required this.agenticAiUseCase,
+    required this.conversationBloc,
     this.defaultModel,
   }) : super(const VoiceAssistantState()) {
+    _conversationSubscription = conversationBloc.stream.listen((convState) {
+      if (isClosed) return;
+      final totalTokens = convState.logs.fold<int>(
+        0,
+        (sum, log) => sum + log.totalTokens,
+      );
+      add(
+        ConversationMetricsUpdated(
+          sessionCostUsd: convState.sessionCostUsd,
+          totalLoggedTurns: convState.logs.length,
+          totalLoggedTokens: totalTokens,
+        ),
+      );
+    });
+
     on<StartVoiceAssistant>(_onStartVoiceAssistant);
     on<StopVoiceAssistant>(_onStopVoiceAssistant);
     on<ToggleVoiceAssistantMute>(_onToggleVoiceAssistantMute);
@@ -56,6 +78,7 @@ class VoiceAssistantBloc
     on<AgentEventReceived>(_onAgentEventReceived);
     on<ConnectionStateChanged>(_onConnectionStateChanged);
     on<RequestAssistantResponse>(_onRequestAssistantResponse);
+    on<ConversationMetricsUpdated>(_onConversationMetricsUpdated);
   }
 
   Future<void> _onStartVoiceAssistant(
@@ -68,16 +91,24 @@ class VoiceAssistantBloc
         return;
       }
 
+      final sessionId = _buildSessionId();
+
       emit(
         state.copyWith(
           status: VoiceAssistantStatus.connecting,
           messages: const [],
           agentState: const AgentStateEntity(),
+          currentSessionId: sessionId,
+          sessionEstimatedCostUsd: 0,
+          totalLoggedTurns: 0,
+          totalLoggedTokens: 0,
           isProcessing: false,
           isMuted: false,
           error: null,
         ),
       );
+
+      _refreshConversationMetrics(sessionId);
 
       voiceSessionUseCase.updateStatus(VoiceAssistantStatus.connecting);
 
@@ -89,6 +120,7 @@ class VoiceAssistantBloc
       await voiceSessionUseCase.start(
         model: event.model ?? defaultModel ?? 'gpt-realtime-mini-2025-12-15',
         voice: event.voice ?? 'verse',
+        sessionId: sessionId,
         tools: agenticAiUseCase.getFunctionDefinitions(),
         instructions: agenticAiUseCase.getSystemInstructions(),
         onConnectionStateChange: (connectionState) {
@@ -160,7 +192,18 @@ class VoiceAssistantBloc
 
       await voiceSessionUseCase.stop();
 
-      emit(const VoiceAssistantState(status: VoiceAssistantStatus.idle));
+      _refreshConversationMetrics(state.currentSessionId);
+
+      emit(
+        state.copyWith(
+          status: VoiceAssistantStatus.idle,
+          messages: const [],
+          agentState: const AgentStateEntity(),
+          isProcessing: false,
+          isMuted: false,
+          error: null,
+        ),
+      );
 
       voiceSessionUseCase.updateStatus(VoiceAssistantStatus.idle);
 
@@ -386,6 +429,7 @@ class VoiceAssistantBloc
     }
 
     if (eventType == 'response.done') {
+      _refreshConversationMetrics(state.currentSessionId);
       emit(state.copyWith(status: VoiceAssistantStatus.connected));
       voiceSessionUseCase.updateStatus(VoiceAssistantStatus.connected);
       return;
@@ -460,5 +504,43 @@ class VoiceAssistantBloc
         stackTrace: stackTrace,
       );
     }
+  }
+
+  Future<void> _onConversationMetricsUpdated(
+    ConversationMetricsUpdated event,
+    Emitter<VoiceAssistantState> emit,
+  ) async {
+    emit(
+      state.copyWith(
+        sessionEstimatedCostUsd: event.sessionCostUsd,
+        totalLoggedTurns: event.totalLoggedTurns,
+        totalLoggedTokens: event.totalLoggedTokens,
+      ),
+    );
+  }
+
+  void _refreshConversationMetrics(String? sessionId) {
+    if (sessionId == null || sessionId.isEmpty) return;
+    conversationBloc.add(
+      LoadSessionConversationRequested(sessionId: sessionId),
+    );
+    conversationBloc.add(CalculateSessionCostRequested(sessionId: sessionId));
+  }
+
+  String _buildSessionId() {
+    final now = DateTime.now().toUtc();
+    final year = now.year.toString().padLeft(4, '0');
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    final second = now.second.toString().padLeft(2, '0');
+    return 'booking_$year$month${day}_$hour$minute$second';
+  }
+
+  @override
+  Future<void> close() async {
+    await _conversationSubscription?.cancel();
+    return super.close();
   }
 }

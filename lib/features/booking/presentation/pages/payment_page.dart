@@ -141,7 +141,7 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
                     roomName: widget.booking.room.name,
                   ),
                   const SizedBox(height: 24),
-                  PaymentMethodSection(
+                  _PaymentMethodSection(
                     methods: _paymentMethods,
                     selectedMethod: _selectedPaymentMethod,
                     isLoading: isLoading,
@@ -310,14 +310,13 @@ class _HotelMiniRow extends StatelessWidget {
   }
 }
 
-class PaymentMethodSection extends StatelessWidget {
+class _PaymentMethodSection extends StatelessWidget {
   final List<_PaymentMethodOption> methods;
   final String selectedMethod;
   final bool isLoading;
   final ValueChanged<String> onChanged;
 
-  const PaymentMethodSection({
-    super.key,
+  const _PaymentMethodSection({
     required this.methods,
     required this.selectedMethod,
     required this.isLoading,
@@ -339,16 +338,27 @@ class PaymentMethodSection extends StatelessWidget {
           style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 16),
-        ...methods.map(
-          (method) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: PaymentMethodCard(
-              option: method,
-              isSelected: selectedMethod == method.key,
-              groupValue: selectedMethod,
-              isDisabled: isLoading,
-              onTap: () => onChanged(method.key),
-            ),
+        RadioGroup<String>(
+          groupValue: selectedMethod,
+          onChanged: (value) {
+            if (value != null && !isLoading) {
+              onChanged(value);
+            }
+          },
+          child: Column(
+            children: methods
+                .map(
+                  (method) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _PaymentMethodCard(
+                      option: method,
+                      isSelected: selectedMethod == method.key,
+                      isDisabled: isLoading,
+                      onTap: () => onChanged(method.key),
+                    ),
+                  ),
+                )
+                .toList(),
           ),
         ),
       ],
@@ -356,18 +366,15 @@ class PaymentMethodSection extends StatelessWidget {
   }
 }
 
-class PaymentMethodCard extends StatelessWidget {
+class _PaymentMethodCard extends StatelessWidget {
   final _PaymentMethodOption option;
   final bool isSelected;
-  final String groupValue;
   final bool isDisabled;
   final VoidCallback onTap;
 
-  const PaymentMethodCard({
-    super.key,
+  const _PaymentMethodCard({
     required this.option,
     required this.isSelected,
-    required this.groupValue,
     required this.isDisabled,
     required this.onTap,
   });
@@ -403,8 +410,7 @@ class PaymentMethodCard extends StatelessWidget {
             children: [
               Radio<String>(
                 value: option.key,
-                groupValue: groupValue,
-                onChanged: isDisabled ? null : (_) => onTap(),
+                enabled: !isDisabled,
                 activeColor: AppColors.primary,
               ),
               const SizedBox(width: 2),

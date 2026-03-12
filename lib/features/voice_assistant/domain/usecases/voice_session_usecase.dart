@@ -8,7 +8,6 @@ import '../entities/voice_assistant_status.dart';
 import '../entities/voice_session_entity.dart';
 import '../repositories/voice_assistant_repository.dart';
 import 'agentic_ai_usecase.dart';
-import 'session_token_tracker.dart';
 import 'voice_conversation_logger.dart';
 
 class VoiceSessionUseCase {
@@ -16,13 +15,11 @@ class VoiceSessionUseCase {
     required this.repository,
     required this.agenticAiUseCase,
     required this.logger,
-    required this.tokenTracker,
   });
 
   final VoiceAssistantRepository repository;
   final AgenticAiUseCase agenticAiUseCase;
   final VoiceConversationLogger logger;
-  final SessionTokenTracker tokenTracker;
 
   VoiceSessionEntity? _session;
   bool _isConnecting = false;
@@ -51,6 +48,7 @@ class VoiceSessionUseCase {
   Future<VoiceSessionEntity> start({
     required String model,
     required String voice,
+    String? sessionId,
     List<Map<String, dynamic>>? tools,
     String? instructions,
     required Function(ConnectionStateEntity) onConnectionStateChange,
@@ -59,7 +57,9 @@ class VoiceSessionUseCase {
     required Function(Map<String, dynamic>) onAgentEvent,
   }) async {
     resetMemory();
-    tokenTracker.reset();
+    if (sessionId != null && sessionId.trim().isNotEmpty) {
+      logger.setSessionId(sessionId);
+    }
 
     return _connect(
       model: model,
@@ -79,9 +79,8 @@ class VoiceSessionUseCase {
 
     try {
       await _disconnect();
-      logger.logSessionSummary();
+      await logger.logSessionSummary();
     } finally {
-      tokenTracker.reset();
       resetMemory();
       _isStopping = false;
     }

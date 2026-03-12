@@ -84,3 +84,23 @@ class RequestAssistantResponse extends VoiceAssistantEvent {
   @override
   List<Object?> get props => [instructions];
 }
+
+/// Internal event to sync persisted conversation metrics to UI state
+class ConversationMetricsUpdated extends VoiceAssistantEvent {
+  final double sessionCostUsd;
+  final int totalLoggedTurns;
+  final int totalLoggedTokens;
+
+  const ConversationMetricsUpdated({
+    required this.sessionCostUsd,
+    required this.totalLoggedTurns,
+    required this.totalLoggedTokens,
+  });
+
+  @override
+  List<Object?> get props => [
+    sessionCostUsd,
+    totalLoggedTurns,
+    totalLoggedTokens,
+  ];
+}
