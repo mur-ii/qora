@@ -40,7 +40,7 @@ class VoiceAssistantInjection {
 
     // Keep parameter for backward compatibility with existing call sites.
     if (enableFileLogging && kDebugMode) {
-      // No-op: logging is persisted to local database by design.
+      // No-op: runtime logging is kept in-memory by design.
     }
 
     _conversationLocalDataSource ??= ConversationLocalDataSource();

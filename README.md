@@ -31,7 +31,7 @@ A modern Flutter hotel booking application featuring a **Realtime Agentic Voice 
 
 - Flutter SDK 3.9.2+
 - OpenAI API key with Realtime API access
-- Android Studio / Xcode
+- Android Studio
 
 ### Installation
 
@@ -200,10 +200,6 @@ OPENAI_API_KEY=sk-proj-your-key-here
 - Audio settings permission
 - Bluetooth permission
 
-**iOS** (if deploying):
-
-- Add microphone usage description to Info.plist
-
 ---
 
 ## 📱 Features by Screen
@@ -262,12 +258,6 @@ OPENAI_API_KEY=sk-proj-your-key-here
 
 ```bash
 flutter build apk --dart-define=OPENAI_API_KEY=your-key
-```
-
-### iOS
-
-```bash
-flutter build ios --dart-define=OPENAI_API_KEY=your-key
 ```
 
 ### Pre-Deployment Checklist
