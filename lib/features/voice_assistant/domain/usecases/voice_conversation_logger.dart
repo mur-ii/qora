@@ -12,19 +12,28 @@ class VoiceTokenUsage {
   final int cachedTokens;
   final int outputTokens;
   final int totalTokens;
+  final Map<String, dynamic> inputTokenDetails;
+  final Map<String, dynamic> outputTokenDetails;
+  final String? responseId;
 
   const VoiceTokenUsage({
     required this.inputTokens,
     required this.cachedTokens,
     required this.outputTokens,
     required this.totalTokens,
+    this.inputTokenDetails = const <String, dynamic>{},
+    this.outputTokenDetails = const <String, dynamic>{},
+    this.responseId,
   });
 
   const VoiceTokenUsage.empty()
     : inputTokens = 0,
       cachedTokens = 0,
       outputTokens = 0,
-      totalTokens = 0;
+      totalTokens = 0,
+      inputTokenDetails = const <String, dynamic>{},
+      outputTokenDetails = const <String, dynamic>{},
+      responseId = null;
 }
 
 class VoiceConversationLogger {
@@ -101,12 +110,33 @@ class VoiceConversationLogger {
   }
 
   Future<void> logSessionSummary() async {
+    final logs = await getConversationLogsBySession(_sessionId);
+    final totalInputTokens = logs.fold<int>(
+      0,
+      (sum, log) => sum + log.inputTokens,
+    );
+    final totalOutputTokens = logs.fold<int>(
+      0,
+      (sum, log) => sum + log.outputTokens,
+    );
+    final totalCachedTokens = logs.fold<int>(
+      0,
+      (sum, log) => sum + log.cachedTokens,
+    );
+    final totalTokens = logs.fold<int>(0, (sum, log) => sum + log.totalTokens);
     final totalCost = await calculateSessionCost(_sessionId);
+
     final summary = StringBuffer()
       ..writeln('[Session Summary]')
       ..writeln('Session: $_sessionId')
       ..writeln('Model: $_modelName')
+      ..writeln('Total Turns: ${logs.length}')
+      ..writeln('Total Input Tokens: $totalInputTokens')
+      ..writeln('Total Output Tokens: $totalOutputTokens')
+      ..writeln('Total Cached Tokens: $totalCachedTokens')
+      ..writeln('Total Tokens: $totalTokens')
       ..writeln('Total Cost (USD): ${totalCost.toStringAsFixed(6)}');
+
     AppLogger.info('VoiceSession', summary.toString());
   }
 
@@ -122,6 +152,11 @@ class VoiceConversationLogger {
           if (transcript != null && transcript.isNotEmpty) {
             _pendingUserTranscript = transcript;
             _pendingUserTimestamp = DateTime.now().toUtc();
+            _logConversationBySentence(
+              speaker: 'User',
+              eventType: type,
+              text: transcript,
+            );
             _assistantBuffer = null;
             _pendingAssistantTranscript = null;
             _pendingUsage = null;
@@ -147,6 +182,11 @@ class VoiceConversationLogger {
               : (bufferText ?? '');
           if (resolvedTranscript.isNotEmpty) {
             _pendingAssistantTranscript = resolvedTranscript;
+            _logConversationBySentence(
+              speaker: 'Assistant',
+              eventType: type,
+              text: resolvedTranscript,
+            );
           }
           logLifecycle('Assistant response received');
           unawaited(_tryFinalizeTurn());
@@ -154,6 +194,14 @@ class VoiceConversationLogger {
 
         case 'response.done':
           _pendingUsage = _parseUsage(event);
+          if (_pendingUsage != null) {
+            _logRealtimeUsageBreakdown(_pendingUsage!);
+          } else {
+            AppLogger.warn(
+              'VoiceToken',
+              '[OpenAI Usage] response.done received without usage payload',
+            );
+          }
           _responseDoneSeen = true;
           unawaited(_tryFinalizeTurn());
           break;
@@ -190,6 +238,16 @@ class VoiceConversationLogger {
     final totalTokens = (usage == null || usage.totalTokens <= 0)
         ? fallbackTotal
         : usage.totalTokens;
+
+    _logTurnTokenSource(
+      usedRealtimeUsage: usage != null,
+      estimatedInput: estimatedInput,
+      estimatedOutput: estimatedOutput,
+      inputTokens: inputTokens,
+      outputTokens: outputTokens,
+      cachedTokens: cachedTokens,
+      totalTokens: totalTokens,
+    );
 
     try {
       await logConversation(
@@ -239,16 +297,33 @@ class VoiceConversationLogger {
       final outputTokens = _parseInt(usage['output_tokens']);
       final totalTokens = _parseInt(usage['total_tokens']);
       final cachedTokens = _parseCachedTokens(usage);
+      final inputTokenDetails = _toStringDynamicMap(
+        usage['input_tokens_details'] ?? usage['input_token_details'],
+      );
+      final outputTokenDetails = _toStringDynamicMap(
+        usage['output_tokens_details'] ?? usage['output_token_details'],
+      );
+      final responseId = (response is Map ? response['id'] : null)?.toString();
 
       return VoiceTokenUsage(
         inputTokens: inputTokens,
         cachedTokens: cachedTokens,
         outputTokens: outputTokens,
         totalTokens: totalTokens,
+        inputTokenDetails: inputTokenDetails,
+        outputTokenDetails: outputTokenDetails,
+        responseId: responseId,
       );
     }
 
     return null;
+  }
+
+  Map<String, dynamic> _toStringDynamicMap(dynamic value) {
+    if (value is Map) {
+      return Map<String, dynamic>.from(value);
+    }
+    return const <String, dynamic>{};
   }
 
   int _parseCachedTokens(Map usage) {
@@ -279,6 +354,151 @@ class VoiceConversationLogger {
     final cachedCost = cachedTokens * (_cachedCostPerM / _oneMillion);
     final outputCost = outputTokens * (_outputCostPerM / _oneMillion);
     return inputCost + cachedCost + outputCost;
+  }
+
+  double _calculateInputCost(int tokens) {
+    return tokens * (_inputCostPerM / _oneMillion);
+  }
+
+  double _calculateCachedCost(int tokens) {
+    return tokens * (_cachedCostPerM / _oneMillion);
+  }
+
+  double _calculateOutputCost(int tokens) {
+    return tokens * (_outputCostPerM / _oneMillion);
+  }
+
+  void _logRealtimeUsageBreakdown(VoiceTokenUsage usage) {
+    final inputCost = _calculateInputCost(usage.inputTokens);
+    final cachedCost = _calculateCachedCost(usage.cachedTokens);
+    final outputCost = _calculateOutputCost(usage.outputTokens);
+    final totalCost = inputCost + cachedCost + outputCost;
+
+    final message = StringBuffer()
+      ..writeln('[OpenAI Usage]')
+      ..writeln('Session: $_sessionId')
+      ..writeln('Model: $_modelName')
+      ..writeln('Response ID: ${usage.responseId ?? '-'}')
+      ..writeln('Input Tokens: ${usage.inputTokens}')
+      ..writeln('Output Tokens: ${usage.outputTokens}')
+      ..writeln('Cached Tokens: ${usage.cachedTokens}')
+      ..writeln('Total Tokens: ${usage.totalTokens}')
+      ..writeln(
+        'Input Details: ${_formatUsageDetails(usage.inputTokenDetails)}',
+      )
+      ..writeln(
+        'Output Details: ${_formatUsageDetails(usage.outputTokenDetails)}',
+      )
+      ..writeln('Cost Input (USD): ${inputCost.toStringAsFixed(6)}')
+      ..writeln('Cost Cached (USD): ${cachedCost.toStringAsFixed(6)}')
+      ..writeln('Cost Output (USD): ${outputCost.toStringAsFixed(6)}')
+      ..writeln('Cost Total (USD): ${totalCost.toStringAsFixed(6)}');
+
+    AppLogger.info('VoiceToken', message.toString());
+  }
+
+  void _logTurnTokenSource({
+    required bool usedRealtimeUsage,
+    required int estimatedInput,
+    required int estimatedOutput,
+    required int inputTokens,
+    required int outputTokens,
+    required int cachedTokens,
+    required int totalTokens,
+  }) {
+    final source = usedRealtimeUsage ? 'openai_usage' : 'estimation_fallback';
+    final message = StringBuffer()
+      ..writeln('[Turn Token Source]')
+      ..writeln('Session: $_sessionId')
+      ..writeln('Model: $_modelName')
+      ..writeln('Source: $source')
+      ..writeln('Estimated Input Tokens: $estimatedInput')
+      ..writeln('Estimated Output Tokens: $estimatedOutput')
+      ..writeln('Resolved Input Tokens: $inputTokens')
+      ..writeln('Resolved Output Tokens: $outputTokens')
+      ..writeln('Resolved Cached Tokens: $cachedTokens')
+      ..writeln('Resolved Total Tokens: $totalTokens');
+
+    AppLogger.info('VoiceToken', message.toString());
+  }
+
+  void _logConversationBySentence({
+    required String speaker,
+    required String eventType,
+    required String text,
+  }) {
+    final normalized = _normalizeText(text);
+    if (normalized.isEmpty) return;
+
+    final sentences = _splitSentences(normalized);
+    AppLogger.info(
+      'VoiceConversation',
+      '[Conversation][$speaker] event=$eventType session=$_sessionId model=$_modelName sentence_count=${sentences.length}',
+    );
+
+    for (var i = 0; i < sentences.length; i++) {
+      AppLogger.info(
+        'VoiceConversation',
+        '[Conversation][$speaker][Sentence ${i + 1}] ${sentences[i]}',
+      );
+    }
+  }
+
+  String _normalizeText(String value) {
+    return value.replaceAll(RegExp(r'\s+'), ' ').trim();
+  }
+
+  List<String> _splitSentences(String text) {
+    final normalized = _normalizeText(text);
+    if (normalized.isEmpty) {
+      return const <String>[];
+    }
+
+    final matches = RegExp(r'[^.!?]+[.!?]?').allMatches(normalized);
+    final sentences = <String>[];
+    for (final match in matches) {
+      final sentence = _normalizeText(match.group(0) ?? '');
+      if (sentence.isNotEmpty) {
+        sentences.add(sentence);
+      }
+    }
+
+    if (sentences.isEmpty) {
+      return <String>[normalized];
+    }
+
+    return sentences;
+  }
+
+  String _formatUsageDetails(Map<String, dynamic> details) {
+    if (details.isEmpty) {
+      return '-';
+    }
+
+    return details.entries
+        .map((entry) => '${entry.key}=${_detailValueToString(entry.value)}')
+        .join(', ');
+  }
+
+  String _detailValueToString(dynamic value) {
+    if (value == null) {
+      return 'null';
+    }
+    if (value is String) {
+      return value;
+    }
+    if (value is num || value is bool) {
+      return value.toString();
+    }
+    if (value is List) {
+      return value.join('|');
+    }
+    if (value is Map) {
+      return value.entries
+          .map((entry) => '${entry.key}:${_detailValueToString(entry.value)}')
+          .join(';');
+    }
+    return value.toString();
   }
 
   Future<void> logConversation({
@@ -313,16 +533,29 @@ class VoiceConversationLogger {
 
     await _logConversationUseCase(entry);
 
+    final runningSessionCost = await calculateSessionCost(sessionId);
+    final inputCost = _calculateInputCost(entry.inputTokens);
+    final cachedCost = _calculateCachedCost(entry.cachedTokens);
+    final outputCost = _calculateOutputCost(entry.outputTokens);
+
     final message = StringBuffer()
       ..writeln('[Conversation Logged]')
       ..writeln('Session: ${entry.sessionId}')
       ..writeln('Timestamp: ${entry.timestamp.toIso8601String()}')
+      ..writeln('User Message: ${_normalizeText(entry.userMessage)}')
+      ..writeln('Assistant Message: ${_normalizeText(entry.assistantMessage)}')
       ..writeln('Input Tokens: ${entry.inputTokens}')
       ..writeln('Output Tokens: ${entry.outputTokens}')
       ..writeln('Cached Tokens: ${entry.cachedTokens}')
       ..writeln('Total Tokens: ${entry.totalTokens}')
+      ..writeln('Input Cost (USD): ${inputCost.toStringAsFixed(6)}')
+      ..writeln('Cached Cost (USD): ${cachedCost.toStringAsFixed(6)}')
+      ..writeln('Output Cost (USD): ${outputCost.toStringAsFixed(6)}')
       ..writeln(
         'Estimated Cost (USD): ${entry.estimatedCostUsd.toStringAsFixed(6)}',
+      )
+      ..writeln(
+        'Session Running Cost (USD): ${runningSessionCost.toStringAsFixed(6)}',
       );
 
     AppLogger.info('VoiceConversation', message.toString());
