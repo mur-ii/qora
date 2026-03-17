@@ -14,6 +14,7 @@ class AppRoutes {
   static const String bookingPaymentName = 'booking-payment';
   static const String bookingConfirmationName = 'booking-confirmation';
   static const String profileName = 'profile';
+  static const String performanceSummaryName = 'performance-summary';
 
   static const String screenHome = 'home';
   static const String screenHotelList = 'hotel_list';
@@ -38,6 +39,7 @@ class AppRoutes {
   static const String bookingPaymentPath = '/booking/payment';
   static const String bookingConfirmationPath = '/booking/confirmation';
   static const String profilePath = '/profile';
+  static const String performanceSummaryPath = '/performance-summary';
 
   static String hotelDetailPathFor(String id) => '/hotel-detail/$id';
   static String bookingSummaryPathWithQuery(String query) =>

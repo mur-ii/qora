@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/di/booking_injection.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/services/performance_tracking_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_toast.dart';
@@ -67,11 +68,20 @@ class _BookingSummaryPageContent extends StatefulWidget {
 
 class _BookingSummaryPageContentState
     extends State<_BookingSummaryPageContent> {
-  bool _hasVoicePrompted = false;
+  bool _hasVoiceCompleted = false;
 
-  void _requestSummaryReview(BookingEntity booking) {
-    if (_hasVoicePrompted) return;
-    _hasVoicePrompted = true;
+  void _completeVoiceSessionAtSummary(BookingEntity booking) {
+    if (_hasVoiceCompleted) return;
+
+    final voiceState = context.read<VoiceAssistantBloc>().state;
+    if (!voiceState.isActive) {
+      return;
+    }
+
+    _hasVoiceCompleted = true;
+    PerformanceTrackingService.instance.markVoiceOriginBooking(
+      booking.bookingId,
+    );
 
     final currencySymbol = booking.pricing.currency.toUpperCase() == 'IDR'
         ? 'Rp '
@@ -90,11 +100,15 @@ class _BookingSummaryPageContentState
         '${booking.bookingDetails.guests} tamu, '
         '${booking.bookingDetails.rooms} kamar. '
         'Total pembayaran ${currencyFormat.format(booking.pricing.grandTotal)} dan dibayar lunas saat pemesanan. '
-        'Apakah Anda ingin melanjutkan ke halaman Pembayaran sekarang? '
-        'Jika pengguna menjawab setuju, panggil fungsi navigate_to_screen dengan screen_name "booking_payment".';
+        'Ringkasan pemesanan hotel Anda sudah ditampilkan pada layar. '
+        'Saat ini voice assistant hanya dapat membantu sampai tahap ini dan belum mendukung proses pembayaran. '
+        'Terima kasih telah menggunakan voice assistant.';
 
     context.read<VoiceAssistantBloc>().add(
-      RequestAssistantResponse(instructions: prompt),
+      CompleteVoiceSessionWithMessage(
+        message: prompt,
+        reason: 'booking_summary_completed',
+      ),
     );
   }
 
@@ -118,10 +132,7 @@ class _BookingSummaryPageContentState
             }
 
             if (state is BookingSummaryLoaded) {
-              final voiceState = context.read<VoiceAssistantBloc>().state;
-              if (voiceState.isActive) {
-                _requestSummaryReview(state.booking);
-              }
+              _completeVoiceSessionAtSummary(state.booking);
             }
           },
         ),
@@ -134,7 +145,7 @@ class _BookingSummaryPageContentState
 
             final bookingState = context.read<BookingBloc>().state;
             if (bookingState is BookingSummaryLoaded) {
-              _requestSummaryReview(bookingState.booking);
+              _completeVoiceSessionAtSummary(bookingState.booking);
             }
           },
         ),

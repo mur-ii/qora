@@ -4,7 +4,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/di/booking_injection.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/services/performance_tracking_service.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../performance/domain/entities/performance_scenario.dart';
 import '../../data/models/booking_record.dart';
 import '../../domain/entities/booking_entity.dart';
 
@@ -54,6 +56,26 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
 
     final repository = BookingInjection.createLocalRepository();
     await repository.saveBooking(record);
+
+    final performanceService = PerformanceTrackingService.instance;
+    final isVoiceOriginBooking = performanceService.isVoiceOriginBooking(
+      widget.booking.bookingId,
+    );
+
+    if (!isVoiceOriginBooking) {
+      await performanceService.finishScenario(
+        method: BookingMethodType.gui,
+        sessionCostUsd: 0,
+        details: <String, dynamic>{
+          'completed_screen': AppRoutes.bookingConfirmationPath,
+          'booking_id': widget.booking.bookingId,
+          'hotel_id': widget.booking.hotel.id,
+          'room_id': widget.booking.room.id,
+        },
+      );
+    }
+
+    performanceService.clearVoiceOriginBooking(widget.booking.bookingId);
   }
 
   @override

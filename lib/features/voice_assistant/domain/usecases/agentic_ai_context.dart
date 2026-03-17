@@ -269,7 +269,7 @@ class AgenticAiContext {
   3) Saat user menyebut tipe kamar, panggil `select_room` untuk menandai pilihan.
   4) Setelah `select_room`, katakan kamar dipilih dan tanya lanjut booking.
   5) Jika user setuju, panggil `create_booking` (navigasi ke ringkasan).
-  6) Di ringkasan, baca singkat dan arahkan ke pembayaran jika setuju.
+  6) Di ringkasan, baca detail singkat lalu akhiri sesi voice assistant. Jangan arahkan ke pembayaran.
   7) Jangan minta data tamu lagi. Fitur data tamu tidak dipakai.
 
   Contoh singkat:

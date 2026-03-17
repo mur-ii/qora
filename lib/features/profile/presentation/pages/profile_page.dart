@@ -79,6 +79,8 @@ class _ProfilePageContent extends StatelessWidget {
                     onTapChangePassword: () =>
                         _onMenuTap(context, 'Ganti Password'),
                     onTapReward: () => _onMenuTap(context, 'Reward'),
+                    onTapPerformance: () =>
+                        context.push(AppRoutes.performanceSummaryPath),
                     onTapContact: () => _onMenuTap(context, 'Hubungi Kami'),
                   ),
                   const SizedBox(height: 16),
@@ -222,12 +224,14 @@ class _CompactMenuSection extends StatelessWidget {
     required this.onTapProfile,
     required this.onTapChangePassword,
     required this.onTapReward,
+    required this.onTapPerformance,
     required this.onTapContact,
   });
 
   final VoidCallback onTapProfile;
   final VoidCallback onTapChangePassword;
   final VoidCallback onTapReward;
+  final VoidCallback onTapPerformance;
   final VoidCallback onTapContact;
 
   @override
@@ -254,6 +258,11 @@ class _CompactMenuSection extends StatelessWidget {
             icon: Icons.workspace_premium_outlined,
             title: 'Reward',
             onTap: onTapReward,
+          ),
+          _MenuTile(
+            icon: Icons.bar_chart_outlined,
+            title: 'Performance',
+            onTap: onTapPerformance,
           ),
           _MenuTile(
             icon: Icons.support_agent,

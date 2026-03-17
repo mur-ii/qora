@@ -73,22 +73,36 @@ class VoiceSessionUseCase {
     );
   }
 
-  Future<void> stop() async {
-    if (_isStopping) return;
+  Future<VoiceSessionSummary> stop() async {
+    if (_isStopping) {
+      return VoiceSessionSummary.empty(
+        sessionId: logger.sessionId,
+        model: logger.modelName,
+      );
+    }
     _isStopping = true;
+    updateStatus(VoiceAssistantStatus.disconnecting);
+
+    VoiceSessionSummary summary = VoiceSessionSummary.empty(
+      sessionId: logger.sessionId,
+      model: logger.modelName,
+    );
 
     try {
       await _disconnect();
-      await logger.logSessionSummary();
+      summary = await logger.logSessionSummary();
+      return summary;
     } finally {
       resetMemory();
+      updateStatus(VoiceAssistantStatus.idle);
       _isStopping = false;
     }
   }
 
-  Future<void> endSessionWithMessage(String message) async {
-    if (_isClosingSession || !isConnected) return;
+  Future<VoiceSessionSummary?> endSessionWithMessage(String message) async {
+    if (_isClosingSession || !isConnected) return null;
     _isClosingSession = true;
+    VoiceSessionSummary? summary;
 
     try {
       _responseDoneCompleter = Completer<void>();
@@ -98,9 +112,11 @@ class VoiceSessionUseCase {
       // Ignore and continue to disconnect.
     } finally {
       _responseDoneCompleter = null;
-      await stop();
+      summary = await stop();
       _isClosingSession = false;
     }
+
+    return summary;
   }
 
   void handleAgentEvent(Map<String, dynamic> event) {

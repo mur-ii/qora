@@ -7,6 +7,151 @@ import 'calculate_session_cost.dart';
 import 'log_conversation.dart';
 import 'token_estimator.dart';
 
+class VoiceSessionTurnSummary {
+  const VoiceSessionTurnSummary({
+    required this.turn,
+    required this.timestamp,
+    required this.userMessage,
+    required this.assistantMessage,
+    required this.inputTokens,
+    required this.outputTokens,
+    required this.cachedTokens,
+    required this.totalTokens,
+    required this.inputCostUsd,
+    required this.outputCostUsd,
+    required this.cachedCostUsd,
+    required this.totalCostUsd,
+  });
+
+  final int turn;
+  final DateTime timestamp;
+  final String userMessage;
+  final String assistantMessage;
+  final int inputTokens;
+  final int outputTokens;
+  final int cachedTokens;
+  final int totalTokens;
+  final double inputCostUsd;
+  final double outputCostUsd;
+  final double cachedCostUsd;
+  final double totalCostUsd;
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'turn': turn,
+      'timestamp': timestamp.toUtc().toIso8601String(),
+      'user_message': userMessage,
+      'assistant_message': assistantMessage,
+      'input_tokens': inputTokens,
+      'output_tokens': outputTokens,
+      'cached_tokens': cachedTokens,
+      'total_tokens': totalTokens,
+      'input_cost_usd': inputCostUsd,
+      'output_cost_usd': outputCostUsd,
+      'cached_cost_usd': cachedCostUsd,
+      'total_cost_usd': totalCostUsd,
+    };
+  }
+}
+
+class VoiceSessionSummary {
+  const VoiceSessionSummary({
+    required this.sessionId,
+    required this.model,
+    required this.userConversation,
+    required this.assistantConversation,
+    required this.turns,
+    required this.totalTurns,
+    required this.inputTokens,
+    required this.outputTokens,
+    required this.cachedTokens,
+    required this.totalTokens,
+    required this.inputCostUsd,
+    required this.outputCostUsd,
+    required this.cachedCostUsd,
+    required this.totalCostUsd,
+  });
+
+  const VoiceSessionSummary.empty({
+    required this.sessionId,
+    required this.model,
+  }) : userConversation = const <String>[],
+       assistantConversation = const <String>[],
+       turns = const <VoiceSessionTurnSummary>[],
+       totalTurns = 0,
+       inputTokens = 0,
+       outputTokens = 0,
+       cachedTokens = 0,
+       totalTokens = 0,
+       inputCostUsd = 0,
+       outputCostUsd = 0,
+       cachedCostUsd = 0,
+       totalCostUsd = 0;
+
+  final String sessionId;
+  final String model;
+  final List<String> userConversation;
+  final List<String> assistantConversation;
+  final List<VoiceSessionTurnSummary> turns;
+  final int totalTurns;
+  final int inputTokens;
+  final int outputTokens;
+  final int cachedTokens;
+  final int totalTokens;
+  final double inputCostUsd;
+  final double outputCostUsd;
+  final double cachedCostUsd;
+  final double totalCostUsd;
+
+  Map<String, dynamic> toPerformanceDetails() {
+    final transcript = <Map<String, dynamic>>[];
+
+    for (final turn in turns) {
+      if (turn.userMessage.trim().isNotEmpty) {
+        transcript.add(<String, dynamic>{
+          'index': transcript.length + 1,
+          'speaker': 'user',
+          'message': turn.userMessage,
+          'timestamp': turn.timestamp.toUtc().toIso8601String(),
+          'turn': turn.turn,
+        });
+      }
+
+      if (turn.assistantMessage.trim().isNotEmpty) {
+        transcript.add(<String, dynamic>{
+          'index': transcript.length + 1,
+          'speaker': 'assistant',
+          'message': turn.assistantMessage,
+          'timestamp': turn.timestamp.toUtc().toIso8601String(),
+          'turn': turn.turn,
+        });
+      }
+    }
+
+    return <String, dynamic>{
+      'session_id': sessionId,
+      'model': model,
+      'conversation_user': userConversation,
+      'conversation_assistant': assistantConversation,
+      'conversation_transcript': transcript,
+      'turns_detail': turns.map((turn) => turn.toMap()).toList(growable: false),
+      'total_turns': totalTurns,
+      'token_usage': <String, dynamic>{
+        'input_tokens': inputTokens,
+        'output_tokens': outputTokens,
+        'cached_tokens': cachedTokens,
+        'total_tokens': totalTokens,
+      },
+      'cost_calculation': <String, dynamic>{
+        'input_cost_usd': inputCostUsd,
+        'output_cost_usd': outputCostUsd,
+        'cached_cost_usd': cachedCostUsd,
+        'total_cost_usd': totalCostUsd,
+      },
+    };
+  }
+}
+
 class VoiceTokenUsage {
   final int inputTokens;
   final int cachedTokens;
@@ -109,35 +254,98 @@ class VoiceConversationLogger {
     });
   }
 
-  Future<void> logSessionSummary() async {
-    final logs = await getConversationLogsBySession(_sessionId);
-    final totalInputTokens = logs.fold<int>(
-      0,
-      (sum, log) => sum + log.inputTokens,
-    );
-    final totalOutputTokens = logs.fold<int>(
-      0,
-      (sum, log) => sum + log.outputTokens,
-    );
-    final totalCachedTokens = logs.fold<int>(
-      0,
-      (sum, log) => sum + log.cachedTokens,
-    );
-    final totalTokens = logs.fold<int>(0, (sum, log) => sum + log.totalTokens);
-    final totalCost = await calculateSessionCost(_sessionId);
+  Future<VoiceSessionSummary> buildSessionSummary({String? sessionId}) async {
+    final resolvedSessionId = _normalizeSessionId(sessionId ?? _sessionId);
+    final logs = await getConversationLogsBySession(resolvedSessionId);
 
-    final summary = StringBuffer()
-      ..writeln('[Session Summary]')
-      ..writeln('Session: $_sessionId')
-      ..writeln('Model: $_modelName')
-      ..writeln('Total Turns: ${logs.length}')
-      ..writeln('Total Input Tokens: $totalInputTokens')
-      ..writeln('Total Output Tokens: $totalOutputTokens')
-      ..writeln('Total Cached Tokens: $totalCachedTokens')
-      ..writeln('Total Tokens: $totalTokens')
-      ..writeln('Total Cost (USD): ${totalCost.toStringAsFixed(6)}');
+    if (logs.isEmpty) {
+      return VoiceSessionSummary.empty(
+        sessionId: resolvedSessionId,
+        model: _modelName,
+      );
+    }
 
-    AppLogger.info('VoiceSession', summary.toString());
+    final userConversation = <String>[];
+    final assistantConversation = <String>[];
+    final turnDetails = <VoiceSessionTurnSummary>[];
+
+    var totalInputTokens = 0;
+    var totalOutputTokens = 0;
+    var totalCachedTokens = 0;
+    var totalTokens = 0;
+    var totalInputCost = 0.0;
+    var totalOutputCost = 0.0;
+    var totalCachedCost = 0.0;
+
+    for (var i = 0; i < logs.length; i++) {
+      final log = logs[i];
+      final normalizedUser = _normalizeText(log.userMessage);
+      final normalizedAssistant = _normalizeText(log.assistantMessage);
+
+      if (normalizedUser.isNotEmpty) {
+        userConversation.add(normalizedUser);
+      }
+
+      if (normalizedAssistant.isNotEmpty) {
+        assistantConversation.add(normalizedAssistant);
+      }
+
+      final inputCost = _calculateInputCost(log.inputTokens);
+      final outputCost = _calculateOutputCost(log.outputTokens);
+      final cachedCost = _calculateCachedCost(log.cachedTokens);
+      final totalCost = inputCost + outputCost + cachedCost;
+
+      totalInputTokens += log.inputTokens;
+      totalOutputTokens += log.outputTokens;
+      totalCachedTokens += log.cachedTokens;
+      totalTokens += log.totalTokens;
+      totalInputCost += inputCost;
+      totalOutputCost += outputCost;
+      totalCachedCost += cachedCost;
+
+      turnDetails.add(
+        VoiceSessionTurnSummary(
+          turn: i + 1,
+          timestamp: log.timestamp.toUtc(),
+          userMessage: normalizedUser,
+          assistantMessage: normalizedAssistant,
+          inputTokens: log.inputTokens,
+          outputTokens: log.outputTokens,
+          cachedTokens: log.cachedTokens,
+          totalTokens: log.totalTokens,
+          inputCostUsd: inputCost,
+          outputCostUsd: outputCost,
+          cachedCostUsd: cachedCost,
+          totalCostUsd: totalCost,
+        ),
+      );
+    }
+
+    final persistedTotalCost = await calculateSessionCost(resolvedSessionId);
+    final totalTurns = userConversation.length + assistantConversation.length;
+
+    return VoiceSessionSummary(
+      sessionId: resolvedSessionId,
+      model: _modelName,
+      userConversation: userConversation,
+      assistantConversation: assistantConversation,
+      turns: turnDetails,
+      totalTurns: totalTurns,
+      inputTokens: totalInputTokens,
+      outputTokens: totalOutputTokens,
+      cachedTokens: totalCachedTokens,
+      totalTokens: totalTokens,
+      inputCostUsd: totalInputCost,
+      outputCostUsd: totalOutputCost,
+      cachedCostUsd: totalCachedCost,
+      totalCostUsd: persistedTotalCost,
+    );
+  }
+
+  Future<VoiceSessionSummary> logSessionSummary({String? sessionId}) async {
+    final summary = await buildSessionSummary(sessionId: sessionId);
+    AppLogger.info('VoiceSession', _formatSessionSummaryLog(summary));
+    return summary;
   }
 
   void logRealtimeEvent(Map<String, dynamic> event) {
@@ -152,11 +360,6 @@ class VoiceConversationLogger {
           if (transcript != null && transcript.isNotEmpty) {
             _pendingUserTranscript = transcript;
             _pendingUserTimestamp = DateTime.now().toUtc();
-            _logConversationBySentence(
-              speaker: 'User',
-              eventType: type,
-              text: transcript,
-            );
             _assistantBuffer = null;
             _pendingAssistantTranscript = null;
             _pendingUsage = null;
@@ -182,11 +385,6 @@ class VoiceConversationLogger {
               : (bufferText ?? '');
           if (resolvedTranscript.isNotEmpty) {
             _pendingAssistantTranscript = resolvedTranscript;
-            _logConversationBySentence(
-              speaker: 'Assistant',
-              eventType: type,
-              text: resolvedTranscript,
-            );
           }
           logLifecycle('Assistant response received');
           unawaited(_tryFinalizeTurn());
@@ -194,9 +392,7 @@ class VoiceConversationLogger {
 
         case 'response.done':
           _pendingUsage = _parseUsage(event);
-          if (_pendingUsage != null) {
-            _logRealtimeUsageBreakdown(_pendingUsage!);
-          } else {
+          if (_pendingUsage == null) {
             AppLogger.warn(
               'VoiceToken',
               '[OpenAI Usage] response.done received without usage payload',
@@ -238,16 +434,6 @@ class VoiceConversationLogger {
     final totalTokens = (usage == null || usage.totalTokens <= 0)
         ? fallbackTotal
         : usage.totalTokens;
-
-    _logTurnTokenSource(
-      usedRealtimeUsage: usage != null,
-      estimatedInput: estimatedInput,
-      estimatedOutput: estimatedOutput,
-      inputTokens: inputTokens,
-      outputTokens: outputTokens,
-      cachedTokens: cachedTokens,
-      totalTokens: totalTokens,
-    );
 
     try {
       await logConversation(
@@ -368,137 +554,8 @@ class VoiceConversationLogger {
     return tokens * (_outputCostPerM / _oneMillion);
   }
 
-  void _logRealtimeUsageBreakdown(VoiceTokenUsage usage) {
-    final inputCost = _calculateInputCost(usage.inputTokens);
-    final cachedCost = _calculateCachedCost(usage.cachedTokens);
-    final outputCost = _calculateOutputCost(usage.outputTokens);
-    final totalCost = inputCost + cachedCost + outputCost;
-
-    final message = StringBuffer()
-      ..writeln('[OpenAI Usage]')
-      ..writeln('Session: $_sessionId')
-      ..writeln('Model: $_modelName')
-      ..writeln('Response ID: ${usage.responseId ?? '-'}')
-      ..writeln('Input Tokens: ${usage.inputTokens}')
-      ..writeln('Output Tokens: ${usage.outputTokens}')
-      ..writeln('Cached Tokens: ${usage.cachedTokens}')
-      ..writeln('Total Tokens: ${usage.totalTokens}')
-      ..writeln(
-        'Input Details: ${_formatUsageDetails(usage.inputTokenDetails)}',
-      )
-      ..writeln(
-        'Output Details: ${_formatUsageDetails(usage.outputTokenDetails)}',
-      )
-      ..writeln('Cost Input (USD): ${inputCost.toStringAsFixed(6)}')
-      ..writeln('Cost Cached (USD): ${cachedCost.toStringAsFixed(6)}')
-      ..writeln('Cost Output (USD): ${outputCost.toStringAsFixed(6)}')
-      ..writeln('Cost Total (USD): ${totalCost.toStringAsFixed(6)}');
-
-    AppLogger.info('VoiceToken', message.toString());
-  }
-
-  void _logTurnTokenSource({
-    required bool usedRealtimeUsage,
-    required int estimatedInput,
-    required int estimatedOutput,
-    required int inputTokens,
-    required int outputTokens,
-    required int cachedTokens,
-    required int totalTokens,
-  }) {
-    final source = usedRealtimeUsage ? 'openai_usage' : 'estimation_fallback';
-    final message = StringBuffer()
-      ..writeln('[Turn Token Source]')
-      ..writeln('Session: $_sessionId')
-      ..writeln('Model: $_modelName')
-      ..writeln('Source: $source')
-      ..writeln('Estimated Input Tokens: $estimatedInput')
-      ..writeln('Estimated Output Tokens: $estimatedOutput')
-      ..writeln('Resolved Input Tokens: $inputTokens')
-      ..writeln('Resolved Output Tokens: $outputTokens')
-      ..writeln('Resolved Cached Tokens: $cachedTokens')
-      ..writeln('Resolved Total Tokens: $totalTokens');
-
-    AppLogger.info('VoiceToken', message.toString());
-  }
-
-  void _logConversationBySentence({
-    required String speaker,
-    required String eventType,
-    required String text,
-  }) {
-    final normalized = _normalizeText(text);
-    if (normalized.isEmpty) return;
-
-    final sentences = _splitSentences(normalized);
-    AppLogger.info(
-      'VoiceConversation',
-      '[Conversation][$speaker] event=$eventType session=$_sessionId model=$_modelName sentence_count=${sentences.length}',
-    );
-
-    for (var i = 0; i < sentences.length; i++) {
-      AppLogger.info(
-        'VoiceConversation',
-        '[Conversation][$speaker][Sentence ${i + 1}] ${sentences[i]}',
-      );
-    }
-  }
-
   String _normalizeText(String value) {
     return value.replaceAll(RegExp(r'\s+'), ' ').trim();
-  }
-
-  List<String> _splitSentences(String text) {
-    final normalized = _normalizeText(text);
-    if (normalized.isEmpty) {
-      return const <String>[];
-    }
-
-    final matches = RegExp(r'[^.!?]+[.!?]?').allMatches(normalized);
-    final sentences = <String>[];
-    for (final match in matches) {
-      final sentence = _normalizeText(match.group(0) ?? '');
-      if (sentence.isNotEmpty) {
-        sentences.add(sentence);
-      }
-    }
-
-    if (sentences.isEmpty) {
-      return <String>[normalized];
-    }
-
-    return sentences;
-  }
-
-  String _formatUsageDetails(Map<String, dynamic> details) {
-    if (details.isEmpty) {
-      return '-';
-    }
-
-    return details.entries
-        .map((entry) => '${entry.key}=${_detailValueToString(entry.value)}')
-        .join(', ');
-  }
-
-  String _detailValueToString(dynamic value) {
-    if (value == null) {
-      return 'null';
-    }
-    if (value is String) {
-      return value;
-    }
-    if (value is num || value is bool) {
-      return value.toString();
-    }
-    if (value is List) {
-      return value.join('|');
-    }
-    if (value is Map) {
-      return value.entries
-          .map((entry) => '${entry.key}:${_detailValueToString(entry.value)}')
-          .join(';');
-    }
-    return value.toString();
   }
 
   Future<void> logConversation({
@@ -532,33 +589,6 @@ class VoiceConversationLogger {
     );
 
     await _logConversationUseCase(entry);
-
-    final runningSessionCost = await calculateSessionCost(sessionId);
-    final inputCost = _calculateInputCost(entry.inputTokens);
-    final cachedCost = _calculateCachedCost(entry.cachedTokens);
-    final outputCost = _calculateOutputCost(entry.outputTokens);
-
-    final message = StringBuffer()
-      ..writeln('[Conversation Logged]')
-      ..writeln('Session: ${entry.sessionId}')
-      ..writeln('Timestamp: ${entry.timestamp.toIso8601String()}')
-      ..writeln('User Message: ${_normalizeText(entry.userMessage)}')
-      ..writeln('Assistant Message: ${_normalizeText(entry.assistantMessage)}')
-      ..writeln('Input Tokens: ${entry.inputTokens}')
-      ..writeln('Output Tokens: ${entry.outputTokens}')
-      ..writeln('Cached Tokens: ${entry.cachedTokens}')
-      ..writeln('Total Tokens: ${entry.totalTokens}')
-      ..writeln('Input Cost (USD): ${inputCost.toStringAsFixed(6)}')
-      ..writeln('Cached Cost (USD): ${cachedCost.toStringAsFixed(6)}')
-      ..writeln('Output Cost (USD): ${outputCost.toStringAsFixed(6)}')
-      ..writeln(
-        'Estimated Cost (USD): ${entry.estimatedCostUsd.toStringAsFixed(6)}',
-      )
-      ..writeln(
-        'Session Running Cost (USD): ${runningSessionCost.toStringAsFixed(6)}',
-      );
-
-    AppLogger.info('VoiceConversation', message.toString());
   }
 
   void reset() {
@@ -584,5 +614,68 @@ class VoiceConversationLogger {
     final minute = now.minute.toString().padLeft(2, '0');
     final second = now.second.toString().padLeft(2, '0');
     return 'booking_$year$month${day}_$hour$minute$second';
+  }
+
+  String _formatSessionSummaryLog(VoiceSessionSummary summary) {
+    final buffer = StringBuffer()
+      ..writeln('VOICE SESSION SUMMARY')
+      ..writeln('Session ID: ${summary.sessionId}')
+      ..writeln('Model: ${summary.model}')
+      ..writeln('')
+      ..writeln('Percakapan User:');
+
+    if (summary.userConversation.isEmpty) {
+      buffer.writeln('- (tidak ada)');
+    } else {
+      for (var i = 0; i < summary.userConversation.length; i++) {
+        buffer.writeln('${i + 1}. User: ${summary.userConversation[i]}');
+      }
+    }
+
+    buffer
+      ..writeln('')
+      ..writeln('Percakapan Assistant:');
+
+    if (summary.assistantConversation.isEmpty) {
+      buffer.writeln('- (tidak ada)');
+    } else {
+      for (var i = 0; i < summary.assistantConversation.length; i++) {
+        buffer.writeln(
+          '${i + 1}. Assistant: ${summary.assistantConversation[i]}',
+        );
+      }
+    }
+
+    buffer
+      ..writeln('')
+      ..writeln('Total Turns: ${summary.totalTurns}')
+      ..writeln('')
+      ..writeln('Token Usage:')
+      ..writeln('Input Token: ${summary.inputTokens}')
+      ..writeln('Output Token: ${summary.outputTokens}')
+      ..writeln('Cached Token: ${summary.cachedTokens}')
+      ..writeln('Total Token: ${summary.totalTokens}')
+      ..writeln('')
+      ..writeln('Cost Calculation:')
+      ..writeln('Input Cost: \$${summary.inputCostUsd.toStringAsFixed(6)}')
+      ..writeln('Output Cost: \$${summary.outputCostUsd.toStringAsFixed(6)}')
+      ..writeln('Cache Cost: \$${summary.cachedCostUsd.toStringAsFixed(6)}')
+      ..writeln(
+        'Total Cost (1 Session): \$${summary.totalCostUsd.toStringAsFixed(6)}',
+      )
+      ..writeln('')
+      ..writeln('Per Turn Token Usage:');
+
+    if (summary.turns.isEmpty) {
+      buffer.writeln('- (tidak ada)');
+    } else {
+      for (final turn in summary.turns) {
+        buffer.writeln(
+          '${turn.turn}. input=${turn.inputTokens}, output=${turn.outputTokens}, cached=${turn.cachedTokens}, total=${turn.totalTokens}, cost=\$${turn.totalCostUsd.toStringAsFixed(6)}',
+        );
+      }
+    }
+
+    return buffer.toString();
   }
 }

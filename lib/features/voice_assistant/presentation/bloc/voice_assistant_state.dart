@@ -6,6 +6,8 @@ import '../../domain/entities/voice_assistant_status.dart';
 export '../../domain/entities/voice_assistant_status.dart';
 
 class VoiceAssistantState extends Equatable {
+  static const Object _unset = Object();
+
   final VoiceAssistantStatus status;
   final List<ConversationMessage> messages;
   final AgentStateEntity agentState;
@@ -34,11 +36,11 @@ class VoiceAssistantState extends Equatable {
     VoiceAssistantStatus? status,
     List<ConversationMessage>? messages,
     AgentStateEntity? agentState,
-    String? currentSessionId,
+    Object? currentSessionId = _unset,
     double? sessionEstimatedCostUsd,
     int? totalLoggedTurns,
     int? totalLoggedTokens,
-    String? error,
+    Object? error = _unset,
     bool? isProcessing,
     bool? isMuted,
   }) {
@@ -46,12 +48,14 @@ class VoiceAssistantState extends Equatable {
       status: status ?? this.status,
       messages: messages ?? this.messages,
       agentState: agentState ?? this.agentState,
-      currentSessionId: currentSessionId ?? this.currentSessionId,
+      currentSessionId: identical(currentSessionId, _unset)
+          ? this.currentSessionId
+          : currentSessionId as String?,
       sessionEstimatedCostUsd:
           sessionEstimatedCostUsd ?? this.sessionEstimatedCostUsd,
       totalLoggedTurns: totalLoggedTurns ?? this.totalLoggedTurns,
       totalLoggedTokens: totalLoggedTokens ?? this.totalLoggedTokens,
-      error: error,
+      error: identical(error, _unset) ? this.error : error as String?,
       isProcessing: isProcessing ?? this.isProcessing,
       isMuted: isMuted ?? this.isMuted,
     );

@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 
+import '../../../../core/services/performance_runtime_metrics_service.dart';
 import '../../../../core/utils/app_logger.dart';
 import '../../domain/entities/connection_state_entity.dart';
 import '../../domain/entities/function_call_entity.dart';
@@ -14,6 +15,12 @@ class WebRTCService {
   MediaStream? _localStream;
 
   final VoiceConversationLogger? _conversationLogger;
+  final PerformanceRuntimeMetricsService _runtimeMetrics =
+      PerformanceRuntimeMetricsService.instance;
+
+  Timer? _statsPollingTimer;
+  int _lastWebRtcBytesSent = 0;
+  int _lastWebRtcBytesReceived = 0;
 
   ConnectionStateEntity _connectionState = ConnectionStateEntity.disconnected;
 
@@ -76,12 +83,15 @@ class WebRTCService {
         }
         switch (state) {
           case RTCPeerConnectionState.RTCPeerConnectionStateConnected:
+            _startStatsPolling();
             _updateConnectionState(ConnectionStateEntity.connected);
             break;
           case RTCPeerConnectionState.RTCPeerConnectionStateFailed:
+            _stopStatsPolling();
             _updateConnectionState(ConnectionStateEntity.failed);
             break;
           case RTCPeerConnectionState.RTCPeerConnectionStateDisconnected:
+            _stopStatsPolling();
             _updateConnectionState(ConnectionStateEntity.disconnected);
             break;
           default:
@@ -372,6 +382,8 @@ class WebRTCService {
   /// Disconnect and cleanup
   Future<void> disconnect() async {
     try {
+      _stopStatsPolling();
+
       _onConnectionStateChange = null;
       _onTranscript = null;
       _onFunctionCall = null;
@@ -410,5 +422,140 @@ class WebRTCService {
         stackTrace: stackTrace,
       );
     }
+  }
+
+  void _startStatsPolling() {
+    if (_statsPollingTimer != null) {
+      return;
+    }
+
+    _lastWebRtcBytesSent = 0;
+    _lastWebRtcBytesReceived = 0;
+
+    _statsPollingTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      unawaited(_collectWebRtcNetworkStats());
+    });
+  }
+
+  void _stopStatsPolling() {
+    _statsPollingTimer?.cancel();
+    _statsPollingTimer = null;
+    _lastWebRtcBytesSent = 0;
+    _lastWebRtcBytesReceived = 0;
+  }
+
+  Future<void> _collectWebRtcNetworkStats() async {
+    final peerConnection = _peerConnection;
+    if (peerConnection == null) {
+      return;
+    }
+
+    try {
+      final reports = await peerConnection.getStats();
+
+      var transportSent = 0;
+      var transportReceived = 0;
+      var hasTransport = false;
+      var outboundSent = 0;
+      var inboundReceived = 0;
+
+      for (final report in reports) {
+        final type = _readReportType(report).toLowerCase();
+        final values = _readReportValues(report);
+
+        final bytesSent = _toInt(values['bytesSent'] ?? values['bytes_sent']);
+        final bytesReceived = _toInt(
+          values['bytesReceived'] ?? values['bytes_received'],
+        );
+
+        if (type == 'transport' || type == 'candidate-pair') {
+          hasTransport = true;
+          transportSent += bytesSent;
+          transportReceived += bytesReceived;
+          continue;
+        }
+
+        if (type.contains('outbound-rtp')) {
+          outboundSent += bytesSent;
+        }
+
+        if (type.contains('inbound-rtp')) {
+          inboundReceived += bytesReceived;
+        }
+      }
+
+      final totalSent = hasTransport ? transportSent : outboundSent;
+      final totalReceived = hasTransport ? transportReceived : inboundReceived;
+
+      if (totalSent <= 0 && totalReceived <= 0) {
+        return;
+      }
+
+      final deltaSent = totalSent - _lastWebRtcBytesSent;
+      final deltaReceived = totalReceived - _lastWebRtcBytesReceived;
+
+      if (deltaSent > 0 || deltaReceived > 0) {
+        _runtimeMetrics.addWebRtcTraffic(
+          txBytes: deltaSent > 0 ? deltaSent : 0,
+          rxBytes: deltaReceived > 0 ? deltaReceived : 0,
+        );
+      }
+
+      if (totalSent > _lastWebRtcBytesSent) {
+        _lastWebRtcBytesSent = totalSent;
+      }
+
+      if (totalReceived > _lastWebRtcBytesReceived) {
+        _lastWebRtcBytesReceived = totalReceived;
+      }
+    } catch (_) {
+      // Ignore stats polling errors to keep media session stable.
+    }
+  }
+
+  String _readReportType(dynamic report) {
+    try {
+      return report.type?.toString() ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  Map<String, dynamic> _readReportValues(dynamic report) {
+    dynamic rawValues;
+
+    try {
+      rawValues = report.values;
+    } catch (_) {
+      rawValues = const <String, dynamic>{};
+    }
+
+    if (rawValues is Map<String, dynamic>) {
+      return rawValues;
+    }
+
+    if (rawValues is Map) {
+      return Map<String, dynamic>.from(rawValues);
+    }
+
+    final result = <String, dynamic>{};
+    if (rawValues is List) {
+      for (final entry in rawValues) {
+        if (entry is Map) {
+          final key = entry['name']?.toString();
+          if (key == null || key.isEmpty) continue;
+          result[key] = entry['value'];
+        }
+      }
+    }
+
+    return result;
+  }
+
+  int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
   }
 }

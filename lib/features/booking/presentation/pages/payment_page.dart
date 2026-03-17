@@ -6,13 +6,13 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/di/booking_injection.dart';
-import '../../../../core/di/voice_assistant_injection.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/services/performance_tracking_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_toast.dart';
+import '../../../performance/domain/entities/performance_scenario.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
-import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../bloc/booking_bloc.dart';
 import '../bloc/booking_event.dart';
@@ -72,41 +72,35 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
   ];
 
   String _selectedPaymentMethod = _paymentMethods.first.key;
-  bool _hasVoiceGuidedOnPaymentPage = false;
+  bool _guiTrackingStarted = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _guideAndCloseVoiceAssistant();
+      unawaited(_startGuiPerformanceScenario());
     });
   }
 
-  void _guideAndCloseVoiceAssistant() {
-    if (_hasVoiceGuidedOnPaymentPage) {
+  Future<void> _startGuiPerformanceScenario() async {
+    if (_guiTrackingStarted) {
       return;
     }
 
     final voiceState = context.read<VoiceAssistantBloc>().state;
-    if (!voiceState.isActive) {
+    final isVoiceOriginBooking = PerformanceTrackingService.instance
+        .isVoiceOriginBooking(widget.booking.bookingId);
+    if (voiceState.isActive || isVoiceOriginBooking) {
       return;
     }
 
-    final controller = VoiceAssistantInjection.tryGetVoiceAssistantController();
-    if (controller == null || !controller.isConnected) {
-      return;
-    }
-
-    _hasVoiceGuidedOnPaymentPage = true;
-
-    const closingPrompt =
-        'Anda sudah berada di halaman Pembayaran. '
-        'Silakan klik salah satu metode pembayaran yang tersedia, lalu klik tombol Bayar untuk melanjutkan. '
-        'Saya hanya bisa membantu sampai halaman pembayaran ini karena tidak diizinkan mengakses payment gateway. '
-        'Sesi voice assistant akan saya akhiri sekarang.';
-
-    unawaited(controller.endSessionWithMessage(closingPrompt));
+    _guiTrackingStarted = true;
+    await PerformanceTrackingService.instance.startScenario(
+      method: BookingMethodType.gui,
+      scenarioName: 'GUI booking flow',
+      details: <String, dynamic>{'entry_screen': AppRoutes.bookingPaymentPath},
+    );
   }
 
   void _processPayment() {
@@ -171,15 +165,6 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
                   AppRoutes.bookingConfirmationPath,
                   extra: state.booking,
                 );
-              }
-            },
-          ),
-          BlocListener<VoiceAssistantBloc, VoiceAssistantState>(
-            listenWhen: (previous, current) =>
-                previous.status != current.status,
-            listener: (context, state) {
-              if (state.isActive) {
-                _guideAndCloseVoiceAssistant();
               }
             },
           ),

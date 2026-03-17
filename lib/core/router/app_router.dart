@@ -9,6 +9,7 @@ import '../../features/booking/presentation/pages/payment_page.dart';
 import '../../features/hotel_detail/presentation/pages/hotel_detail_page.dart';
 import '../../features/hotel_list/presentation/pages/hotel_list_page.dart';
 import '../../features/notifications/presentation/pages/notification_page.dart';
+import '../../features/performance/presentation/pages/performance_summary_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/search/presentation/pages/search_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
@@ -155,6 +156,11 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.profilePath,
       name: AppRoutes.profileName,
       builder: (context, state) => const ProfilePage(),
+    ),
+    GoRoute(
+      path: AppRoutes.performanceSummaryPath,
+      name: AppRoutes.performanceSummaryName,
+      builder: (context, state) => const PerformanceSummaryPage(),
     ),
   ],
   errorBuilder: (context, state) =>

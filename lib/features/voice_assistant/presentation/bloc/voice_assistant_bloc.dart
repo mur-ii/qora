@@ -3,10 +3,13 @@ import 'dart:convert';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/services/performance_tracking_service.dart';
 import '../../../../core/utils/app_logger.dart';
+import '../../../performance/domain/entities/performance_scenario.dart';
 import '../../domain/entities/agent_state_entity.dart';
 import '../../domain/entities/function_call_entity.dart';
 import '../../domain/usecases/agentic_ai_usecase.dart';
+import '../../domain/usecases/voice_conversation_logger.dart';
 import '../../domain/usecases/voice_session_usecase.dart';
 import 'conversation_bloc.dart';
 import 'conversation_event.dart';
@@ -61,10 +64,17 @@ class VoiceAssistantBloc
         0,
         (sum, log) => sum + log.totalTokens,
       );
+      final totalTurns = convState.logs.fold<int>(
+        0,
+        (sum, log) =>
+            sum +
+            (log.userMessage.trim().isNotEmpty ? 1 : 0) +
+            (log.assistantMessage.trim().isNotEmpty ? 1 : 0),
+      );
       add(
         ConversationMetricsUpdated(
           sessionCostUsd: convState.sessionCostUsd,
-          totalLoggedTurns: convState.logs.length,
+          totalLoggedTurns: totalTurns,
           totalLoggedTokens: totalTokens,
         ),
       );
@@ -78,6 +88,7 @@ class VoiceAssistantBloc
     on<AgentEventReceived>(_onAgentEventReceived);
     on<ConnectionStateChanged>(_onConnectionStateChanged);
     on<RequestAssistantResponse>(_onRequestAssistantResponse);
+    on<CompleteVoiceSessionWithMessage>(_onCompleteVoiceSessionWithMessage);
     on<ConversationMetricsUpdated>(_onConversationMetricsUpdated);
   }
 
@@ -92,6 +103,16 @@ class VoiceAssistantBloc
       }
 
       final sessionId = _buildSessionId();
+
+      await PerformanceTrackingService.instance.startScenario(
+        method: BookingMethodType.vui,
+        scenarioName: 'VUI booking flow',
+        scenarioId: sessionId,
+        details: <String, dynamic>{
+          'session_id': sessionId,
+          'entry': 'voice_assistant_start',
+        },
+      );
 
       emit(
         state.copyWith(
@@ -165,6 +186,11 @@ class VoiceAssistantBloc
         error: e,
         stackTrace: stackTrace,
       );
+      await PerformanceTrackingService.instance.finishScenario(
+        method: BookingMethodType.vui,
+        status: 'failed',
+        details: <String, dynamic>{'error': _formatError(e), 'stage': 'start'},
+      );
       emit(
         state.copyWith(
           status: VoiceAssistantStatus.idle,
@@ -179,6 +205,11 @@ class VoiceAssistantBloc
     StopVoiceAssistant event,
     Emitter<VoiceAssistantState> emit,
   ) async {
+    final sessionId = state.currentSessionId;
+    final fallbackTurns = state.totalLoggedTurns;
+    final fallbackTokens = state.totalLoggedTokens;
+    final fallbackCost = state.sessionEstimatedCostUsd;
+
     try {
       if (state.status == VoiceAssistantStatus.idle ||
           state.status == VoiceAssistantStatus.disconnecting) {
@@ -190,22 +221,33 @@ class VoiceAssistantBloc
       _functionArgBuffers.clear();
       _functionArgNames.clear();
 
-      await voiceSessionUseCase.stop();
+      final summary = await voiceSessionUseCase.stop();
 
-      _refreshConversationMetrics(state.currentSessionId);
+      _refreshConversationMetrics(sessionId);
+
+      await _finishVuiPerformanceScenario(
+        sessionId: sessionId,
+        exitReason: 'voice_assistant_stop',
+        summary: summary,
+        fallbackTurns: fallbackTurns,
+        fallbackTokens: fallbackTokens,
+        fallbackCost: fallbackCost,
+      );
 
       emit(
         state.copyWith(
           status: VoiceAssistantStatus.idle,
           messages: const [],
           agentState: const AgentStateEntity(),
+          currentSessionId: null,
+          sessionEstimatedCostUsd: 0,
+          totalLoggedTurns: 0,
+          totalLoggedTokens: 0,
           isProcessing: false,
           isMuted: false,
           error: null,
         ),
       );
-
-      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.idle);
 
       AppLogger.info('VoiceAssistant', 'Voice assistant stopped');
     } catch (e, stackTrace) {
@@ -215,10 +257,96 @@ class VoiceAssistantBloc
         error: e,
         stackTrace: stackTrace,
       );
+      await PerformanceTrackingService.instance.finishScenario(
+        method: BookingMethodType.vui,
+        status: 'failed',
+        details: <String, dynamic>{'error': _formatError(e), 'stage': 'stop'},
+      );
       emit(
         state.copyWith(
           status: VoiceAssistantStatus.idle,
+          currentSessionId: null,
           error: 'Failed to stop: ${_formatError(e)}',
+        ),
+      );
+      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.idle);
+    }
+  }
+
+  Future<void> _onCompleteVoiceSessionWithMessage(
+    CompleteVoiceSessionWithMessage event,
+    Emitter<VoiceAssistantState> emit,
+  ) async {
+    final sessionId = state.currentSessionId;
+    final fallbackTurns = state.totalLoggedTurns;
+    final fallbackTokens = state.totalLoggedTokens;
+    final fallbackCost = state.sessionEstimatedCostUsd;
+
+    try {
+      if (state.status == VoiceAssistantStatus.idle ||
+          state.status == VoiceAssistantStatus.disconnecting) {
+        return;
+      }
+
+      emit(
+        state.copyWith(status: VoiceAssistantStatus.disconnecting, error: null),
+      );
+
+      _functionArgBuffers.clear();
+      _functionArgNames.clear();
+
+      final summary = await voiceSessionUseCase.endSessionWithMessage(
+        event.message,
+      );
+
+      _refreshConversationMetrics(sessionId);
+
+      await _finishVuiPerformanceScenario(
+        sessionId: sessionId,
+        exitReason: event.reason,
+        summary: summary,
+        fallbackTurns: fallbackTurns,
+        fallbackTokens: fallbackTokens,
+        fallbackCost: fallbackCost,
+      );
+
+      emit(
+        state.copyWith(
+          status: VoiceAssistantStatus.idle,
+          messages: const [],
+          agentState: const AgentStateEntity(),
+          currentSessionId: null,
+          sessionEstimatedCostUsd: 0,
+          totalLoggedTurns: 0,
+          totalLoggedTokens: 0,
+          isProcessing: false,
+          isMuted: false,
+          error: null,
+        ),
+      );
+
+      AppLogger.info('VoiceAssistant', 'Voice assistant completed and stopped');
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'VoiceAssistant',
+        'Error completing voice assistant session',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      await PerformanceTrackingService.instance.finishScenario(
+        method: BookingMethodType.vui,
+        scenarioId: sessionId,
+        status: 'failed',
+        details: <String, dynamic>{
+          'error': _formatError(e),
+          'stage': 'complete_session',
+        },
+      );
+      emit(
+        state.copyWith(
+          status: VoiceAssistantStatus.idle,
+          currentSessionId: null,
+          error: 'Failed to complete session: ${_formatError(e)}',
         ),
       );
       voiceSessionUseCase.updateStatus(VoiceAssistantStatus.idle);
@@ -299,22 +427,6 @@ class VoiceAssistantBloc
 
       // Send result back to OpenAI
       await voiceSessionUseCase.sendFunctionResult(result);
-
-      // Check if automatic disconnect is required (after booking confirmation)
-      final resultData = result.result;
-      if (resultData is Map<String, dynamic> &&
-          resultData['requires_disconnect'] == true) {
-        AppLogger.info(
-          'VoiceAssistant',
-          'Auto-disconnect scheduled after booking confirmation',
-        );
-        // Schedule disconnect after a short delay to allow AI to speak final message
-        Future.delayed(const Duration(seconds: 5), () {
-          if (!isClosed) {
-            add(const StopVoiceAssistant());
-          }
-        });
-      }
 
       // Update agent state
       emit(
@@ -525,6 +637,28 @@ class VoiceAssistantBloc
       LoadSessionConversationRequested(sessionId: sessionId),
     );
     conversationBloc.add(CalculateSessionCostRequested(sessionId: sessionId));
+  }
+
+  Future<void> _finishVuiPerformanceScenario({
+    required String? sessionId,
+    required String exitReason,
+    required int fallbackTurns,
+    required int fallbackTokens,
+    required double fallbackCost,
+    VoiceSessionSummary? summary,
+  }) async {
+    await PerformanceTrackingService.instance.finishScenario(
+      method: BookingMethodType.vui,
+      scenarioId: sessionId,
+      sessionCostUsd: summary?.totalCostUsd ?? fallbackCost,
+      totalTurns: summary?.totalTurns ?? fallbackTurns,
+      totalTokens: summary?.totalTokens ?? fallbackTokens,
+      details: <String, dynamic>{
+        'exit': exitReason,
+        'session_id': sessionId,
+        if (summary != null) 'voice_session': summary.toPerformanceDetails(),
+      },
+    );
   }
 
   String _buildSessionId() {
