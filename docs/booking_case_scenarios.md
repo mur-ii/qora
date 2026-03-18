@@ -8,6 +8,20 @@ Dokumen ini menyediakan skenario pengujian booking yang konsisten dengan paper p
 
 Dokumen ini dipakai untuk menghasilkan data komparatif GUI vs VUI yang lebih rapi dan dapat direplikasi.
 
+## 1.1 Ringkasan Cepat Jumlah Run
+Untuk setup praktis saat ini dengan 3 skenario dan 2 modalitas:
+1. Target 10 run per kombinasi skenario x modalitas.
+2. Jumlah kombinasi: 3 skenario x 2 modalitas = 6 kombinasi.
+3. Total minimal run valid: 10 x 6 = 60 run.
+
+Rekomendasi praktis agar aman terhadap run failed/rerun:
+1. Tambah buffer 10%: 60 x 1.10 = 66 run yang dijadwalkan.
+2. Target minimal completed tetap 60 run valid.
+
+Catatan untuk paper final:
+1. 30 run per kombinasi tetap lebih kuat untuk analisis inferensial.
+2. 10 run per kombinasi cocok untuk pilot dan validasi awal.
+
 ## 2. Konfigurasi Umum (Wajib Sama di Semua Run)
 1. Device: 1 perangkat Android fisik yang sama untuk satu batch.
 2. Build: Flutter profile mode.
@@ -20,10 +34,10 @@ Dokumen ini dipakai untuk menghasilkan data komparatif GUI vs VUI yang lebih rap
 Gunakan dua mode endpoint agar hasil mudah dianalisis:
 
 ### Mode A: Sesuai implementasi tracking saat ini
-1. GUI start: saat halaman pembayaran terbuka.
+1. GUI start: saat user menekan field lokasi di beranda (tap lokasi pada home search bar).
 2. GUI end: saat halaman konfirmasi booking terbuka.
 3. VUI start: saat voice assistant diaktifkan.
-4. VUI end: saat sesi voice ditutup otomatis/manual di tahap ringkasan.
+4. VUI end: saat halaman konfirmasi booking terbuka (finish tracking otomatis ketika halaman konfirmasi terbuka).
 
 ### Mode B: Endpoint setara (direkomendasikan untuk paper final)
 1. GUI start: saat user menekan aksi mulai pencarian hotel dari beranda.
@@ -32,6 +46,18 @@ Gunakan dua mode endpoint agar hasil mudah dianalisis:
 4. VUI end: saat halaman ringkasan booking terbuka.
 
 Catatan: Mode B memberi perbandingan yang lebih adil untuk GUI vs VUI.
+
+### 3.1 Detail Implementasi Endpoint di Project (Branch Saat Ini)
+Gunakan catatan ini agar eksekusi run konsisten dengan instrumentation yang aktif:
+1. GUI start dipicu ketika user tap field lokasi di beranda, bukan saat halaman pembayaran dibuka.
+2. GUI end difinalisasi otomatis saat halaman konfirmasi booking pertama kali terbuka.
+3. VUI start dipicu saat event StartVoiceAssistant dikirim (toggle di header beranda atau tombol start pada halaman voice assistant).
+4. Pada flow VUI, sesi voice dapat ditutup lebih awal di tahap ringkasan, tetapi tracking eksperimen tetap difinalisasi di halaman konfirmasi booking.
+5. Jika run berhenti sebelum halaman konfirmasi booking terbuka, tandai run sebagai failed untuk Mode A.
+
+### 3.2 Catatan Praktis Pemakaian Mode
+1. Untuk reproduksi metrik yang sesuai implementasi aplikasi saat ini, gunakan Mode A.
+2. Untuk analisis endpoint setara GUI vs VUI di paper final, gunakan Mode B dengan stopwatch/manual marker atau tambahkan instrumentation khusus Mode B.
 
 ## 4. Parameter Task Tetap (Task Contract)
 Gunakan parameter ini sebagai baseline di semua skenario, kecuali saat memang ada koreksi pada correction flow:
@@ -132,15 +158,33 @@ Mengukur biaya performa saat input awal tidak lengkap dan sistem harus klarifika
 3. Tidak ada deadlock percakapan.
 
 ## 8. Matriks Run yang Direkomendasikan
-Untuk paper final, gunakan minimal 30 run per modalitas per skenario:
-1. GUI ideal: 30 run.
-2. VUI ideal: 30 run.
-3. GUI correction: 30 run.
-4. VUI correction: 30 run.
-5. GUI ambiguous: 30 run.
-6. VUI ambiguous: 30 run.
+Untuk eksekusi praktis saat ini, gunakan 10 run per modalitas per skenario:
+1. GUI ideal: 10 run.
+2. VUI ideal: 10 run.
+3. GUI correction: 10 run.
+4. VUI correction: 10 run.
+5. GUI ambiguous: 10 run.
+6. VUI ambiguous: 10 run.
 
-Total minimum run: 180.
+Total minimum run: 60.
+
+### 8.1 Formula cepat
+1. Total run minimum = jumlah_skenario x jumlah_modalitas x run_per_kombinasi.
+2. Pada desain ini: 3 x 2 x 10 = 60.
+
+### 8.2 Target operasional yang disarankan
+1. Target scheduled run: 66 (buffer 10%).
+2. Target completed run: minimal 60.
+3. Jika completed belum 60, lanjutkan run sampai kuota valid terpenuhi.
+
+### 8.3 Contoh pembagian batch
+Contoh pembagian agar rapi:
+1. Batch 1: ideal (GUI 10, VUI 10) = 20.
+2. Batch 2: correction (GUI 10, VUI 10) = 20.
+3. Batch 3: ambiguous (GUI 10, VUI 10) = 20.
+4. Tambahan buffer rerun lintas batch: 6 run.
+
+Total scheduled: 66 run, dengan target valid akhir minimal 60 run.
 
 ## 9. Template Log per Run
 Catat data berikut untuk setiap run:
@@ -169,6 +213,8 @@ run_id,tanggal_waktu,mode_endpoint,modality,scenario_type,status,latency_ms,avg_
 3. Jika gagal karena jaringan/izin, tandai failed dan ulang run baru.
 4. Jangan mengganti script ucapan VUI di dalam batch yang sama.
 5. Jangan mengganti urutan langkah GUI di dalam batch yang sama.
+6. Simpan run failed sebagai data audit, jangan dihapus.
+7. Gunakan run_id baru saat rerun, jangan menimpa run_id lama.
 
 ## 11. Keluaran yang Ditargetkan
 Setelah menjalankan skenario ini, Anda akan punya dataset terstruktur yang siap untuk:

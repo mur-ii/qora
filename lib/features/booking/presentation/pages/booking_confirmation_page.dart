@@ -22,12 +22,18 @@ class BookingConfirmationPage extends StatefulWidget {
 
 class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
   bool _bookingSaved = false;
+  bool _isNavigatingHome = false;
+  bool _performanceFinalized = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _persistBooking();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await _persistBooking();
+      } finally {
+        await _finishTrackingOnConfirmationOpened();
+      }
     });
   }
 
@@ -56,18 +62,36 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
 
     final repository = BookingInjection.createLocalRepository();
     await repository.saveBooking(record);
+  }
+
+  Future<void> _finishTrackingOnConfirmationOpened() async {
+    if (_performanceFinalized) {
+      return;
+    }
 
     final performanceService = PerformanceTrackingService.instance;
     final isVoiceOriginBooking = performanceService.isVoiceOriginBooking(
       widget.booking.bookingId,
     );
 
-    if (!isVoiceOriginBooking) {
+    if (isVoiceOriginBooking) {
+      await performanceService.finishScenario(
+        method: BookingMethodType.vui,
+        details: <String, dynamic>{
+          'completed_screen': AppRoutes.bookingConfirmationPath,
+          'exit_action': 'confirmation_opened',
+          'booking_id': widget.booking.bookingId,
+          'hotel_id': widget.booking.hotel.id,
+          'room_id': widget.booking.room.id,
+        },
+      );
+    } else {
       await performanceService.finishScenario(
         method: BookingMethodType.gui,
         sessionCostUsd: 0,
         details: <String, dynamic>{
           'completed_screen': AppRoutes.bookingConfirmationPath,
+          'exit_action': 'confirmation_opened',
           'booking_id': widget.booking.bookingId,
           'hotel_id': widget.booking.hotel.id,
           'room_id': widget.booking.room.id,
@@ -76,6 +100,21 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
     }
 
     performanceService.clearVoiceOriginBooking(widget.booking.bookingId);
+    _performanceFinalized = true;
+  }
+
+  Future<void> _onBackToHomePressed() async {
+    if (_isNavigatingHome) {
+      return;
+    }
+
+    _isNavigatingHome = true;
+
+    if (mounted) {
+      context.go(AppRoutes.homePath);
+    }
+
+    _isNavigatingHome = false;
   }
 
   @override
@@ -131,9 +170,7 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
           ],
         ),
       ),
-      bottomNavigationBar: SuccessBottomBar(
-        onBackToHome: () => context.go(AppRoutes.homePath),
-      ),
+      bottomNavigationBar: SuccessBottomBar(onBackToHome: _onBackToHomePressed),
     );
   }
 

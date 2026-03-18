@@ -123,6 +123,318 @@ class _HotelListPageContent extends StatelessWidget {
     return DateFormat('dd MMM yyyy').format(parsed);
   }
 
+  DateTime? _tryParseDate(String? rawValue) {
+    if (rawValue == null || rawValue.trim().isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse(rawValue.trim());
+  }
+
+  DateTime _resolveCheckInDate({String? rawCheckIn}) {
+    final parsed = _tryParseDate(rawCheckIn ?? checkIn);
+    if (parsed != null) {
+      return DateTime(parsed.year, parsed.month, parsed.day);
+    }
+
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  DateTime _resolveCheckOutDate({
+    required DateTime checkInDate,
+    String? rawCheckOut,
+  }) {
+    final parsed = _tryParseDate(rawCheckOut ?? checkOut);
+    if (parsed != null) {
+      final normalized = DateTime(parsed.year, parsed.month, parsed.day);
+      if (normalized.isAfter(checkInDate)) {
+        return normalized;
+      }
+    }
+
+    return checkInDate.add(const Duration(days: 1));
+  }
+
+  String _buildDateRangeLabel() {
+    final checkInDate = _tryParseDate(checkIn);
+    final checkOutDate = _tryParseDate(checkOut);
+    if (checkInDate == null || checkOutDate == null) {
+      return 'Pilih tanggal';
+    }
+
+    return '${_shortDateFormatter.format(checkInDate)} - ${_shortDateFormatter.format(checkOutDate)}';
+  }
+
+  String _buildRoomGuestLabel() {
+    final roomCount = _parsePositiveInt(rooms, 1);
+    final guestCount = _parsePositiveInt(guests, 2);
+    return '$roomCount kamar, $guestCount tamu';
+  }
+
+  void _syncVoiceConstraintsIfActive(
+    BuildContext context, {
+    required String location,
+    required String checkIn,
+    required String checkOut,
+    required int guests,
+    required int rooms,
+  }) {
+    final voiceState = context.read<VoiceAssistantBloc>().state;
+    if (!voiceState.isActive) {
+      return;
+    }
+
+    context.read<VoiceAssistantBloc>().add(
+      SyncVoiceSearchConstraints(
+        location: location,
+        checkIn: checkIn,
+        checkOut: checkOut,
+        guests: guests,
+        rooms: rooms,
+      ),
+    );
+  }
+
+  void _applyUpdatedSearch(
+    BuildContext context, {
+    String? nextLocation,
+    String? nextCheckIn,
+    String? nextCheckOut,
+    int? nextRooms,
+    int? nextGuests,
+  }) {
+    final resolvedLocation = (nextLocation ?? location ?? '').trim();
+    final resolvedCheckInDate = _resolveCheckInDate(rawCheckIn: nextCheckIn);
+    final resolvedCheckOutDate = _resolveCheckOutDate(
+      checkInDate: resolvedCheckInDate,
+      rawCheckOut: nextCheckOut,
+    );
+    final resolvedRooms = nextRooms ?? _parsePositiveInt(rooms, 1);
+    final resolvedGuests = nextGuests ?? _parsePositiveInt(guests, 2);
+
+    final checkInParam = DateFormat('yyyy-MM-dd').format(resolvedCheckInDate);
+    final checkOutParam = DateFormat('yyyy-MM-dd').format(resolvedCheckOutDate);
+
+    _syncVoiceConstraintsIfActive(
+      context,
+      location: resolvedLocation,
+      checkIn: checkInParam,
+      checkOut: checkOutParam,
+      guests: resolvedGuests,
+      rooms: resolvedRooms,
+    );
+
+    final uri = Uri(
+      path: AppRoutes.hotelListPath,
+      queryParameters: {
+        'location': resolvedLocation,
+        'checkIn': checkInParam,
+        'checkOut': checkOutParam,
+        'rooms': resolvedRooms.toString(),
+        'guests': resolvedGuests.toString(),
+        'searchKey': DateTime.now().millisecondsSinceEpoch.toString(),
+      },
+    );
+
+    GoRouter.of(context).go(uri.toString());
+  }
+
+  Future<void> _openLocationPicker(BuildContext context) async {
+    final selectedValue = await GoRouter.of(
+      context,
+    ).push(AppRoutes.searchLocationPath);
+
+    if (!context.mounted) {
+      return;
+    }
+
+    if (selectedValue is! String || selectedValue.trim().isEmpty) {
+      return;
+    }
+
+    _applyUpdatedSearch(context, nextLocation: selectedValue.trim());
+  }
+
+  Future<void> _openDateRangePicker(BuildContext context) async {
+    final now = DateTime.now();
+    final firstDate = DateTime(now.year, now.month, now.day);
+    final currentCheckIn = _resolveCheckInDate();
+    final initialStartDate = currentCheckIn.isBefore(firstDate)
+        ? firstDate
+        : currentCheckIn;
+    final initialEndDate = _resolveCheckOutDate(checkInDate: initialStartDate);
+
+    final result = await showDateRangePicker(
+      context: context,
+      firstDate: firstDate,
+      lastDate: firstDate.add(const Duration(days: 365)),
+      initialDateRange: DateTimeRange(
+        start: initialStartDate,
+        end: initialEndDate,
+      ),
+      helpText: 'Pilih tanggal menginap',
+      saveText: 'Terapkan',
+      cancelText: 'Batal',
+      confirmText: 'Pilih',
+    );
+
+    if (result == null) {
+      return;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
+
+    _applyUpdatedSearch(
+      context,
+      nextCheckIn: DateFormat('yyyy-MM-dd').format(result.start),
+      nextCheckOut: DateFormat('yyyy-MM-dd').format(result.end),
+    );
+  }
+
+  Future<void> _openRoomGuestPicker(BuildContext context) async {
+    int tempRooms = _parsePositiveInt(rooms, 1);
+    int tempGuests = _parsePositiveInt(guests, 2);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      useSafeArea: true,
+      backgroundColor: AppColors.surfaceWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const _BottomSheetHandle(),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Pilih kamar dan tamu',
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  _CountAdjusterRow(
+                    label: 'Kamar',
+                    count: tempRooms,
+                    onIncrement: () {
+                      setSheetState(() {
+                        tempRooms += 1;
+                      });
+                    },
+                    onDecrement: () {
+                      if (tempRooms <= 1) return;
+                      setSheetState(() {
+                        tempRooms -= 1;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 14),
+                  _CountAdjusterRow(
+                    label: 'Tamu',
+                    count: tempGuests,
+                    onIncrement: () {
+                      setSheetState(() {
+                        tempGuests += 1;
+                      });
+                    },
+                    onDecrement: () {
+                      if (tempGuests <= 1) return;
+                      setSheetState(() {
+                        tempGuests -= 1;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(sheetContext);
+                        _applyUpdatedSearch(
+                          context,
+                          nextRooms: tempRooms,
+                          nextGuests: tempGuests,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.textOnPrimary,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Terapkan',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildEditableSearchControls(BuildContext context) {
+    final locationLabel = (location != null && location!.trim().isNotEmpty)
+        ? location!.trim()
+        : 'Pilih lokasi';
+
+    return Container(
+      color: AppColors.surface,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Column(
+        children: [
+          _SearchCriteriaButton(
+            icon: Icons.location_on_outlined,
+            title: 'Lokasi',
+            value: locationLabel,
+            onTap: () => _openLocationPicker(context),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _SearchCriteriaButton(
+                  icon: Icons.calendar_today_outlined,
+                  title: 'Tanggal',
+                  value: _buildDateRangeLabel(),
+                  onTap: () => _openDateRangePicker(context),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _SearchCriteriaButton(
+                  icon: Icons.people_outline,
+                  title: 'Tamu',
+                  value: _buildRoomGuestLabel(),
+                  onTap: () => _openRoomGuestPicker(context),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   void _offerAlternativeLocation(BuildContext context) {
     final locationLabel = (location != null && location!.trim().isNotEmpty)
         ? location!
@@ -131,14 +443,10 @@ class _HotelListPageContent extends StatelessWidget {
     final checkOutText = _formatDateForVoice(checkOut);
     final guestsCount = _parsePositiveInt(guests, 2);
     final roomsCount = _parsePositiveInt(rooms, 1);
-    final checkInParam = (checkIn != null && checkIn!.trim().isNotEmpty)
-        ? checkIn!.trim()
-        : DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final checkOutParam = (checkOut != null && checkOut!.trim().isNotEmpty)
-        ? checkOut!.trim()
-        : DateFormat(
-            'yyyy-MM-dd',
-          ).format(DateTime.now().add(const Duration(days: 1)));
+    final checkInDate = _resolveCheckInDate();
+    final checkOutDate = _resolveCheckOutDate(checkInDate: checkInDate);
+    final checkInParam = DateFormat('yyyy-MM-dd').format(checkInDate);
+    final checkOutParam = DateFormat('yyyy-MM-dd').format(checkOutDate);
 
     final prompt =
         'Saya belum menemukan hotel yang cocok di $locationLabel. '
@@ -154,6 +462,14 @@ class _HotelListPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locationTitle = (location != null && location!.trim().isNotEmpty)
+        ? location!.trim()
+        : 'Hotel';
+    final dateRangeTitle = _formatDateRangeShort();
+    final appBarTitle = dateRangeTitle.isEmpty
+        ? locationTitle
+        : '$locationTitle · $dateRangeTitle';
+
     return BlocListener<HotelListBloc, HotelListState>(
       listenWhen: (previous, current) =>
           current is HotelListEmpty && previous is! HotelListEmpty,
@@ -185,7 +501,7 @@ class _HotelListPageContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${location ?? 'Hotel'} · ${_formatDateRangeShort()}',
+                appBarTitle,
                 style: AppTypography.titleMedium.copyWith(
                   fontWeight: FontWeight.w500,
                   color: AppColors.textPrimary,
@@ -196,6 +512,7 @@ class _HotelListPageContent extends StatelessWidget {
         ),
         body: Column(
           children: [
+            _buildEditableSearchControls(context),
             // Filter buttons row
             Container(
               color: AppColors.surface,
@@ -774,6 +1091,147 @@ class _HotelListPageContent extends StatelessWidget {
           ),
           const SizedBox(height: 24),
         ],
+      ),
+    );
+  }
+}
+
+class _SearchCriteriaButton extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+  final VoidCallback onTap;
+
+  const _SearchCriteriaButton({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: AppColors.textSecondary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: AppColors.textTertiary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CountAdjusterRow extends StatelessWidget {
+  final String label;
+  final int count;
+  final VoidCallback onIncrement;
+  final VoidCallback onDecrement;
+
+  const _CountAdjusterRow({
+    required this.label,
+    required this.count,
+    required this.onIncrement,
+    required this.onDecrement,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: AppTypography.bodyLarge.copyWith(
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              _CountAdjusterButton(icon: Icons.remove, onTap: onDecrement),
+              Container(width: 1, height: 36, color: AppColors.border),
+              SizedBox(
+                width: 44,
+                height: 36,
+                child: Center(
+                  child: Text(
+                    '$count',
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+              ),
+              Container(width: 1, height: 36, color: AppColors.border),
+              _CountAdjusterButton(icon: Icons.add, onTap: onIncrement),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CountAdjusterButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _CountAdjusterButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: SizedBox(
+        width: 36,
+        height: 36,
+        child: Icon(icon, size: 18, color: AppColors.primary),
       ),
     );
   }

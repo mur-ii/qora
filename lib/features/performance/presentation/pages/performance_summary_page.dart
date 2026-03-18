@@ -345,11 +345,6 @@ class _ScenarioCard extends StatelessWidget {
                 : '${scenario.peakMemoryMb!.toStringAsFixed(2)} MB',
           ),
           _MetricRow(
-            label: 'Network TX/RX',
-            value:
-                '${scenario.networkTxKb?.toStringAsFixed(2) ?? '-'} / ${scenario.networkRxKb?.toStringAsFixed(2) ?? '-'} KB',
-          ),
-          _MetricRow(
             label: 'Session Cost',
             value: '${scenario.sessionCostUsd.toStringAsFixed(6)} USD',
           ),

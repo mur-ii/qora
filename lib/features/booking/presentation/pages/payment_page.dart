@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -7,12 +5,9 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/di/booking_injection.dart';
 import '../../../../core/router/app_routes.dart';
-import '../../../../core/services/performance_tracking_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_toast.dart';
-import '../../../performance/domain/entities/performance_scenario.dart';
-import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../bloc/booking_bloc.dart';
 import '../bloc/booking_event.dart';
@@ -72,36 +67,6 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
   ];
 
   String _selectedPaymentMethod = _paymentMethods.first.key;
-  bool _guiTrackingStarted = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      unawaited(_startGuiPerformanceScenario());
-    });
-  }
-
-  Future<void> _startGuiPerformanceScenario() async {
-    if (_guiTrackingStarted) {
-      return;
-    }
-
-    final voiceState = context.read<VoiceAssistantBloc>().state;
-    final isVoiceOriginBooking = PerformanceTrackingService.instance
-        .isVoiceOriginBooking(widget.booking.bookingId);
-    if (voiceState.isActive || isVoiceOriginBooking) {
-      return;
-    }
-
-    _guiTrackingStarted = true;
-    await PerformanceTrackingService.instance.startScenario(
-      method: BookingMethodType.gui,
-      scenarioName: 'GUI booking flow',
-      details: <String, dynamic>{'entry_screen': AppRoutes.bookingPaymentPath},
-    );
-  }
 
   void _processPayment() {
     context.read<BookingBloc>().add(

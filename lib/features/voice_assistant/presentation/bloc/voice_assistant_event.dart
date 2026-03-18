@@ -85,6 +85,26 @@ class RequestAssistantResponse extends VoiceAssistantEvent {
   List<Object?> get props => [instructions];
 }
 
+/// Sync user search constraints when the GUI search form changes.
+class SyncVoiceSearchConstraints extends VoiceAssistantEvent {
+  final String location;
+  final String checkIn;
+  final String checkOut;
+  final int guests;
+  final int rooms;
+
+  const SyncVoiceSearchConstraints({
+    required this.location,
+    required this.checkIn,
+    required this.checkOut,
+    required this.guests,
+    required this.rooms,
+  });
+
+  @override
+  List<Object?> get props => [location, checkIn, checkOut, guests, rooms];
+}
+
 /// Ask assistant to deliver final message then close the session.
 class CompleteVoiceSessionWithMessage extends VoiceAssistantEvent {
   final String message;

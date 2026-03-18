@@ -48,7 +48,6 @@ class PerformanceTrackingService {
 
     final now = DateTime.now();
     final resolvedScenarioId = scenarioId ?? _buildScenarioId(method);
-    final networkSnapshot = _runtimeMetrics.getNetworkSnapshot();
 
     final scenario = PerformanceScenario(
       scenarioId: resolvedScenarioId,
@@ -64,8 +63,6 @@ class PerformanceTrackingService {
       scenarioId: resolvedScenarioId,
       startedAt: now,
       scenarioName: scenarioName,
-      startTxBytes: networkSnapshot.totalTxBytes,
-      startRxBytes: networkSnapshot.totalRxBytes,
     );
 
     _ensureSamplingTimer();
@@ -81,8 +78,6 @@ class PerformanceTrackingService {
     int? latencyMs,
     double? avgCpuPercent,
     double? peakMemoryMb,
-    double? networkTxKb,
-    double? networkRxKb,
     double? sessionCostUsd,
     int? totalTokens,
     int? totalTurns,
@@ -114,25 +109,12 @@ class PerformanceTrackingService {
     final peakMemory = peakMemoryMb ?? active?.peakMemoryMb;
     final uiFrameTime = active?.uiFrameTimeStats;
     final rasterFrameTime = active?.rasterFrameTimeStats;
-    final networkSnapshot = _runtimeMetrics.getNetworkSnapshot();
-    final resolvedNetworkTxKb =
-        networkTxKb ??
-        _bytesToKb(
-          (networkSnapshot.totalTxBytes - (active?.startTxBytes ?? 0)),
-        );
-    final resolvedNetworkRxKb =
-        networkRxKb ??
-        _bytesToKb(
-          (networkSnapshot.totalRxBytes - (active?.startRxBytes ?? 0)),
-        );
 
     final updatedScenario = existing.copyWith(
       endedAt: now,
       latencyMs: resolvedLatencyMs,
       avgCpuPercent: avgCpu,
       peakMemoryMb: peakMemory,
-      networkTxKb: resolvedNetworkTxKb,
-      networkRxKb: resolvedNetworkRxKb,
       sessionCostUsd: sessionCostUsd,
       totalTokens: totalTokens,
       totalTurns: totalTurns,
@@ -147,10 +129,6 @@ class PerformanceTrackingService {
         'raster_frame_time_ms_max': rasterFrameTime?.max,
         'cpu_peak_percent': peakCpu,
         'memory_avg_mb': avgMemory,
-        'http_tx_kb': _bytesToKb(networkSnapshot.httpTxBytes),
-        'http_rx_kb': _bytesToKb(networkSnapshot.httpRxBytes),
-        'webrtc_tx_kb': _bytesToKb(networkSnapshot.webRtcTxBytes),
-        'webrtc_rx_kb': _bytesToKb(networkSnapshot.webRtcRxBytes),
         'runtime_metrics_source': 'android_method_channel',
       }),
     );
@@ -403,11 +381,6 @@ class PerformanceTrackingService {
         _parseDouble(details['memory_avg_mb']) ?? scenario.peakMemoryMb;
     final peakMemory = scenario.peakMemoryMb;
 
-    final httpTx = _parseDouble(details['http_tx_kb']);
-    final httpRx = _parseDouble(details['http_rx_kb']);
-    final webRtcTx = _parseDouble(details['webrtc_tx_kb']);
-    final webRtcRx = _parseDouble(details['webrtc_rx_kb']);
-
     return <String, dynamic>{
       'ui_frame_time_ms': <String, dynamic>{
         'avg': _roundMetric(uiAvg),
@@ -426,16 +399,6 @@ class PerformanceTrackingService {
       'memory': <String, dynamic>{
         'avg_memory_mb': _roundMetric(avgMemory),
         'peak_memory_mb': _roundMetric(peakMemory),
-      },
-      'network': <String, dynamic>{
-        'http': <String, dynamic>{
-          'tx_kb': _roundMetric(httpTx),
-          'rx_kb': _roundMetric(httpRx),
-        },
-        'webrtc': <String, dynamic>{
-          'tx_kb': _roundMetric(webRtcTx),
-          'rx_kb': _roundMetric(webRtcRx),
-        },
       },
     };
   }
@@ -655,11 +618,6 @@ class PerformanceTrackingService {
       memoryMb: metrics.memoryMb,
     );
   }
-
-  double _bytesToKb(int bytes) {
-    if (bytes <= 0) return 0;
-    return bytes / 1024;
-  }
 }
 
 class _ActiveRun {
@@ -667,15 +625,11 @@ class _ActiveRun {
     required this.scenarioId,
     required this.startedAt,
     required this.scenarioName,
-    required this.startTxBytes,
-    required this.startRxBytes,
   });
 
   final String scenarioId;
   final DateTime startedAt;
   final String scenarioName;
-  final int startTxBytes;
-  final int startRxBytes;
 
   double _cpuTotal = 0;
   int _cpuSamples = 0;

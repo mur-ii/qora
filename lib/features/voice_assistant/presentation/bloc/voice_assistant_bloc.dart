@@ -88,6 +88,7 @@ class VoiceAssistantBloc
     on<AgentEventReceived>(_onAgentEventReceived);
     on<ConnectionStateChanged>(_onConnectionStateChanged);
     on<RequestAssistantResponse>(_onRequestAssistantResponse);
+    on<SyncVoiceSearchConstraints>(_onSyncVoiceSearchConstraints);
     on<CompleteVoiceSessionWithMessage>(_onCompleteVoiceSessionWithMessage);
     on<ConversationMetricsUpdated>(_onConversationMetricsUpdated);
   }
@@ -278,6 +279,8 @@ class VoiceAssistantBloc
     Emitter<VoiceAssistantState> emit,
   ) async {
     final sessionId = state.currentSessionId;
+    final shouldDeferPerformanceFinish =
+        event.reason == 'booking_summary_completed';
     final fallbackTurns = state.totalLoggedTurns;
     final fallbackTokens = state.totalLoggedTokens;
     final fallbackCost = state.sessionEstimatedCostUsd;
@@ -301,14 +304,16 @@ class VoiceAssistantBloc
 
       _refreshConversationMetrics(sessionId);
 
-      await _finishVuiPerformanceScenario(
-        sessionId: sessionId,
-        exitReason: event.reason,
-        summary: summary,
-        fallbackTurns: fallbackTurns,
-        fallbackTokens: fallbackTokens,
-        fallbackCost: fallbackCost,
-      );
+      if (!shouldDeferPerformanceFinish) {
+        await _finishVuiPerformanceScenario(
+          sessionId: sessionId,
+          exitReason: event.reason,
+          summary: summary,
+          fallbackTurns: fallbackTurns,
+          fallbackTokens: fallbackTokens,
+          fallbackCost: fallbackCost,
+        );
+      }
 
       emit(
         state.copyWith(
@@ -615,6 +620,26 @@ class VoiceAssistantBloc
         error: e,
         stackTrace: stackTrace,
       );
+    }
+  }
+
+  void _onSyncVoiceSearchConstraints(
+    SyncVoiceSearchConstraints event,
+    Emitter<VoiceAssistantState> emit,
+  ) {
+    final args = <String, dynamic>{
+      'location': event.location,
+      'check_in': event.checkIn,
+      'check_out': event.checkOut,
+      'guests': event.guests,
+      'rooms': event.rooms,
+    };
+
+    agenticAiUseCase.previewUserConstraints(args);
+    final nextAgentState = agenticAiUseCase.agentState;
+
+    if (nextAgentState != state.agentState) {
+      emit(state.copyWith(agentState: nextAgentState));
     }
   }
 

@@ -33,8 +33,6 @@ class PerformanceScenario {
     this.latencyMs,
     this.avgCpuPercent,
     this.peakMemoryMb,
-    this.networkTxKb,
-    this.networkRxKb,
     this.sessionCostUsd = 0,
     this.totalTokens = 0,
     this.totalTurns = 0,
@@ -51,8 +49,6 @@ class PerformanceScenario {
   final int? latencyMs;
   final double? avgCpuPercent;
   final double? peakMemoryMb;
-  final double? networkTxKb;
-  final double? networkRxKb;
   final double sessionCostUsd;
   final int totalTokens;
   final int totalTurns;
@@ -71,8 +67,6 @@ class PerformanceScenario {
     int? latencyMs,
     double? avgCpuPercent,
     double? peakMemoryMb,
-    double? networkTxKb,
-    double? networkRxKb,
     double? sessionCostUsd,
     int? totalTokens,
     int? totalTurns,
@@ -89,8 +83,6 @@ class PerformanceScenario {
       latencyMs: latencyMs ?? this.latencyMs,
       avgCpuPercent: avgCpuPercent ?? this.avgCpuPercent,
       peakMemoryMb: peakMemoryMb ?? this.peakMemoryMb,
-      networkTxKb: networkTxKb ?? this.networkTxKb,
-      networkRxKb: networkRxKb ?? this.networkRxKb,
       sessionCostUsd: sessionCostUsd ?? this.sessionCostUsd,
       totalTokens: totalTokens ?? this.totalTokens,
       totalTurns: totalTurns ?? this.totalTurns,
@@ -110,8 +102,6 @@ class PerformanceScenario {
       'latency_ms': latencyMs,
       'avg_cpu_percent': avgCpuPercent,
       'peak_memory_mb': peakMemoryMb,
-      'network_tx_kb': networkTxKb,
-      'network_rx_kb': networkRxKb,
       'session_cost_usd': sessionCostUsd,
       'total_tokens': totalTokens,
       'total_turns': totalTurns,
@@ -135,8 +125,6 @@ class PerformanceScenario {
       latencyMs: map['latency_ms'] as int?,
       avgCpuPercent: _parseDouble(map['avg_cpu_percent']),
       peakMemoryMb: _parseDouble(map['peak_memory_mb']),
-      networkTxKb: _parseDouble(map['network_tx_kb']),
-      networkRxKb: _parseDouble(map['network_rx_kb']),
       sessionCostUsd: _parseDouble(map['session_cost_usd']) ?? 0,
       totalTokens: _parseInt(map['total_tokens']) ?? 0,
       totalTurns: _parseInt(map['total_turns']) ?? 0,

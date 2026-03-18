@@ -7,7 +7,7 @@ class PerformanceLocalDataSource {
   PerformanceLocalDataSource();
 
   static const String _dbName = 'qora_performance.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
   static const String _tableName = 'performance_runs';
 
   Database? _database;
@@ -22,26 +22,12 @@ class PerformanceLocalDataSource {
       path,
       version: _dbVersion,
       onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE $_tableName (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            scenario_id TEXT NOT NULL UNIQUE,
-            method TEXT NOT NULL,
-            scenario_name TEXT NOT NULL,
-            started_at TEXT NOT NULL,
-            ended_at TEXT,
-            latency_ms INTEGER,
-            avg_cpu_percent REAL,
-            peak_memory_mb REAL,
-            network_tx_kb REAL,
-            network_rx_kb REAL,
-            session_cost_usd REAL NOT NULL DEFAULT 0,
-            total_tokens INTEGER NOT NULL DEFAULT 0,
-            total_turns INTEGER NOT NULL DEFAULT 0,
-            status TEXT NOT NULL DEFAULT 'running',
-            details_json TEXT NOT NULL DEFAULT '{}'
-          )
-        ''');
+        await _createPerformanceRunsTable(db);
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await _migrateToV2(db);
+        }
       },
     );
 
@@ -89,5 +75,85 @@ class PerformanceLocalDataSource {
       where: 'scenario_id = ?',
       whereArgs: <Object>[scenarioId],
     );
+  }
+
+  Future<void> _createPerformanceRunsTable(DatabaseExecutor db) async {
+    await db.execute('''
+      CREATE TABLE $_tableName (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        scenario_id TEXT NOT NULL UNIQUE,
+        method TEXT NOT NULL,
+        scenario_name TEXT NOT NULL,
+        started_at TEXT NOT NULL,
+        ended_at TEXT,
+        latency_ms INTEGER,
+        avg_cpu_percent REAL,
+        peak_memory_mb REAL,
+        session_cost_usd REAL NOT NULL DEFAULT 0,
+        total_tokens INTEGER NOT NULL DEFAULT 0,
+        total_turns INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'running',
+        details_json TEXT NOT NULL DEFAULT '{}'
+      )
+    ''');
+  }
+
+  Future<void> _migrateToV2(Database db) async {
+    const legacyTableName = 'performance_runs_legacy_v1';
+
+    await db.transaction((txn) async {
+      final existingTable = await txn.query(
+        'sqlite_master',
+        columns: <String>['name'],
+        where: 'type = ? AND name = ?',
+        whereArgs: <Object>['table', _tableName],
+        limit: 1,
+      );
+
+      if (existingTable.isEmpty) {
+        await _createPerformanceRunsTable(txn);
+        return;
+      }
+
+      await txn.execute('ALTER TABLE $_tableName RENAME TO $legacyTableName');
+      await _createPerformanceRunsTable(txn);
+
+      await txn.execute('''
+        INSERT INTO $_tableName (
+          id,
+          scenario_id,
+          method,
+          scenario_name,
+          started_at,
+          ended_at,
+          latency_ms,
+          avg_cpu_percent,
+          peak_memory_mb,
+          session_cost_usd,
+          total_tokens,
+          total_turns,
+          status,
+          details_json
+        )
+        SELECT
+          id,
+          scenario_id,
+          method,
+          scenario_name,
+          started_at,
+          ended_at,
+          latency_ms,
+          avg_cpu_percent,
+          peak_memory_mb,
+          session_cost_usd,
+          total_tokens,
+          total_turns,
+          status,
+          details_json
+        FROM $legacyTableName
+      ''');
+
+      await txn.execute('DROP TABLE $legacyTableName');
+    });
   }
 }
