@@ -1,1 +1,0 @@
-run_id,tanggal_waktu,mode_endpoint,batch_label,modality,scenario_type,status,latency_ms,avg_cpu_percent,peak_memory_mb,network_tx_kb,network_rx_kb,total_tokens,session_cost_usd,total_turns,notes_error_or_retry

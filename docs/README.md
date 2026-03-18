@@ -2,11 +2,13 @@
 
 Folder ini berisi dokumen operasional untuk testing GUI vs VUI pada skenario booking.
 
-## 1) Paket Inti (4 File Saja)
+## 1) Paket Inti (6 File Saja)
 1. [booking_case_scenarios.md](booking_case_scenarios.md)
 2. [booking_operational_checklist.md](booking_operational_checklist.md)
-3. [template/booking_run_log_template.csv](template/booking_run_log_template.csv)
-4. [README.md](README.md)
+3. [booking_operator_sheet_gui.md](booking_operator_sheet_gui.md)
+4. [template/booking_gui_30_run_tracking_template.csv](template/booking_gui_30_run_tracking_template.csv)
+5. [template/booking_run_log_template.csv](template/booking_run_log_template.csv)
+6. [README.md](README.md)
 
 ## 2) Jawaban ringkas jumlah tes
 - Target praktis (disarankan saat ini): 10 run per kombinasi.
@@ -20,8 +22,9 @@ Catatan:
 ## 3) Alur pakai cepat
 1. Baca skenario di [booking_case_scenarios.md](booking_case_scenarios.md).
 2. Jalankan run pakai checklist di [booking_operational_checklist.md](booking_operational_checklist.md).
-3. Catat semua run ke [template/booking_run_log_template.csv](template/booking_run_log_template.csv).
-4. Pastikan tiap kombinasi mencapai 10 completed run.
+3. Untuk sesi GUI 30 run, pakai [template/booking_gui_30_run_tracking_template.csv](template/booking_gui_30_run_tracking_template.csv).
+4. Untuk logging metrik lengkap lintas modalitas, pakai [template/booking_run_log_template.csv](template/booking_run_log_template.csv).
+5. Pastikan tiap kombinasi mencapai 10 completed run.
 
 ## 3.1) Ringkasan Endpoint Implementasi Aktual (Branch Saat Ini)
 1. Mode A (sesuai instrumentation default app):
