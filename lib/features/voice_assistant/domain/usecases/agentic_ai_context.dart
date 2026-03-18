@@ -101,51 +101,36 @@ class AgenticAiContext {
       final guests = (_agentState.userConstraints['guests'] ?? 2).toString();
       final rooms = (_agentState.userConstraints['rooms'] ?? 1).toString();
       final scheduleText = (checkIn != null && checkOut != null)
-          ? 'dengan check-in $checkIn dan check-out $checkOut'
-          : 'dengan tanggal yang sama seperti sebelumnya';
+          ? 'check-in $checkIn dan check-out $checkOut'
+          : 'tanggal sebelumnya';
 
-      return 'Maaf, saya tidak menemukan hotel yang sesuai di $city. '
-          'Apakah Anda ingin ganti lokasi lain? '
-          'Saya akan tetap gunakan $scheduleText, $guests tamu, dan $rooms kamar.';
+      return 'Belum ada hotel yang cocok di $city. '
+          'Mau ganti lokasi? Saya tetap pakai $scheduleText, $guests tamu, $rooms kamar.';
     }
 
-    final buffer = StringBuffer();
-    buffer.writeln('Saya menemukan ${hotels.length} hotel di $city.');
-    buffer.writeln('Berikut daftarnya:');
+    final shownHotels = hotels.take(3).toList(growable: false);
+    final buffer = StringBuffer('Ada ${hotels.length} hotel di $city. ');
 
-    for (var i = 0; i < hotels.length; i++) {
-      final hotel = hotels[i];
+    for (var i = 0; i < shownHotels.length; i++) {
+      final hotel = shownHotels[i];
       final name = hotel['name'] ?? 'Hotel';
-      final location = hotel['location'] ?? city;
-      final rating = hotel['rating'] ?? '-';
-      final price = hotel['pricePerNight'] ?? '-';
-      final amenities = (hotel['amenities'] as List?)?.cast<String>().join(
-        ', ',
-      );
-
-      buffer.writeln(
-        '${i + 1}. $name di $location, rating $rating, '
-        'mulai IDR $price per malam'
-        '${amenities != null ? ', fasilitas: $amenities' : ''}.',
-      );
+      buffer.write('${i + 1}) $name. ');
     }
 
-    buffer.writeln('Hotel mana yang ingin Anda lihat detailnya?');
+    if (hotels.length > shownHotels.length) {
+      buffer.write('Masih ada opsi lain. ');
+    }
+
+    buffer.write('Pilih nama hotel atau nomor.');
     return buffer.toString();
   }
 
   String buildHotelDetailPrompt() {
     if (selectedHotel.isEmpty) {
-      return 'Detail hotel tersedia. Silakan pilih tipe kamar.';
+      return 'Silakan pilih tipe kamar.';
     }
 
     final name = selectedHotel['name']?.toString() ?? 'Hotel ini';
-    final rating = selectedHotel['rating']?.toString() ?? '-';
-    final city =
-        selectedHotel['city']?.toString() ??
-        selectedHotel['location']?.toString() ??
-        '';
-
     final roomTypes = selectedHotel['roomTypes'] as List<dynamic>? ?? [];
     final roomNames = roomTypes
         .map((room) => (room as Map<String, dynamic>)['name']?.toString())
@@ -154,11 +139,10 @@ class AgenticAiContext {
         .toList();
 
     final roomsText = roomNames.isNotEmpty
-        ? 'Pilihan kamar: ${roomNames.join(', ')}.'
+        ? 'Pilihan: ${roomNames.join(', ')}.'
         : 'Silakan pilih tipe kamar.';
 
-    return '$name, rating $rating${city.isNotEmpty ? ' di $city' : ''}. '
-        '$roomsText Sebutkan tipe kamar yang Anda inginkan.';
+    return '$name. $roomsText Tipe kamar yang diinginkan?';
   }
 
   BookingEntity? buildBookingEntityFromCache() {
@@ -254,29 +238,29 @@ class AgenticAiContext {
 
   String getSystemInstructions() {
     return '''
-  Kamu adalah asisten pemesanan hotel berbasis suara untuk Qora.
-  Gunakan Bahasa Indonesia yang singkat, jelas, dan langsung.
+Kamu adalah voice assistant khusus pemesanan hotel di aplikasi Qora.
 
-  Konteks:
-  - Tahap: ${_agentState.currentStep.name}
-  - Layar: ${_agentState.currentScreen ?? 'tidak diketahui'}
-  - Data: ${jsonEncode(_agentState.userConstraints)}
+Konteks:
+- Tahap: ${_agentState.currentStep.name}
+- Layar: ${_agentState.currentScreen ?? 'tidak diketahui'}
+- Data: ${jsonEncode(_agentState.userConstraints)}
 
-  Aturan ringkas:
-  1) Jangan bertele-tele. Maksimal 1 pertanyaan per respons.
-  2) Setelah detail hotel ditampilkan, jelaskan singkat lalu tawarkan tipe kamar.
-  2a) Jika hotel tidak ditemukan, tawarkan ganti lokasi lain dengan check-in, check-out, jumlah tamu, dan kamar tetap sama.
-  3) Saat user menyebut tipe kamar, panggil `select_room` untuk menandai pilihan.
-  4) Setelah `select_room`, katakan kamar dipilih dan tanya lanjut booking.
-  5) Jika user setuju, panggil `create_booking` (navigasi ke ringkasan).
-  6) Di ringkasan, baca detail singkat lalu akhiri sesi voice assistant. Jangan arahkan ke pembayaran.
-  7) Jangan minta data tamu lagi. Fitur data tamu tidak dipakai.
+Aturan WAJIB:
+1) Jawaban sangat ringkas: maksimal 2 kalimat dan maksimal 30 kata.
+2) Maksimal 1 pertanyaan per respons.
+3) Jangan jelaskan panjang, jangan daftar detail berlebihan, jangan mengulang info.
+4) Fokus hanya booking hotel dalam aplikasi ini.
+5) Jika user di luar konteks booking hotel (contoh: coding, matematika, politik, cuaca, trivia), jawab PERSIS:
+   "Maaf, saya hanya bisa membantu pemesanan hotel di aplikasi ini."
+6) Saat user minta cari hotel, panggil search_hotels.
+7) Saat user pilih hotel, panggil get_hotel_details.
+8) Saat user pilih kamar, panggil select_room lalu jawab singkat: "Kamar dipilih. Lanjutkan pemesanan?"
+9) Jika user setuju lanjut, panggil create_booking.
+10) Di ringkasan, baca ringkas lalu akhiri sesi voice assistant. Jangan arahkan ke pembayaran.
+11) Jangan minta data tamu lagi.
 
-  Contoh singkat:
-  "Hotel A, rating 4.8. Pilih kamar: Deluxe, Suite. Kamar mana?"
-  "Kamar Deluxe dipilih. Lanjutkan pemesanan?"
-
-  Fungsi: search_hotels, get_hotel_details, select_room, create_booking, confirm_booking, navigate_to_screen, update_booking_step.
+Gunakan fungsi ini saat relevan:
+search_hotels, get_hotel_details, select_room, create_booking, confirm_booking, navigate_to_screen, update_booking_step.
 ''';
   }
 

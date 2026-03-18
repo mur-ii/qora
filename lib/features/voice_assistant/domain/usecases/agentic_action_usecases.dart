@@ -70,11 +70,20 @@ class SearchHotelsUseCase {
       currentScreen: AppRoutes.screenHotelList,
     );
 
+    final assistantHotels = filteredHotels
+        .map(
+          (hotel) => <String, dynamic>{
+            'id': hotel['id']?.toString(),
+            'name': hotel['name']?.toString(),
+          },
+        )
+        .take(6)
+        .toList(growable: false);
+
     return {
       'success': true,
-      'message':
-          'Found ${context.hotelSearchResults['total']} hotels in ${normalizedArgs['location']}',
-      'hotels': context.hotelSearchResults['hotels'],
+      'message': 'Pencarian hotel berhasil.',
+      'hotels': assistantHotels,
       'assistant_prompt': context.buildHotelListSpeech(
         filteredHotels,
         normalizedArgs['location'].toString(),
@@ -114,10 +123,29 @@ class HotelDetailsUseCase {
 
     context.updateAgentState(currentScreen: AppRoutes.screenHotelDetail);
 
+    final roomTypes =
+        (context.selectedHotel['roomTypes'] as List<dynamic>? ?? <dynamic>[])
+            .whereType<Map>()
+            .map(
+              (room) => <String, dynamic>{
+                'id': room['id']?.toString(),
+                'name': room['name']?.toString(),
+                'price_per_night': room['pricePerNight'],
+              },
+            )
+            .take(4)
+            .toList(growable: false);
+
     return {
       'success': true,
-      'hotel': context.selectedHotel,
-      'message': 'Hotel details retrieved for ${context.selectedHotel['name']}',
+      'hotel': <String, dynamic>{
+        'id': context.selectedHotel['id']?.toString(),
+        'name': context.selectedHotel['name']?.toString(),
+        'rating': context.selectedHotel['rating'],
+        'location': context.selectedHotel['location']?.toString(),
+      },
+      'room_types': roomTypes,
+      'message': 'Detail hotel siap.',
       'assistant_prompt': context.buildHotelDetailPrompt(),
     };
   }
@@ -162,9 +190,9 @@ class SelectRoomUseCase {
     return {
       'success': true,
       'selected_room_id': roomId,
-      'message': 'Room selected',
+      'message': 'Kamar dipilih.',
       'assistant_prompt':
-          'Kamar ${roomName ?? 'pilihan Anda'} sudah dipilih. Lanjutkan pemesanan? Jika ya, panggil create_booking.',
+          'Kamar ${roomName ?? 'pilihan Anda'} dipilih. Lanjutkan pemesanan?',
     };
   }
 }
@@ -421,9 +449,16 @@ class CreateBookingUseCase {
 
     return {
       'success': true,
-      'booking': context.bookingData,
-      'message':
-          'Booking created. Please review the details before confirming.',
+      'booking': <String, dynamic>{
+        'booking_id': context.bookingData['booking_id'],
+        'hotel_name': mergedHotel['name'],
+        'room_name': mergedRoom['name'],
+        'check_in': bookingDetails['checkIn'],
+        'check_out': bookingDetails['checkOut'],
+        'grand_total': pricing['grandTotal'],
+        'currency': pricing['currency'],
+      },
+      'message': 'Booking dibuat. Silakan konfirmasi.',
     };
   }
 }
@@ -451,18 +486,9 @@ class ConfirmBookingUseCase {
     };
 
     final message =
-        '''
-Pemesanan Anda telah berhasil dikonfirmasi dengan nomor konfirmasi ${confirmationData['confirmationNumber']}.
-
-Hotel: ${confirmationData['hotel']['name']}
-Kamar: ${confirmationData['room']['roomType']}
-Check-in: ${confirmationData['bookingDetails']['checkIn']}
-Check-out: ${confirmationData['bookingDetails']['checkOut']}
-
-Untuk melanjutkan pembayaran, silakan lakukan pembayaran secara manual melalui halaman Pembayaran di aplikasi dengan total IDR ${confirmationData['pricing']['grandTotal']}.
-
-Terima kasih telah menggunakan layanan kami. Semoga Anda menikmati pengalaman menginap Anda. Sampai jumpa!
-''';
+        'Booking dikonfirmasi. Nomor ${confirmationData['confirmationNumber']}. '
+        'Hotel ${confirmationData['hotel']['name']}, '
+        'kamar ${confirmationData['room']['roomType']}.';
 
     return {
       'success': true,

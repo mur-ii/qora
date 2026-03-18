@@ -338,11 +338,8 @@ class WebRTCService {
       'type': 'response.create',
       'response': {
         'modalities': ['text', 'audio'],
-        if (assistantPrompt != null && assistantPrompt.isNotEmpty)
-          'instructions': assistantPrompt
-        else
-          'instructions':
-              'Berikan respons singkat dalam Bahasa Indonesia berdasarkan hasil fungsi.',
+        'instructions':
+            '${_conciseResponseInstruction()} ${assistantPrompt ?? 'Sampaikan hasil fungsi secara singkat.'}',
       },
     });
 
@@ -519,6 +516,12 @@ class WebRTCService {
     } catch (_) {
       return '';
     }
+  }
+
+  String _conciseResponseInstruction() {
+    return 'Jawab dalam Bahasa Indonesia, maksimal 2 kalimat dan maksimal 30 kata. '
+        'Fokus hanya booking hotel. Jika di luar konteks booking hotel, jawab persis: '
+        '"Maaf, saya hanya bisa membantu pemesanan hotel di aplikasi ini."';
   }
 
   Map<String, dynamic> _readReportValues(dynamic report) {

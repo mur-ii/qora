@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/scheduler.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -27,6 +29,9 @@ class PerformanceTrackingService {
       <BookingMethodType, _ActiveRun>{};
   final Set<String> _voiceOriginBookingIds = <String>{};
   Timer? _samplingTimer;
+  final DateFormat _dateTimeFormatter = DateFormat('dd-MM-yyyy, HH:mm:ss');
+  late final TimingsCallback _frameTimingsCallback = _onFrameTimings;
+  bool _isFrameTimingsAttached = false;
 
   static const Duration _samplingInterval = Duration(seconds: 2);
 
@@ -64,6 +69,7 @@ class PerformanceTrackingService {
     );
 
     _ensureSamplingTimer();
+    _ensureFrameTimingsCallback();
     await _collectSystemSampleFor(method);
 
     return resolvedScenarioId;
@@ -103,7 +109,11 @@ class PerformanceTrackingService {
     await _collectSystemSampleFor(method);
 
     final avgCpu = avgCpuPercent ?? active?.averageCpuPercent;
+    final peakCpu = active?.peakCpuPercent;
+    final avgMemory = active?.averageMemoryMb;
     final peakMemory = peakMemoryMb ?? active?.peakMemoryMb;
+    final uiFrameTime = active?.uiFrameTimeStats;
+    final rasterFrameTime = active?.rasterFrameTimeStats;
     final networkSnapshot = _runtimeMetrics.getNetworkSnapshot();
     final resolvedNetworkTxKb =
         networkTxKb ??
@@ -129,6 +139,14 @@ class PerformanceTrackingService {
       status: status,
       details: _mergeDetails(existing.details, <String, dynamic>{
         if (details != null) ...details,
+        'ui_frame_time_ms_avg': uiFrameTime?.avg,
+        'ui_frame_time_ms_min': uiFrameTime?.min,
+        'ui_frame_time_ms_max': uiFrameTime?.max,
+        'raster_frame_time_ms_avg': rasterFrameTime?.avg,
+        'raster_frame_time_ms_min': rasterFrameTime?.min,
+        'raster_frame_time_ms_max': rasterFrameTime?.max,
+        'cpu_peak_percent': peakCpu,
+        'memory_avg_mb': avgMemory,
         'http_tx_kb': _bytesToKb(networkSnapshot.httpTxBytes),
         'http_rx_kb': _bytesToKb(networkSnapshot.httpRxBytes),
         'webrtc_tx_kb': _bytesToKb(networkSnapshot.webRtcTxBytes),
@@ -192,7 +210,8 @@ class PerformanceTrackingService {
     }
 
     final voiceSessionData = _extractVoiceSessionData(scenario);
-    final networkMetrics = _extractNetworkMetrics(scenario);
+    final performanceData = _buildPerformanceData(scenario);
+    final aiAnalysis = _buildAiAnalysis(scenario, voiceSessionData);
     final sessionIdFromDetails = scenario.details['session_id']?.toString();
 
     final exportDirectory = await _resolveExportDirectory();
@@ -208,8 +227,8 @@ class PerformanceTrackingService {
     final payload = <String, dynamic>{
       'meta': <String, dynamic>{
         'app': 'Qora',
-        'exported_at': now.toUtc().toIso8601String(),
-        'format_version': 2,
+        'exported_at': _formatDateTime(now),
+        'format_version': 3,
       },
       'skenario': <String, dynamic>{
         'id': scenario.scenarioId,
@@ -217,21 +236,13 @@ class PerformanceTrackingService {
         'name': scenario.scenarioName,
         'method': scenario.method.value,
         'status': scenario.status,
-        'started_at': scenario.startedAt.toUtc().toIso8601String(),
-        'ended_at': scenario.endedAt?.toUtc().toIso8601String(),
+        'started_at': _formatDateTime(scenario.startedAt),
+        'ended_at': _formatNullableDateTime(scenario.endedAt),
         'latency_ms': scenario.latencyMs,
       },
-      'performance': <String, dynamic>{
-        'avg_cpu_percent': scenario.avgCpuPercent,
-        'peak_memory_mb': scenario.peakMemoryMb,
-        'network_tx_kb': scenario.networkTxKb,
-        'network_rx_kb': scenario.networkRxKb,
-        'session_cost_usd': scenario.sessionCostUsd,
-        'total_tokens': scenario.totalTokens,
-        'total_turns': scenario.totalTurns,
-      },
+      'performance': performanceData,
+      'ai_analysis': aiAnalysis,
       'voice_session': voiceSessionData,
-      'network_metrics': networkMetrics,
     };
 
     final prettyJson = const JsonEncoder.withIndent('  ').convert(payload);
@@ -318,6 +329,162 @@ class PerformanceTrackingService {
     return replaced.isEmpty ? 'scenario' : replaced;
   }
 
+  String _formatDateTime(DateTime value) {
+    return _dateTimeFormatter.format(value.toLocal());
+  }
+
+  String? _formatNullableDateTime(DateTime? value) {
+    if (value == null) {
+      return null;
+    }
+    return _formatDateTime(value);
+  }
+
+  double _roundMetric(double? value) {
+    final resolved = value ?? 0;
+    return double.parse(resolved.toStringAsFixed(2));
+  }
+
+  // Token/cost values can be very small; keep 6 decimals to avoid flattening to 0.0.
+  double _roundCost(double? value) {
+    final resolved = value ?? 0;
+    return double.parse(resolved.toStringAsFixed(6));
+  }
+
+  int _parseInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  double? _parseDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    return null;
+  }
+
+  String? _formatDynamicTimestamp(dynamic raw) {
+    if (raw == null) {
+      return null;
+    }
+
+    if (raw is DateTime) {
+      return _formatDateTime(raw);
+    }
+
+    if (raw is String) {
+      final parsed = DateTime.tryParse(raw);
+      if (parsed != null) {
+        return _formatDateTime(parsed);
+      }
+      return raw;
+    }
+
+    return raw.toString();
+  }
+
+  Map<String, dynamic> _buildPerformanceData(PerformanceScenario scenario) {
+    final details = scenario.details;
+
+    final uiAvg = _parseDouble(details['ui_frame_time_ms_avg']);
+    final uiMin = _parseDouble(details['ui_frame_time_ms_min']);
+    final uiMax = _parseDouble(details['ui_frame_time_ms_max']);
+
+    final rasterAvg = _parseDouble(details['raster_frame_time_ms_avg']);
+    final rasterMin = _parseDouble(details['raster_frame_time_ms_min']);
+    final rasterMax = _parseDouble(details['raster_frame_time_ms_max']);
+
+    final avgCpu = scenario.avgCpuPercent;
+    final peakCpu = _parseDouble(details['cpu_peak_percent']) ?? avgCpu;
+
+    final avgMemory =
+        _parseDouble(details['memory_avg_mb']) ?? scenario.peakMemoryMb;
+    final peakMemory = scenario.peakMemoryMb;
+
+    final httpTx = _parseDouble(details['http_tx_kb']);
+    final httpRx = _parseDouble(details['http_rx_kb']);
+    final webRtcTx = _parseDouble(details['webrtc_tx_kb']);
+    final webRtcRx = _parseDouble(details['webrtc_rx_kb']);
+
+    return <String, dynamic>{
+      'ui_frame_time_ms': <String, dynamic>{
+        'avg': _roundMetric(uiAvg),
+        'min': _roundMetric(uiMin),
+        'max': _roundMetric(uiMax),
+      },
+      'raster_frame_time_ms': <String, dynamic>{
+        'avg': _roundMetric(rasterAvg),
+        'min': _roundMetric(rasterMin),
+        'max': _roundMetric(rasterMax),
+      },
+      'cpu_profile': <String, dynamic>{
+        'avg_cpu_percent': _roundMetric(avgCpu),
+        'peak_cpu_percent': _roundMetric(peakCpu),
+      },
+      'memory': <String, dynamic>{
+        'avg_memory_mb': _roundMetric(avgMemory),
+        'peak_memory_mb': _roundMetric(peakMemory),
+      },
+      'network': <String, dynamic>{
+        'http': <String, dynamic>{
+          'tx_kb': _roundMetric(httpTx),
+          'rx_kb': _roundMetric(httpRx),
+        },
+        'webrtc': <String, dynamic>{
+          'tx_kb': _roundMetric(webRtcTx),
+          'rx_kb': _roundMetric(webRtcRx),
+        },
+      },
+    };
+  }
+
+  Map<String, dynamic> _buildAiAnalysis(
+    PerformanceScenario scenario,
+    Map<String, dynamic> voiceSessionData,
+  ) {
+    final tokenUsage = voiceSessionData['token_usage'];
+    final costCalculation = voiceSessionData['cost_calculation'];
+
+    final inputTokens = tokenUsage is Map
+        ? _parseInt(tokenUsage['input_tokens'])
+        : 0;
+    final outputTokens = tokenUsage is Map
+        ? _parseInt(tokenUsage['output_tokens'])
+        : 0;
+    final cachedTokens = tokenUsage is Map
+        ? _parseInt(tokenUsage['cached_tokens'])
+        : 0;
+    final totalTokensFromUsage = tokenUsage is Map
+        ? _parseInt(tokenUsage['total_tokens'])
+        : 0;
+    final totalTokens = scenario.totalTokens > 0
+        ? scenario.totalTokens
+        : totalTokensFromUsage;
+
+    final totalCostFromVoice = costCalculation is Map
+        ? _parseDouble(costCalculation['total_cost_usd'])
+        : null;
+    final totalCost = scenario.sessionCostUsd > 0
+        ? scenario.sessionCostUsd
+        : (totalCostFromVoice ?? 0);
+
+    final turnsDetail = voiceSessionData['turns_detail'];
+    final fallbackTurns = turnsDetail is List ? turnsDetail.length : 0;
+
+    return <String, dynamic>{
+      'total_tokens': totalTokens,
+      'input_tokens': inputTokens,
+      'output_tokens': outputTokens,
+      'cached_tokens': cachedTokens,
+      'total_cost_usd': _roundCost(totalCost),
+      'total_turns': scenario.totalTurns > 0
+          ? scenario.totalTurns
+          : fallbackTurns,
+    };
+  }
+
   Map<String, dynamic> _extractVoiceSessionData(PerformanceScenario scenario) {
     final voiceSessionRaw = scenario.details['voice_session'];
     if (voiceSessionRaw is Map<String, dynamic>) {
@@ -325,27 +492,70 @@ class PerformanceTrackingService {
       final rawTokenUsage = voiceSessionRaw['token_usage'];
       final rawCostCalculation = voiceSessionRaw['cost_calculation'];
 
-      return <String, dynamic>{
-        'turns_detail': rawTurns is List
-            ? List<dynamic>.from(rawTurns)
-            : const <Map<String, dynamic>>[],
-        'token_usage': rawTokenUsage is Map
-            ? Map<String, dynamic>.from(rawTokenUsage)
-            : <String, dynamic>{
-                'input_tokens': null,
-                'output_tokens': null,
-                'cached_tokens': null,
-                'total_tokens': scenario.totalTokens,
-              },
-        'cost_calculation': rawCostCalculation is Map
-            ? Map<String, dynamic>.from(rawCostCalculation)
-            : <String, dynamic>{
-                'input_cost_usd': null,
-                'output_cost_usd': null,
-                'cached_cost_usd': null,
-                'total_cost_usd': scenario.sessionCostUsd,
-              },
-      };
+      final turns = rawTurns is List
+          ? rawTurns
+                .whereType<Map>()
+                .map((rawTurn) => _normalizeVoiceTurn(rawTurn))
+                .toList(growable: false)
+          : const <Map<String, dynamic>>[];
+
+      final tokenUsage = rawTokenUsage is Map
+          ? <String, dynamic>{
+              'input_tokens': _parseInt(rawTokenUsage['input_tokens']),
+              'output_tokens': _parseInt(rawTokenUsage['output_tokens']),
+              'cached_tokens': _parseInt(rawTokenUsage['cached_tokens']),
+              'total_tokens': _parseInt(rawTokenUsage['total_tokens']),
+            }
+          : <String, dynamic>{
+              'input_tokens': 0,
+              'output_tokens': 0,
+              'cached_tokens': 0,
+              'total_tokens': scenario.totalTokens,
+            };
+
+      final costCalculation = rawCostCalculation is Map
+          ? <String, dynamic>{
+              'input_cost_usd': _roundCost(
+                _parseDouble(rawCostCalculation['input_cost_usd']),
+              ),
+              'output_cost_usd': _roundCost(
+                _parseDouble(rawCostCalculation['output_cost_usd']),
+              ),
+              'cached_cost_usd': _roundCost(
+                _parseDouble(rawCostCalculation['cached_cost_usd']),
+              ),
+              'total_cost_usd': _roundCost(
+                _parseDouble(rawCostCalculation['total_cost_usd']) ??
+                    scenario.sessionCostUsd,
+              ),
+            }
+          : <String, dynamic>{
+              'input_cost_usd': 0.0,
+              'output_cost_usd': 0.0,
+              'cached_cost_usd': 0.0,
+              'total_cost_usd': _roundCost(scenario.sessionCostUsd),
+            };
+
+      final normalized = <String, dynamic>{...voiceSessionRaw};
+      normalized['turns_detail'] = turns;
+      normalized['token_usage'] = tokenUsage;
+      normalized['cost_calculation'] = costCalculation;
+
+      final transcriptRaw = voiceSessionRaw['conversation_transcript'];
+      if (transcriptRaw is List) {
+        normalized['conversation_transcript'] = transcriptRaw
+            .whereType<Map>()
+            .map((entry) {
+              final mapped = Map<String, dynamic>.from(entry);
+              mapped['timestamp'] = _formatDynamicTimestamp(
+                mapped['timestamp'],
+              );
+              return mapped;
+            })
+            .toList(growable: false);
+      }
+
+      return normalized;
     }
 
     return <String, dynamic>{
@@ -360,25 +570,26 @@ class PerformanceTrackingService {
         'input_cost_usd': 0.0,
         'output_cost_usd': 0.0,
         'cached_cost_usd': 0.0,
-        'total_cost_usd': scenario.sessionCostUsd,
+        'total_cost_usd': _roundCost(scenario.sessionCostUsd),
       },
     };
   }
 
-  Map<String, dynamic> _extractNetworkMetrics(PerformanceScenario scenario) {
-    final details = scenario.details;
-
+  Map<String, dynamic> _normalizeVoiceTurn(Map rawTurn) {
+    final turn = Map<String, dynamic>.from(rawTurn);
     return <String, dynamic>{
-      'http': <String, dynamic>{
-        'tx_kb': details['http_tx_kb'],
-        'rx_kb': details['http_rx_kb'],
-      },
-      'webrtc': <String, dynamic>{
-        'tx_kb': details['webrtc_tx_kb'],
-        'rx_kb': details['webrtc_rx_kb'],
-      },
-      'runtime_metrics_source':
-          details['runtime_metrics_source'] ?? 'android_method_channel',
+      'turn': _parseInt(turn['turn']),
+      'timestamp': _formatDynamicTimestamp(turn['timestamp']),
+      'user_message': turn['user_message']?.toString() ?? '',
+      'assistant_message': turn['assistant_message']?.toString() ?? '',
+      'input_tokens': _parseInt(turn['input_tokens']),
+      'output_tokens': _parseInt(turn['output_tokens']),
+      'cached_tokens': _parseInt(turn['cached_tokens']),
+      'total_tokens': _parseInt(turn['total_tokens']),
+      'input_cost_usd': _roundCost(_parseDouble(turn['input_cost_usd'])),
+      'output_cost_usd': _roundCost(_parseDouble(turn['output_cost_usd'])),
+      'cached_cost_usd': _roundCost(_parseDouble(turn['cached_cost_usd'])),
+      'total_cost_usd': _roundCost(_parseDouble(turn['total_cost_usd'])),
     };
   }
 
@@ -406,6 +617,30 @@ class PerformanceTrackingService {
 
     _samplingTimer?.cancel();
     _samplingTimer = null;
+
+    if (_isFrameTimingsAttached) {
+      SchedulerBinding.instance.removeTimingsCallback(_frameTimingsCallback);
+      _isFrameTimingsAttached = false;
+    }
+  }
+
+  void _ensureFrameTimingsCallback() {
+    if (_isFrameTimingsAttached) {
+      return;
+    }
+
+    SchedulerBinding.instance.addTimingsCallback(_frameTimingsCallback);
+    _isFrameTimingsAttached = true;
+  }
+
+  void _onFrameTimings(List<FrameTiming> timings) {
+    if (timings.isEmpty || _activeRuns.isEmpty) {
+      return;
+    }
+
+    for (final run in _activeRuns.values) {
+      run.addFrameTimings(timings);
+    }
   }
 
   Future<void> _collectSystemSampleFor(BookingMethodType method) async {
@@ -444,11 +679,26 @@ class _ActiveRun {
 
   double _cpuTotal = 0;
   int _cpuSamples = 0;
+  double _peakCpuPercent = 0;
+  double _memoryTotal = 0;
+  int _memorySamples = 0;
   double _peakMemoryMb = 0;
+  final _MetricAccumulator _uiFrameTime = _MetricAccumulator();
+  final _MetricAccumulator _rasterFrameTime = _MetricAccumulator();
 
   double? get averageCpuPercent {
     if (_cpuSamples <= 0) return null;
     return _cpuTotal / _cpuSamples;
+  }
+
+  double? get peakCpuPercent {
+    if (_cpuSamples <= 0) return null;
+    return _peakCpuPercent;
+  }
+
+  double? get averageMemoryMb {
+    if (_memorySamples <= 0) return null;
+    return _memoryTotal / _memorySamples;
   }
 
   double? get peakMemoryMb {
@@ -456,14 +706,78 @@ class _ActiveRun {
     return _peakMemoryMb;
   }
 
+  _MetricSummary? get uiFrameTimeStats => _uiFrameTime.summary;
+
+  _MetricSummary? get rasterFrameTimeStats => _rasterFrameTime.summary;
+
   void addSystemSample({double? cpuPercent, double? memoryMb}) {
     if (cpuPercent != null && cpuPercent >= 0) {
       _cpuTotal += cpuPercent;
       _cpuSamples += 1;
+      if (cpuPercent > _peakCpuPercent) {
+        _peakCpuPercent = cpuPercent;
+      }
     }
 
-    if (memoryMb != null && memoryMb > _peakMemoryMb) {
-      _peakMemoryMb = memoryMb;
+    if (memoryMb != null && memoryMb >= 0) {
+      _memoryTotal += memoryMb;
+      _memorySamples += 1;
+      if (memoryMb > _peakMemoryMb) {
+        _peakMemoryMb = memoryMb;
+      }
     }
   }
+
+  void addFrameTimings(List<FrameTiming> timings) {
+    for (final timing in timings) {
+      final uiMs = timing.buildDuration.inMicroseconds / 1000;
+      final rasterMs = timing.rasterDuration.inMicroseconds / 1000;
+      _uiFrameTime.add(uiMs);
+      _rasterFrameTime.add(rasterMs);
+    }
+  }
+}
+
+class _MetricAccumulator {
+  double _sum = 0;
+  int _count = 0;
+  double? _min;
+  double? _max;
+
+  void add(double value) {
+    if (value.isNaN || value.isInfinite || value < 0) {
+      return;
+    }
+
+    _sum += value;
+    _count += 1;
+
+    if (_min == null || value < _min!) {
+      _min = value;
+    }
+
+    if (_max == null || value > _max!) {
+      _max = value;
+    }
+  }
+
+  _MetricSummary? get summary {
+    if (_count <= 0 || _min == null || _max == null) {
+      return null;
+    }
+
+    return _MetricSummary(avg: _sum / _count, min: _min!, max: _max!);
+  }
+}
+
+class _MetricSummary {
+  const _MetricSummary({
+    required this.avg,
+    required this.min,
+    required this.max,
+  });
+
+  final double avg;
+  final double min;
+  final double max;
 }
