@@ -142,6 +142,10 @@ class PerformanceTrackingService {
     return _repository.getAllScenarios();
   }
 
+  Future<PerformanceScenario?> getScenarioById(String scenarioId) {
+    return _repository.getScenarioById(scenarioId);
+  }
+
   void markVoiceOriginBooking(String bookingId) {
     final normalizedBookingId = bookingId.trim();
     if (normalizedBookingId.isEmpty) {
@@ -187,9 +191,14 @@ class PerformanceTrackingService {
       throw Exception('Scenario tidak ditemukan');
     }
 
-    final voiceSessionData = _extractVoiceSessionData(scenario);
+    final isGuiScenario = scenario.method == BookingMethodType.gui;
+    final voiceSessionData = isGuiScenario
+        ? const <String, dynamic>{}
+        : _extractVoiceSessionData(scenario);
     final performanceData = _buildPerformanceData(scenario);
-    final aiAnalysis = _buildAiAnalysis(scenario, voiceSessionData);
+    final aiAnalysis = isGuiScenario
+        ? const <String, dynamic>{}
+        : _buildAiAnalysis(scenario, voiceSessionData);
     final sessionIdFromDetails = scenario.details['session_id']?.toString();
 
     final exportDirectory = await _resolveExportDirectory();
@@ -219,8 +228,8 @@ class PerformanceTrackingService {
         'latency_ms': scenario.latencyMs,
       },
       'performance': performanceData,
-      'ai_analysis': aiAnalysis,
-      'voice_session': voiceSessionData,
+      if (!isGuiScenario) 'ai_analysis': aiAnalysis,
+      if (!isGuiScenario) 'voice_session': voiceSessionData,
     };
 
     final prettyJson = const JsonEncoder.withIndent('  ').convert(payload);

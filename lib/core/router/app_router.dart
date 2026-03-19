@@ -5,6 +5,7 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/booking/domain/entities/booking_entity.dart';
 import '../../features/booking/presentation/pages/booking_confirmation_page.dart';
 import '../../features/booking/presentation/pages/booking_summary_page.dart';
+import '../../features/booking/presentation/pages/guest_info_page.dart';
 import '../../features/booking/presentation/pages/payment_page.dart';
 import '../../features/hotel_detail/presentation/pages/hotel_detail_page.dart';
 import '../../features/hotel_list/presentation/pages/hotel_list_page.dart';
@@ -133,7 +134,7 @@ final GoRouter appRouter = GoRouter(
       name: AppRoutes.bookingGuestInfoName,
       builder: (context, state) {
         final booking = state.extra as BookingEntity;
-        return PaymentPage(booking: booking);
+        return GuestInfoPage(booking: booking);
       },
     ),
     GoRoute(
