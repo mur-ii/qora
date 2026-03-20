@@ -1,6 +1,7 @@
 param(
   [int]$LoopCount = 10,
   [string]$OutputDirectory = "performance_reports",
+  [string]$DriverFile = "test_driver/integration_test.dart",
   [string]$TestFile = "integration_test/app_login_booking_logout_flow_test.dart"
 )
 
@@ -19,9 +20,9 @@ if (-not (Test-Path $OutputDirectory)) {
 $outputPath = Join-Path $OutputDirectory "gui_performance_loop_${LoopCount}_${timestamp}.csv"
 
 Write-Host "Running performance loop test ($LoopCount iterations)..."
-Write-Host "Command: flutter test $TestFile --dart-define=PERF_LOOP_COUNT=$LoopCount"
+Write-Host "Command: flutter drive --driver=$DriverFile --target=$TestFile --profile --dart-define=PERF_LOOP_COUNT=$LoopCount"
 
-$rawOutput = & flutter test $TestFile "--dart-define=PERF_LOOP_COUNT=$LoopCount" 2>&1 |
+$rawOutput = & flutter drive "--driver=$DriverFile" "--target=$TestFile" --profile "--dart-define=PERF_LOOP_COUNT=$LoopCount" 2>&1 |
   Tee-Object -Variable capturedOutput
 
 $exitCode = $LASTEXITCODE

@@ -23,6 +23,9 @@ class _MetricStat {
 class _IterationPerfMetrics {
   const _IterationPerfMetrics({
     required this.iteration,
+    required this.latencyMs,
+    required this.totalFrames,
+    required this.jankFrames,
     required this.uiFrame,
     required this.rasterFrame,
     required this.avgMemoryMb,
@@ -30,6 +33,9 @@ class _IterationPerfMetrics {
   });
 
   final int iteration;
+  final double latencyMs;
+  final int totalFrames;
+  final int jankFrames;
   final _MetricStat uiFrame;
   final _MetricStat rasterFrame;
   final double avgMemoryMb;
@@ -38,6 +44,9 @@ class _IterationPerfMetrics {
   Map<String, dynamic> toJson() {
     return {
       'iteration': iteration,
+      'latency_ms': latencyMs,
+      'total_frames': totalFrames,
+      'jank_frames': jankFrames,
       'ui_frame_time_ms': {
         'avg': uiFrame.avg,
         'min': uiFrame.min,
@@ -120,12 +129,15 @@ void main() {
   String buildCsv(List<_IterationPerfMetrics> metrics) {
     final buffer = StringBuffer();
     buffer.writeln(
-      'iteration,ui_avg_ms,ui_min_ms,ui_max_ms,raster_avg_ms,raster_min_ms,raster_max_ms,avg_memory_mb,peak_memory_mb',
+      'iteration,latency_ms,total_frames,jank_frames,ui_avg_ms,ui_min_ms,ui_max_ms,raster_avg_ms,raster_min_ms,raster_max_ms,avg_memory_mb,peak_memory_mb',
     );
 
     for (final item in metrics) {
       buffer.writeln(
         '${item.iteration},'
+        '${formatDouble(item.latencyMs)},'
+        '${item.totalFrames},'
+        '${item.jankFrames},'
         '${formatDouble(item.uiFrame.avg)},'
         '${formatDouble(item.uiFrame.min)},'
         '${formatDouble(item.uiFrame.max)},'
@@ -177,7 +189,7 @@ void main() {
     await pumpUntilFound(tester, find.text('Cari Hotel'));
 
     await tester.tap(find.byType(TextField).first);
-    await tester.pumpAndSettle(); // Ganti Duration dengan pumpAndSettle
+    await tester.pump(const Duration(milliseconds: 600));
 
     // Pastikan sudah masuk ke halaman pencarian
     await pumpUntilFound(tester, find.text('Pilih Provinsi'));
@@ -190,8 +202,7 @@ void main() {
 
     // Sekarang aman untuk di-tap
     await tester.tap(jakartaProvince.first);
-    await tester
-        .pumpAndSettle(); // Tunggu animasi kembali ke halaman awal selesai
+    await tester.pump(const Duration(milliseconds: 700));
 
     // Verifikasi akhir
     await pumpUntilFound(tester, editableTextWithValue('Jakarta, Indonesia'));
@@ -343,6 +354,7 @@ void main() {
 
       final metrics = <_IterationPerfMetrics>[];
       final effectiveLoopCount = loopCount <= 0 ? 10 : loopCount;
+      const jankThresholdMicros = 16666;
 
       for (var iteration = 1; iteration <= effectiveLoopCount; iteration++) {
         final frameTimings = <FrameTiming>[];
@@ -359,10 +371,12 @@ void main() {
           const Duration(milliseconds: 200),
           (_) => memorySamples.add(readMemoryMb()),
         );
+        final loopStopwatch = Stopwatch()..start();
 
         try {
           await runBookingScenarioLoopOnce(tester);
         } finally {
+          loopStopwatch.stop();
           memorySampler.cancel();
           memorySamples.add(readMemoryMb());
           SchedulerBinding.instance.removeTimingsCallback(onReportTimings);
@@ -378,10 +392,22 @@ void main() {
         final uiFrameStat = buildMetricStat(uiFrameSamples);
         final rasterFrameStat = buildMetricStat(rasterFrameSamples);
         final memoryStat = buildMetricStat(memorySamples);
+        final latencyMs = loopStopwatch.elapsedMicroseconds / 1000;
+        final totalFrames = frameTimings.length;
+        final jankFrames = frameTimings
+            .where(
+              (timing) =>
+                  timing.buildDuration.inMicroseconds > jankThresholdMicros ||
+                  timing.rasterDuration.inMicroseconds > jankThresholdMicros,
+            )
+            .length;
 
         metrics.add(
           _IterationPerfMetrics(
             iteration: iteration,
+            latencyMs: latencyMs,
+            totalFrames: totalFrames,
+            jankFrames: jankFrames,
             uiFrame: uiFrameStat,
             rasterFrame: rasterFrameStat,
             avgMemoryMb: memoryStat.avg,
@@ -391,6 +417,7 @@ void main() {
 
         debugPrint(
           'Loop $iteration selesai: '
+          'Latency=${formatDouble(latencyMs)}ms, Frames=$totalFrames, Jank=$jankFrames, '
           'UI(avg=${formatDouble(uiFrameStat.avg)}ms, min=${formatDouble(uiFrameStat.min)}ms, max=${formatDouble(uiFrameStat.max)}ms), '
           'Raster(avg=${formatDouble(rasterFrameStat.avg)}ms, min=${formatDouble(rasterFrameStat.min)}ms, max=${formatDouble(rasterFrameStat.max)}ms), '
           'Memory(avg=${formatDouble(memoryStat.avg)}MB, peak=${formatDouble(memoryStat.max)}MB)',
