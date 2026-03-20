@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/home_injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/app_toast.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
 import '../bloc/home_bloc.dart';
@@ -65,13 +64,16 @@ class _HomeView extends StatelessWidget {
         listenWhen: (prev, curr) => prev.status != curr.status,
         listener: (context, state) {
           if (state.status == HomeStatus.failure) {
-            AppToast.showError(
-              context,
-              state.errorMessage ?? 'Terjadi kesalahan',
-            );
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(state.errorMessage ?? 'Terjadi kesalahan'),
+                  backgroundColor: AppColors.error,
+                ),
+              );
             context.read<HomeBloc>().add(const HomeStatusReset());
           } else if (state.status == HomeStatus.success) {
-            AppToast.showInfo(context, 'Mencari hotel...');
             context.go(
               Uri(
                 path: AppRoutes.hotelListPath,

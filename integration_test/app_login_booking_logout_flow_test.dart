@@ -161,36 +161,39 @@ void main() {
     );
   }
 
-  Future<void> runBookingFlowOnce(
-    WidgetTester tester, {
-    required bool isFirstIteration,
-  }) async {
-    // Splash -> Login (hanya iterasi pertama)
-    if (isFirstIteration) {
-      await tester.pump(const Duration(seconds: 3));
-    }
+  Future<void> loginToHomeOnce(WidgetTester tester) async {
+    // Splash -> Login
+    await tester.pump(const Duration(seconds: 3));
     await pumpUntilFound(tester, find.text('Verifikasi OTP'));
 
     // Login -> Home
     await tester.tap(find.text('Verifikasi OTP'));
     await tester.pump(const Duration(milliseconds: 400));
     await pumpUntilFound(tester, find.text('Cari Hotel'));
+  }
 
+  Future<void> runBookingScenarioLoopOnce(WidgetTester tester) async {
     // Pilih lokasi lewat search page
+    await pumpUntilFound(tester, find.text('Cari Hotel'));
+
     await tester.tap(find.byType(TextField).first);
-    await tester.pump(const Duration(milliseconds: 300));
-    await pumpUntilFound(tester, find.text('Pilih Lokasi atau Hotel'));
+    await tester.pumpAndSettle(); // Ganti Duration dengan pumpAndSettle
 
-    await tester.enterText(
-      find.byWidgetPredicate((w) => w is TextField && w.autofocus == true),
-      'jakarta',
+    // Pastikan sudah masuk ke halaman pencarian
+    await pumpUntilFound(tester, find.text('Pilih Provinsi'));
+
+    // Pilih Jakarta langsung dari daftar provinsi
+    final jakartaProvince = find.byKey(
+      const ValueKey<String>('province_jakarta'),
     );
-    await tester.pump(const Duration(milliseconds: 500));
+    await pumpUntilFound(tester, jakartaProvince);
 
-    await pumpUntilFound(tester, find.text('Jakarta, Indonesia'));
-    await tester.tap(find.text('Jakarta, Indonesia').first);
-    await tester.pump(const Duration(milliseconds: 400));
+    // Sekarang aman untuk di-tap
+    await tester.tap(jakartaProvince.first);
+    await tester
+        .pumpAndSettle(); // Tunggu animasi kembali ke halaman awal selesai
 
+    // Verifikasi akhir
     await pumpUntilFound(tester, editableTextWithValue('Jakarta, Indonesia'));
 
     // Pilih tanggal 1-3 April 2026
@@ -229,7 +232,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     await pumpUntilFound(tester, find.textContaining('akomodasi'));
 
-    // Pilih hotel paling atas
     await pumpUntilFound(tester, find.byType(HotelCard));
     await tester.tap(find.byType(HotelCard).first);
     await tester.pump(const Duration(milliseconds: 500));
@@ -305,7 +307,10 @@ void main() {
     await pumpUntilFound(tester, kembaliKeBerandaButton);
     await tester.tap(kembaliKeBerandaButton.first);
     await tester.pump(const Duration(milliseconds: 500));
+    await pumpUntilFound(tester, find.text('Cari Hotel'));
+  }
 
+  Future<void> logoutFromProfile(WidgetTester tester) async {
     // Logout dari profile
     await pumpUntilFound(tester, find.text('Cari Hotel'));
     await tester.tap(find.text('Akun Saya'));
@@ -334,6 +339,7 @@ void main() {
       navigationService.setRouter(appRouter);
 
       await tester.pumpWidget(const MyApp());
+      await loginToHomeOnce(tester);
 
       final metrics = <_IterationPerfMetrics>[];
       final effectiveLoopCount = loopCount <= 0 ? 10 : loopCount;
@@ -355,7 +361,7 @@ void main() {
         );
 
         try {
-          await runBookingFlowOnce(tester, isFirstIteration: iteration == 1);
+          await runBookingScenarioLoopOnce(tester);
         } finally {
           memorySampler.cancel();
           memorySamples.add(readMemoryMb());
@@ -390,6 +396,8 @@ void main() {
           'Memory(avg=${formatDouble(memoryStat.avg)}MB, peak=${formatDouble(memoryStat.max)}MB)',
         );
       }
+
+      await logoutFromProfile(tester);
 
       final csv = buildCsv(metrics);
       debugPrint('PERFORMANCE_CSV_START');

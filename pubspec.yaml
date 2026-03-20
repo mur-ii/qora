@@ -13,7 +13,6 @@ dependencies:
   # UI & Navigation
   go_router: ^17.0.1
   lottie: ^3.3.2
-  toastification: ^3.0.3
 
   # Networking & Dependency Injection
   http: ^1.6.0

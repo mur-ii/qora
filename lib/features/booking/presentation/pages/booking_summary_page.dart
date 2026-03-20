@@ -7,7 +7,6 @@ import '../../../../core/di/booking_injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_toast.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_event.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
@@ -123,7 +122,14 @@ class _BookingSummaryPageContentState
           },
           listener: (context, state) {
             if (state is BookingError) {
-              AppToast.showError(context, state.message);
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
+                    backgroundColor: AppColors.error,
+                  ),
+                );
               return;
             }
 

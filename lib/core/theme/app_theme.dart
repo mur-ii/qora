@@ -353,21 +353,6 @@ class AppTheme {
         clipBehavior: Clip.hardEdge,
       ),
 
-      // Snackbar Theme
-      snackBarTheme: SnackBarThemeData(
-        backgroundColor: AppColors.neutral,
-        contentTextStyle: const TextStyle(
-          fontFamily: AppTypography.fontFamily,
-          fontSize: 14,
-          color: AppColors.textOnDark,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(radiusSmall),
-        ),
-        behavior: SnackBarBehavior.floating,
-        elevation: elevationMedium,
-      ),
-
       // Divider Theme
       dividerTheme: const DividerThemeData(
         color: AppColors.divider,

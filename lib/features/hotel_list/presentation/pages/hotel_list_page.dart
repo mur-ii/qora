@@ -7,7 +7,6 @@ import '../../../../core/di/hotel_list_injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_toast.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_event.dart';
 import '../bloc/hotel_list_bloc.dart';
@@ -540,7 +539,13 @@ class _HotelListPageContent extends StatelessWidget {
                       icon: Icons.map_outlined,
                       label: 'Peta',
                       onTap: () {
-                        AppToast.showInfo(context, 'Peta akan segera hadir');
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(
+                            const SnackBar(
+                              content: Text('Peta akan segera hadir'),
+                            ),
+                          );
                       },
                     ),
                   ),

@@ -95,9 +95,9 @@ class _ProfilePageContent extends StatelessWidget {
   }
 
   void _onMenuTap(BuildContext context, String label) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$label segera tersedia')));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text('$label segera tersedia')));
   }
 
   Future<void> _handleLogout(BuildContext context) async {

@@ -16,12 +16,6 @@ class SearchBloc extends Bloc<SearchEvent, SearchState> {
     SearchHotelsEvent event,
     Emitter<SearchState> emit,
   ) async {
-    // Don't search if both query and location are empty
-    if ((event.query == null || event.query!.isEmpty) &&
-        (event.location == null || event.location!.isEmpty)) {
-      return;
-    }
-
     emit(const SearchLoading());
 
     try {

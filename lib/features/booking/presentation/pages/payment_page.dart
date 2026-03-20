@@ -7,7 +7,6 @@ import '../../../../core/di/booking_injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/app_toast.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../bloc/booking_bloc.dart';
 import '../bloc/booking_event.dart';
@@ -124,7 +123,14 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
           BlocListener<BookingBloc, BookingState>(
             listener: (context, state) {
               if (state is BookingError) {
-                AppToast.showError(context, state.message);
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
               } else if (state is BookingConfirmed) {
                 context.go(
                   AppRoutes.bookingConfirmationPath,

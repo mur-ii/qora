@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/app_toast.dart';
 import '../../domain/entities/agent_state_entity.dart';
 import '../bloc/voice_assistant_bloc.dart';
 import '../bloc/voice_assistant_event.dart';
@@ -30,7 +29,14 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
     final status = await Permission.microphone.request();
     if (!status.isGranted) {
       if (mounted) {
-        AppToast.showError(context, 'Microphone permission is required');
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Microphone permission is required'),
+              backgroundColor: AppColors.error,
+            ),
+          );
       }
     }
   }
@@ -64,7 +70,14 @@ class _VoiceAssistantPageState extends State<VoiceAssistantPage> {
             previous.error != current.error && current.error != null,
         listener: (context, state) {
           if (state.error != null) {
-            AppToast.showError(context, state.error!);
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Text(state.error!),
+                  backgroundColor: AppColors.error,
+                ),
+              );
           }
         },
         child: Column(
