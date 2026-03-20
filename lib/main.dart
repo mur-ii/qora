@@ -1,12 +1,9 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/config/env_config.dart';
 import 'core/di/voice_assistant_injection.dart';
 import 'core/router/app_router.dart';
-import 'core/services/booking_alpha_test_launcher.dart';
 import 'core/theme/app_theme.dart';
 import 'features/voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
 
@@ -24,8 +21,6 @@ void main() async {
   navigationService.setRouter(appRouter);
 
   runApp(const MyApp());
-
-  unawaited(BookingAlphaTestLauncher.runDefaultDebugLoopIfEnabled());
 }
 
 class MyApp extends StatelessWidget {

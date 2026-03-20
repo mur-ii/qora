@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/di/booking_injection.dart';
 import '../../../../core/router/app_routes.dart';
-import '../../../../core/services/performance_tracking_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_toast.dart';
@@ -79,9 +78,6 @@ class _BookingSummaryPageContentState
     }
 
     _hasVoiceCompleted = true;
-    PerformanceTrackingService.instance.markVoiceOriginBooking(
-      booking.bookingId,
-    );
 
     final currencySymbol = booking.pricing.currency.toUpperCase() == 'IDR'
         ? 'Rp '

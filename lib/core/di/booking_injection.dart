@@ -5,7 +5,6 @@ import '../../features/booking/data/repositories/booking_repository_impl.dart';
 import '../../features/booking/domain/repositories/booking_local_repository.dart';
 import '../../features/booking/domain/usecases/confirm_booking.dart';
 import '../../features/booking/domain/usecases/get_booking_summary.dart';
-import '../../features/booking/domain/usecases/run_booking_alpha_loop.dart';
 import '../../features/booking/domain/usecases/submit_guest_info.dart';
 import '../../features/booking/presentation/bloc/booking_bloc.dart';
 
@@ -24,16 +23,5 @@ class BookingInjection {
   static BookingLocalRepository createLocalRepository() {
     final localDataSource = BookingLocalDataSource();
     return BookingLocalRepositoryImpl(localDataSource: localDataSource);
-  }
-
-  static RunBookingAlphaLoop createBookingAlphaLoopRunner() {
-    final dataSource = BookingRemoteDataSourceImpl();
-    final repository = BookingRepositoryImpl(dataSource);
-
-    return RunBookingAlphaLoop(
-      getBookingSummary: GetBookingSummary(repository),
-      submitGuestInfo: SubmitGuestInfo(repository),
-      confirmBooking: ConfirmBooking(repository),
-    );
   }
 }

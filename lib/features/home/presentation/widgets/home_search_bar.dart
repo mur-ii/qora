@@ -1,15 +1,11 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_routes.dart';
-import '../../../../core/services/performance_tracking_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../performance/domain/entities/performance_scenario.dart';
 import '../bloc/home_bloc.dart';
 
 /// Search card displayed at the top of the home screen.
@@ -204,17 +200,6 @@ class _LocationFieldState extends State<_LocationField> {
         fontWeight: FontWeight.w500,
       ),
       onTap: () async {
-        unawaited(
-          PerformanceTrackingService.instance.startScenario(
-            method: BookingMethodType.gui,
-            scenarioName: 'GUI booking flow',
-            details: <String, dynamic>{
-              'entry_screen': AppRoutes.homePath,
-              'entry_action': 'home_location_field_tap',
-            },
-          ),
-        );
-
         final router = GoRouter.of(context);
         final bloc = context.read<HomeBloc>();
         final value = await router.push(AppRoutes.searchLocationPath);
