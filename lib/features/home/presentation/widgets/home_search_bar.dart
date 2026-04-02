@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -168,6 +166,21 @@ class _LocationField extends StatefulWidget {
 }
 
 class _LocationFieldState extends State<_LocationField> {
+  static const List<_CityOption> _cities = [
+    _CityOption(
+      value: 'Jakarta, Indonesia',
+      label: 'Jakarta',
+      subtitle: 'Pusat bisnis dan wisata urban',
+      icon: Icons.location_city,
+    ),
+    _CityOption(
+      value: 'Bandung, Indonesia',
+      label: 'Bandung',
+      subtitle: 'Kota kreatif dengan udara sejuk',
+      icon: Icons.terrain,
+    ),
+  ];
+
   late final TextEditingController _controller;
 
   @override
@@ -200,18 +213,194 @@ class _LocationFieldState extends State<_LocationField> {
         fontWeight: FontWeight.w500,
       ),
       onTap: () async {
-        final router = GoRouter.of(context);
-        final bloc = context.read<HomeBloc>();
-        final value = await router.push(AppRoutes.searchLocationPath);
-        if (!mounted) return;
-        if (value is String) {
-          bloc.add(HomeLocationChanged(value));
-        }
+        final selectedCity = await _showCityPickerBottomSheet(context);
+        if (!context.mounted || selectedCity == null) return;
+        context.read<HomeBloc>().add(HomeLocationChanged(selectedCity));
       },
       decoration: _inputDecoration(
-        hintText: 'Pilih kota atau hotel',
+        hintText: 'Pilih kota (Jakarta/Bandung)',
         prefixIcon: const Icon(Icons.location_on_outlined),
-        suffixIcon: const Icon(Icons.search),
+        suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded),
+      ),
+    );
+  }
+
+  Future<String?> _showCityPickerBottomSheet(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+
+    return showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppColors.transparent,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            0,
+            16,
+            (bottomInset > 0 ? bottomInset : 12) + 8,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.surfaceWhite,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 10),
+                Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.explore_outlined,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Pilih kota tujuan',
+                              style: AppTypography.titleMedium.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Tersedia: Jakarta dan Bandung',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ..._cities.map(
+                  (city) => _CityOptionTile(
+                    city: city,
+                    isSelected: _controller.text == city.value,
+                    onTap: () => Navigator.of(sheetContext).pop(city.value),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CityOption {
+  const _CityOption({
+    required this.value,
+    required this.label,
+    required this.subtitle,
+    required this.icon,
+  });
+
+  final String value;
+  final String label;
+  final String subtitle;
+  final IconData icon;
+}
+
+class _CityOptionTile extends StatelessWidget {
+  const _CityOptionTile({
+    required this.city,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final _CityOption city;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+      child: Material(
+        color: AppColors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Ink(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isSelected ? AppColors.primary : AppColors.border,
+                width: isSelected ? 1.4 : 1,
+              ),
+              color: isSelected
+                  ? AppColors.primary.withValues(alpha: 0.06)
+                  : AppColors.surface,
+            ),
+            child: Row(
+              children: [
+                Icon(city.icon, color: AppColors.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        city.label,
+                        style: AppTypography.bodyLarge.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        city.subtitle,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  isSelected
+                      ? Icons.check_circle_rounded
+                      : Icons.chevron_right_rounded,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.textSecondary,
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

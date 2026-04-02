@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../features/booking/presentation/pages/booking_list_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
-import '../../features/profile/presentation/pages/profile_page.dart';
 import '../theme/app_colors.dart';
 
 class MainNavigationPage extends StatefulWidget {
@@ -19,7 +18,6 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
     return const [
       RepaintBoundary(child: HomePage()),
       RepaintBoundary(child: BookingListPage()),
-      RepaintBoundary(child: ProfilePage()),
     ];
   }
 
@@ -34,11 +32,6 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
         icon: Icon(Icons.book_online),
         activeIcon: Icon(Icons.book_online_outlined),
         label: 'Booking',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.person),
-        activeIcon: Icon(Icons.person_rounded),
-        label: 'Akun Saya',
       ),
     ];
   }

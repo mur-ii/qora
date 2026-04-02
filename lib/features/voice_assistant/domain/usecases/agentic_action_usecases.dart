@@ -197,30 +197,6 @@ class SelectRoomUseCase {
   }
 }
 
-class CheckAvailabilityUseCase {
-  Future<Map<String, dynamic>> call(Map<String, dynamic> args) async {
-    final jsonString = await rootBundle.loadString(
-      'lib/features/room/mock/room_list_response.json',
-    );
-    final jsonData = jsonDecode(jsonString) as Map<String, dynamic>;
-
-    final rooms = jsonData['data']['rooms'] as List;
-    final availableRooms = rooms
-        .where((room) => (room as Map<String, dynamic>)['availableRooms'] > 0)
-        .toList();
-
-    return {
-      'success': true,
-      'available': availableRooms.isNotEmpty,
-      'rooms_available': availableRooms.length,
-      'rooms': availableRooms,
-      'message': availableRooms.isNotEmpty
-          ? 'Found ${availableRooms.length} available rooms for your dates'
-          : 'No rooms available for selected dates',
-    };
-  }
-}
-
 class PricingUseCase {
   Future<Map<String, dynamic>> call(Map<String, dynamic> args) async {
     final jsonString = await rootBundle.loadString(

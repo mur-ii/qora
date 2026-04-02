@@ -8,12 +8,14 @@ import '../../domain/entities/hotel_detail_entity.dart';
 class RoomTypesSection extends StatefulWidget {
   final List<RoomTypeEntity> roomTypes;
   final Function(String roomId) onRoomSelected;
+  final Function(RoomTypeEntity room) onBookNow;
   final String? selectedRoomId;
 
   const RoomTypesSection({
     super.key,
     required this.roomTypes,
     required this.onRoomSelected,
+    required this.onBookNow,
     this.selectedRoomId,
   });
 
@@ -28,6 +30,8 @@ class _RoomTypesSectionState extends State<RoomTypesSection> {
     decimalDigits: 0,
   );
 
+  String? _expandedRoomId;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -40,27 +44,28 @@ class _RoomTypesSectionState extends State<RoomTypesSection> {
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Pilih kamar yang paling sesuai dengan kebutuhan Anda.',
-          style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: widget.roomTypes.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
+          separatorBuilder: (context, index) => const SizedBox(height: 10),
           itemBuilder: (context, index) {
             final room = widget.roomTypes[index];
             final isSelected = widget.selectedRoomId == room.id;
+            final isExpanded = _expandedRoomId == room.id;
 
             return _RoomCard(
               room: room,
               isSelected: isSelected,
+              isExpanded: isExpanded,
+              onTapCard: () {
+                setState(() {
+                  _expandedRoomId = isExpanded ? null : room.id;
+                });
+              },
               onSelect: () => widget.onRoomSelected(room.id),
+              onBookNow: () => widget.onBookNow(room),
               priceText: _formatter.format(room.pricePerNight),
             );
           },
@@ -73,230 +78,217 @@ class _RoomTypesSectionState extends State<RoomTypesSection> {
 class _RoomCard extends StatelessWidget {
   final RoomTypeEntity room;
   final bool isSelected;
+  final bool isExpanded;
+  final VoidCallback onTapCard;
   final VoidCallback onSelect;
+  final VoidCallback onBookNow;
   final String priceText;
 
   const _RoomCard({
     required this.room,
     required this.isSelected,
+    required this.isExpanded,
+    required this.onTapCard,
     required this.onSelect,
+    required this.onBookNow,
     required this.priceText,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isSelected ? AppColors.primary : AppColors.border,
-          width: isSelected ? 2 : 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.deepBlack.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 5),
+    return GestureDetector(
+      onTap: onTapCard,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceWhite,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : isExpanded
+                ? AppColors.brandGreen
+                : AppColors.border,
+            width: isSelected ? 1.4 : 1,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-            child: SizedBox(
-              height: 150,
-              width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.deepBlack.withValues(
+                alpha: isExpanded ? 0.06 : 0.03,
+              ),
+              blurRadius: isExpanded ? 12 : 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  const _RoomImagePlaceholder(),
-                  Positioned(
-                    left: 14,
-                    bottom: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceWhite.withValues(alpha: 0.22),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppColors.surfaceWhite.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      child: Text(
-                        'Kamar Pilihan',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.surfaceWhite,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.bed_rounded,
+                      color: AppColors.primary,
+                      size: 20,
                     ),
                   ),
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.deepBlack.withValues(alpha: 0.55),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${room.maxGuests} tamu',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.surfaceWhite,
-                          fontWeight: FontWeight.w600,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          room.name,
+                          style: AppTypography.bodyLarge.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${room.maxGuests} tamu - ${room.size} m2',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        priceText,
+                        style: AppTypography.labelLarge.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ),
+                      Text(
+                        'per malam',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  room.name,
-                  style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  room.description,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 8,
-                  children: [
-                    _RoomInfoChip(
-                      icon: Icons.people_outline,
-                      label: '${room.maxGuests} Tamu',
-                    ),
-                    _RoomInfoChip(
-                      icon: Icons.square_foot_outlined,
-                      label: '${room.size} m2',
-                    ),
-                    _RoomInfoChip(
-                      icon: Icons.bed_outlined,
-                      label: _translateBedType(room.bedType),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: room.amenities.take(4).map((amenity) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.neutral100,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        _translateAmenity(amenity),
+              AnimatedCrossFade(
+                firstChild: const SizedBox.shrink(),
+                secondChild: Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        room.description,
                         style: AppTypography.bodySmall.copyWith(
                           color: AppColors.textSecondary,
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
-                if (room.amenities.length > 4)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Text(
-                      '+${room.amenities.length - 4} fasilitas lainnya',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
                         children: [
-                          Text(
-                            priceText,
-                            style: AppTypography.titleMedium.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primary,
-                            ),
+                          _RoomInfoChip(
+                            icon: Icons.bed_outlined,
+                            label: _translateBedType(room.bedType),
                           ),
-                          Text(
-                            'per malam',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
+                          ...room.amenities
+                              .take(3)
+                              .map(
+                                (amenity) => _RoomInfoChip(
+                                  icon: Icons.check_circle_outline,
+                                  label: _translateAmenity(amenity),
+                                ),
+                              ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(minWidth: 118),
-                      child: SizedBox(
-                        height: 46,
-                        child: ElevatedButton(
-                          onPressed: onSelect,
-                          style: ElevatedButton.styleFrom(
-                            elevation: 0,
-                            minimumSize: const Size(118, 46),
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            backgroundColor: isSelected
-                                ? AppColors.brandGreen
-                                : AppColors.primary,
-                            foregroundColor: AppColors.surfaceWhite,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Text(
-                              isSelected ? 'Dipilih' : 'Pilih Kamar',
-                              maxLines: 1,
-                              style: AppTypography.labelMedium.copyWith(
-                                fontWeight: FontWeight.w700,
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          SizedBox(
+                            height: 38,
+                            child: OutlinedButton(
+                              onPressed: onSelect,
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? AppColors.brandGreen
+                                      : AppColors.primary,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  isSelected ? 'Dipilih' : 'Select Room',
+                                  style: AppTypography.labelSmall.copyWith(
+                                    color: isSelected
+                                        ? AppColors.brandGreen
+                                        : AppColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                          if (isSelected) ...[
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: SizedBox(
+                                height: 38,
+                                child: ElevatedButton(
+                                  onPressed: onBookNow,
+                                  style: ElevatedButton.styleFrom(
+                                    elevation: 0,
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: AppColors.surfaceWhite,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Pesan Sekarang',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ],
-            ),
+                crossFadeState: isExpanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                duration: const Duration(milliseconds: 220),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -334,38 +326,6 @@ class _RoomCard extends StatelessWidget {
   }
 }
 
-class _RoomImagePlaceholder extends StatelessWidget {
-  const _RoomImagePlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.brandGreen, AppColors.primaryOrange],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: Center(
-        child: Container(
-          width: 82,
-          height: 82,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceWhite.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(22),
-          ),
-          child: const Icon(
-            Icons.bed_rounded,
-            size: 44,
-            color: AppColors.surfaceWhite,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _RoomInfoChip extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -374,18 +334,25 @@ class _RoomInfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 15, color: AppColors.textTertiary),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: AppTypography.bodySmall.copyWith(
-            color: AppColors.textSecondary,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.neutral100,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: AppColors.textSecondary),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

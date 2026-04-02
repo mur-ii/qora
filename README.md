@@ -19,7 +19,7 @@ A modern Flutter hotel booking application featuring a **Realtime Agentic Voice 
 - **Natural conversation** for hotel booking
 - **Agentic AI** that understands context and goals
 - **Automatic navigation** - AI controls the app
-- **8 smart functions** for complete booking flows
+- **7 smart functions** for complete booking flows
 - **Real-time audio** streaming via WebRTC
 - **Hands-free booking** experience
 
@@ -144,12 +144,10 @@ lib/
 │   ├── theme/               # App theme
 │   └── widgets/             # Shared widgets
 └── features/
-    ├── auth/                # Authentication
     ├── booking/             # Booking management
     ├── home/                # Home screen
     ├── hotel_detail/        # Hotel details
     ├── hotel_list/          # Hotel listings
-    ├── profile/             # User profile
     ├── search/              # Search functionality
     └── voice_assistant/     # 🎙️ NEW: Voice AI
         ├── di/              # DI container
@@ -166,18 +164,6 @@ lib/
 
 ```bash
 flutter test
-```
-
-### Run Performance Integration Test (Profile Mode)
-
-Gunakan mode profile (bukan debug) untuk benchmark performa loop booking:
-
-```bash
-flutter drive \
-    --driver=test_driver/integration_test.dart \
-    --target=integration_test/app_login_booking_logout_flow_test.dart \
-    --profile \
-    --dart-define=PERF_LOOP_COUNT=10
 ```
 
 ### Test Voice Assistant

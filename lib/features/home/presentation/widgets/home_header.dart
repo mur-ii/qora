@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/voice_assistant_injection.dart';
-import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -29,14 +27,24 @@ class HomeHeader extends StatelessWidget implements PreferredSizeWidget {
       foregroundColor: AppColors.primary,
       centerTitle: false,
       title: Text(
-        'Qora',
+        'Qora Smart',
         style: AppTypography.logo.copyWith(color: AppColors.primary),
       ),
       actions: [
         const _VoiceModeToggle(),
         const SizedBox(width: AppTheme.spacingSmall),
         _NotificationButton(
-          onPressed: () => context.push(AppRoutes.notificationsPath),
+          onPressed: () {
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Fitur notifikasi masih dalam tahap pengembangan',
+                  ),
+                ),
+              );
+          },
         ),
         const SizedBox(width: AppTheme.spacingMedium),
       ],

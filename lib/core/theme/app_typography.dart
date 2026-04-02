@@ -7,7 +7,7 @@ class AppTypography {
   // Logo text style
   static const TextStyle logo = TextStyle(
     fontFamily: logoFontFamily,
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: FontWeight.w400,
     letterSpacing: 1.0,
   );

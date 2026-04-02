@@ -16,7 +16,6 @@ class AgenticAiUseCase {
   late final SearchHotelsUseCase _searchHotelsUseCase;
   late final HotelDetailsUseCase _hotelDetailsUseCase;
   late final SelectRoomUseCase _selectRoomUseCase;
-  late final CheckAvailabilityUseCase _checkAvailabilityUseCase;
   late final PricingUseCase _pricingUseCase;
   late final CreateBookingUseCase _createBookingUseCase;
   late final ConfirmBookingUseCase _confirmBookingUseCase;
@@ -33,7 +32,6 @@ class AgenticAiUseCase {
       navigationService: navigationService,
     );
     _selectRoomUseCase = SelectRoomUseCase(context: _context);
-    _checkAvailabilityUseCase = CheckAvailabilityUseCase();
     _pricingUseCase = PricingUseCase();
     _createBookingUseCase = CreateBookingUseCase(
       context: _context,
@@ -76,10 +74,6 @@ class AgenticAiUseCase {
 
         case 'get_hotel_details':
           result = await _hotelDetailsUseCase.call(functionCall.arguments);
-          break;
-
-        case 'check_availability':
-          result = await _checkAvailabilityUseCase.call(functionCall.arguments);
           break;
 
         case 'get_pricing':

@@ -73,14 +73,6 @@ class NavigationService {
           }
           break;
 
-        case AppRoutes.screenSearch:
-          _router!.go(AppRoutes.searchPath);
-          break;
-
-        case AppRoutes.screenNotifications:
-          _router!.go(AppRoutes.notificationsPath);
-          break;
-
         default:
           AppLogger.warn('Navigation', 'Unknown screen: $screenName');
       }

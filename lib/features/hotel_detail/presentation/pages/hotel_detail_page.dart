@@ -13,7 +13,6 @@ import '../../domain/entities/hotel_detail_entity.dart';
 import '../bloc/hotel_detail_bloc.dart';
 import '../bloc/hotel_detail_event.dart';
 import '../bloc/hotel_detail_state.dart';
-import '../widgets/booking_bottom_bar.dart';
 import '../widgets/facilities_section.dart';
 import '../widgets/hotel_description_section.dart';
 import '../widgets/hotel_header.dart';
@@ -169,6 +168,33 @@ class _HotelDetailPageContent extends StatelessWidget {
                           roomTypes: hotel.roomTypes,
                           selectedRoomId: selectedRoomId,
                           onRoomSelected: onRoomSelected,
+                          onBookNow: (room) {
+                            final now = DateTime.now();
+                            final checkIn = DateTime(
+                              now.year,
+                              now.month,
+                              now.day + 1,
+                            );
+                            final checkOut = DateTime(
+                              now.year,
+                              now.month,
+                              now.day + 2,
+                            );
+
+                            context.push(
+                              Uri(
+                                path: AppRoutes.bookingSummaryPath,
+                                queryParameters: {
+                                  'hotelId': state.hotel.id,
+                                  'roomId': room.id,
+                                  'checkIn': checkIn.toIso8601String(),
+                                  'checkOut': checkOut.toIso8601String(),
+                                  'guests': room.maxGuests.toString(),
+                                  'rooms': '1',
+                                },
+                              ).toString(),
+                            );
+                          },
                         ),
                         const SizedBox(height: 24),
 
@@ -183,67 +209,6 @@ class _HotelDetailPageContent extends StatelessWidget {
             );
           }
 
-          return const SizedBox.shrink();
-        },
-      ),
-      bottomNavigationBar: BlocBuilder<HotelDetailBloc, HotelDetailState>(
-        builder: (context, state) {
-          if (state is HotelDetailLoaded) {
-            double displayPrice = state.hotel.pricePerNight;
-            String priceLabel = 'Mulai dari';
-            int maxGuests = 2;
-
-            if (selectedRoomId != null) {
-              try {
-                final selectedRoom = state.hotel.roomTypes.firstWhere(
-                  (room) => room.id == selectedRoomId,
-                );
-                displayPrice = selectedRoom.pricePerNight;
-                priceLabel = 'Kamar terpilih';
-                maxGuests = selectedRoom.maxGuests;
-              } catch (e) {
-                displayPrice = state.hotel.pricePerNight;
-                priceLabel = 'Mulai dari';
-              }
-            }
-
-            return BookingBottomBar(
-              priceLabel: priceLabel,
-              formattedPrice: _currencyFormatter.format(displayPrice),
-              buttonLabel: selectedRoomId == null
-                  ? 'Pilih Kamar'
-                  : 'Pesan Sekarang',
-              onBookPressed: selectedRoomId == null
-                  ? null
-                  : () {
-                      final now = DateTime.now();
-                      final checkIn = DateTime(
-                        now.year,
-                        now.month,
-                        now.day + 1,
-                      );
-                      final checkOut = DateTime(
-                        now.year,
-                        now.month,
-                        now.day + 2,
-                      );
-
-                      context.push(
-                        Uri(
-                          path: AppRoutes.bookingSummaryPath,
-                          queryParameters: {
-                            'hotelId': state.hotel.id,
-                            'roomId': selectedRoomId!,
-                            'checkIn': checkIn.toIso8601String(),
-                            'checkOut': checkOut.toIso8601String(),
-                            'guests': maxGuests.toString(),
-                            'rooms': '1',
-                          },
-                        ).toString(),
-                      );
-                    },
-            );
-          }
           return const SizedBox.shrink();
         },
       ),

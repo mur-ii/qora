@@ -12,14 +12,12 @@ dependencies:
 
   # UI & Navigation
   go_router: ^17.0.1
-  lottie: ^3.3.2
 
   # Networking & Dependency Injection
   http: ^1.6.0
 
   # Storage & Data
   flutter_dotenv: ^5.2.1
-  path: ^1.9.1
 
   # State management & Core
   flutter_bloc: ^9.1.1
@@ -33,26 +31,17 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  integration_test:
-    sdk: flutter
 
   flutter_lints: ^5.0.0
-
-  # Code Generation Tools
-  freezed: ^2.5.2                    
-  json_serializable: ^6.8.0         
 
 flutter:
   uses-material-design: true
   assets:
     - .env
-    - assets/lotties/
     - lib/features/home/data/mock/
-    - lib/features/search/mock/
     - lib/features/hotel_detail/mock/
     - lib/features/booking/mock/
     - lib/features/hotel_list/data/mock/
-    - lib/features/profile/mock/
   fonts:
     - family: Roboto
       fonts:

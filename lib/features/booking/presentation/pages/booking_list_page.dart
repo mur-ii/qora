@@ -1,385 +1,66 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
-import '../../../../core/di/booking_injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../data/models/booking_record.dart';
-import '../bloc/booking_history_bloc.dart';
-import '../bloc/booking_history_event.dart';
-import '../bloc/booking_history_state.dart';
 
 class BookingListPage extends StatelessWidget {
   const BookingListPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) {
-        final repository = BookingInjection.createLocalRepository();
-        return BookingHistoryBloc(repository: repository)
-          ..add(const LoadBookingHistory());
-      },
-      child: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          backgroundColor: AppColors.background,
-          appBar: AppBar(
-            elevation: 0,
-            backgroundColor: AppColors.surfaceWhite,
-            title: Text(
-              'Booking Saya',
-              style: AppTypography.titleLarge.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            centerTitle: false,
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
-              child: Container(
-                color: AppColors.surfaceWhite,
-                child: TabBar(
-                  indicatorColor: AppColors.brandGreen,
-                  indicatorWeight: 3,
-                  labelColor: AppColors.brandGreen,
-                  unselectedLabelColor: AppColors.textTertiary,
-                  labelStyle: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  unselectedLabelStyle: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  tabs: const [
-                    Tab(text: 'Ongoing'),
-                    Tab(text: 'History'),
-                  ],
-                ),
-              ),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: AppColors.surfaceWhite,
+          title: Text(
+            'Booking Saya',
+            style: AppTypography.titleLarge.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          body: const TabBarView(
-            children: [OngoingBookingsTab(), HistoryBookingsTab()],
+          centerTitle: false,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48),
+            child: Container(
+              color: AppColors.surfaceWhite,
+              child: TabBar(
+                indicatorColor: AppColors.brandGreen,
+                indicatorWeight: 3,
+                labelColor: AppColors.brandGreen,
+                unselectedLabelColor: AppColors.textTertiary,
+                labelStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
+                tabs: const [
+                  Tab(text: 'Ongoing'),
+                  Tab(text: 'History'),
+                ],
+              ),
+            ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ==================== ONGOING BOOKINGS TAB ====================
-class OngoingBookingsTab extends StatelessWidget {
-  const OngoingBookingsTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<BookingHistoryBloc, BookingHistoryState>(
-      builder: (context, state) {
-        if (state is BookingHistoryLoading) {
-          return const SizedBox.shrink();
-        }
-
-        if (state is BookingHistoryLoaded) {
-          if (state.ongoing.isEmpty) {
-            return const _BookingEmptyState(
-              title: 'No ongoing bookings',
-              subtitle: 'Your upcoming stays will appear here.',
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: state.ongoing.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final record = state.ongoing[index];
-              // RepaintBoundary caches the rasterized card (shadow included) so
-              // the GPU texture is reused on scroll instead of re-blurring.
-              return RepaintBoundary(
-                child: _BookingCard(record: record, isHistory: false),
-              );
-            },
-          );
-        }
-
-        if (state is BookingHistoryError) {
-          return const _BookingEmptyState(
-            title: 'Unable to load bookings',
-            subtitle: 'Please try again later.',
-          );
-        }
-
-        return const SizedBox.shrink();
-      },
-    );
-  }
-}
-
-// ==================== HISTORY BOOKINGS TAB ====================
-class HistoryBookingsTab extends StatelessWidget {
-  const HistoryBookingsTab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<BookingHistoryBloc, BookingHistoryState>(
-      builder: (context, state) {
-        if (state is BookingHistoryLoading) {
-          return const SizedBox.shrink();
-        }
-
-        if (state is BookingHistoryLoaded) {
-          if (state.history.isEmpty) {
-            return const _BookingEmptyState(
-              title: 'No booking history',
-              subtitle: 'Completed stays will appear here.',
-            );
-          }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: state.history.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final record = state.history[index];
-              return RepaintBoundary(
-                child: _BookingCard(record: record, isHistory: true),
-              );
-            },
-          );
-        }
-
-        if (state is BookingHistoryError) {
-          return const _BookingEmptyState(
-            title: 'Unable to load bookings',
-            subtitle: 'Please try again later.',
-          );
-        }
-
-        return const SizedBox.shrink();
-      },
-    );
-  }
-}
-
-class _BookingCard extends StatelessWidget {
-  final BookingRecord record;
-  final bool isHistory;
-
-  const _BookingCard({required this.record, required this.isHistory});
-
-  // Cached once per class, not recreated on every build() call.
-  static final _dateFormat = DateFormat('dd MMM yyyy');
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'Upcoming':
-        return AppColors.secondary;
-      case 'Ongoing':
-        return AppColors.primary;
-      case 'Completed':
-        return AppColors.success;
-      case 'Cancelled':
-        return AppColors.textTertiary;
-      default:
-        return AppColors.primary;
-    }
-  }
-
-  String _statusLabel() {
-    final status = record.bookingStatus.toLowerCase();
-    if (status.contains('cancel')) return 'Cancelled';
-
-    final now = DateTime.now();
-    if (now.isBefore(record.checkIn)) return 'Upcoming';
-    if (now.isAfter(record.checkOut)) return 'Completed';
-    return 'Ongoing';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final status = _statusLabel();
-    final statusColor = _statusColor(status);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.deepBlack.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                child: Container(
-                  height: 100,
-                  width: double.infinity,
-                  color: AppColors.primaryContainer,
-                  child: const Icon(
-                    Icons.hotel_outlined,
-                    size: 40,
-                    color: AppColors.primaryOrange,
-                  ),
-                ),
-              ),
-              Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                      color: AppColors.textOnPrimary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  record.hotelName,
-                  style: AppTypography.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on,
-                      size: 14,
-                      color: AppColors.textTertiary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      record.location,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Check-in',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.textTertiary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _dateFormat.format(record.checkIn),
-                              style: AppTypography.bodyMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Container(
-                        width: 1,
-                        height: 30,
-                        color: AppColors.textTertiary.withValues(alpha: 0.2),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Check-out',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.textTertiary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _dateFormat.format(record.checkOut),
-                              style: AppTypography.bodyMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      record.roomName,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    if (isHistory && status == 'Completed')
-                      TextButton(
-                        onPressed: () {},
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 0),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: Text(
-                          'Book Again',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
+        body: const TabBarView(
+          children: [
+            _BookingEmptyState(
+              title: 'Belum ada booking berjalan',
+              subtitle:
+                  'Data booking yang sedang berlangsung akan tampil di sini.',
             ),
-          ),
-        ],
+            _BookingEmptyState(
+              title: 'Belum ada riwayat booking',
+              subtitle: 'Data riwayat booking akan tampil di sini.',
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -74,21 +74,6 @@ class AgenticFunctionDefinitionsUseCase {
       },
       {
         'type': 'function',
-        'name': 'check_availability',
-        'description': 'Check room availability for specific dates',
-        'parameters': {
-          'type': 'object',
-          'properties': {
-            'hotel_id': {'type': 'string', 'description': 'Hotel identifier'},
-            'room_type': {'type': 'string', 'description': 'Type of room'},
-            'check_in': {'type': 'string', 'description': 'Check-in date'},
-            'check_out': {'type': 'string', 'description': 'Check-out date'},
-          },
-          'required': ['hotel_id', 'room_type', 'check_in', 'check_out'],
-        },
-      },
-      {
-        'type': 'function',
         'name': 'get_pricing',
         'description': 'Get pricing information for a room',
         'parameters': {
@@ -160,8 +145,6 @@ class AgenticFunctionDefinitionsUseCase {
                 AppRoutes.screenBookingGuestInfo,
                 AppRoutes.screenBookingPayment,
                 AppRoutes.screenBookingConfirmation,
-                AppRoutes.screenSearch,
-                AppRoutes.screenNotifications,
               ],
             },
             'params': {'type': 'object', 'description': 'Screen parameters'},

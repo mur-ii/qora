@@ -37,76 +37,22 @@
       "amenities": ["Free WiFi", "Business Center", "Meeting Rooms", "Restaurant"]
     },
     {
-      "id": "11",
-      "name": "Sudirman City Suites",
-      "location": "Jakarta, Indonesia",
-      "imageUrl": "https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?w=800",
-      "pricePerNight": 1600000,
+      "id": "2",
+      "name": "Braga Heritage Hotel",
+      "location": "Bandung, Indonesia",
+      "imageUrl": "https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800",
+      "pricePerNight": 1250000,
       "rating": 4.7,
-      "amenities": ["Free WiFi", "Swimming Pool", "Fitness Center", "Rooftop Bar"]
+      "amenities": ["Free WiFi", "Heated Pool", "Spa", "Restaurant"]
     },
     {
-      "id": "12",
-      "name": "Kemang Boutique Residence",
-      "location": "Jakarta, Indonesia",
+      "id": "11",
+      "name": "Dago Hills Retreat",
+      "location": "Bandung, Indonesia",
       "imageUrl": "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800",
-      "pricePerNight": 890000,
-      "rating": 4.2,
-      "amenities": ["Free WiFi", "Garden", "Cafe", "Parking"]
-    },
-    {
-      "id": "13",
-      "name": "Senayan Grand Hotel",
-      "location": "Jakarta, Indonesia",
-      "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
-      "pricePerNight": 1750000,
-      "rating": 4.9,
-      "amenities": ["Free WiFi", "Swimming Pool", "Spa", "Restaurant"]
-    },
-    {
-      "id": "14",
-      "name": "Thamrin Business Hotel",
-      "location": "Jakarta, Indonesia",
-      "imageUrl": "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?w=800",
-      "pricePerNight": 1050000,
-      "rating": 4.1,
-      "amenities": ["Free WiFi", "Business Center", "Laundry Service"]
-    },
-    {
-      "id": "15",
-      "name": "Pondok Indah Resort",
-      "location": "Jakarta, Indonesia",
-      "imageUrl": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=800",
-      "pricePerNight": 1450000,
+      "pricePerNight": 1100000,
       "rating": 4.5,
-      "amenities": ["Free WiFi", "Swimming Pool", "Tennis Court", "Restaurant"]
-    },
-    {
-      "id": "16",
-      "name": "Gatot Subroto Hotel",
-      "location": "Jakarta, Indonesia",
-      "imageUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
-      "pricePerNight": 990000,
-      "rating": 4.0,
-      "amenities": ["Free WiFi", "Gym", "Restaurant", "Airport Shuttle"]
-    },
-    {
-      "id": "17",
-      "name": "Kelapa Gading Family Hotel",
-      "location": "Jakarta, Indonesia",
-      "imageUrl": "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
-      "pricePerNight": 820000,
-      "rating": 4.2,
-      "amenities": ["Free WiFi", "Kids Club", "Restaurant", "Parking"]
-    },
-    {
-      "id": "18",
-      "name": "Ancol Marina View",
-      "location": "Jakarta, Indonesia",
-      "imageUrl": "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800",
-      "pricePerNight": 1300000,
-      "rating": 4.4,
-      "amenities": ["Free WiFi", "Ocean View", "Restaurant", "Swimming Pool"]
+      "amenities": ["Free WiFi", "Garden", "Cafe", "Family Lounge"]
     }
   ]
 }
