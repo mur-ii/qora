@@ -11,11 +11,17 @@ abstract class HotelListEvent extends Equatable {
 
 class LoadHotelListEvent extends HotelListEvent {
   final String? location;
+  final String? initialSort;
+  final HotelListFilters? initialFilters;
 
-  const LoadHotelListEvent({this.location});
+  const LoadHotelListEvent({
+    this.location,
+    this.initialSort,
+    this.initialFilters,
+  });
 
   @override
-  List<Object?> get props => [location];
+  List<Object?> get props => [location, initialSort, initialFilters];
 }
 
 class FilterHotelListEvent extends HotelListEvent {

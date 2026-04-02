@@ -262,13 +262,20 @@ class _RoomCard extends StatelessWidget {
                                     elevation: 0,
                                     backgroundColor: AppColors.primary,
                                     foregroundColor: AppColors.surfaceWhite,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                   ),
                                   child: Text(
                                     'Pesan Sekarang',
-                                    style: AppTypography.labelSmall.copyWith(
+                                    maxLines: 1,
+                                    softWrap: false,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: AppTypography.labelMedium.copyWith(
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),

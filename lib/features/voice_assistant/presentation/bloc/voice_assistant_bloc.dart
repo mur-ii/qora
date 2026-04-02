@@ -86,7 +86,6 @@ class VoiceAssistantBloc
     on<ConnectionStateChanged>(_onConnectionStateChanged);
     on<RequestAssistantResponse>(_onRequestAssistantResponse);
     on<SyncVoiceSearchConstraints>(_onSyncVoiceSearchConstraints);
-    on<CompleteVoiceSessionWithMessage>(_onCompleteVoiceSessionWithMessage);
     on<ConversationMetricsUpdated>(_onConversationMetricsUpdated);
   }
 
@@ -237,61 +236,6 @@ class VoiceAssistantBloc
     }
   }
 
-  Future<void> _onCompleteVoiceSessionWithMessage(
-    CompleteVoiceSessionWithMessage event,
-    Emitter<VoiceAssistantState> emit,
-  ) async {
-    try {
-      if (state.status == VoiceAssistantStatus.idle ||
-          state.status == VoiceAssistantStatus.disconnecting) {
-        return;
-      }
-
-      emit(
-        state.copyWith(status: VoiceAssistantStatus.disconnecting, error: null),
-      );
-
-      _functionArgBuffers.clear();
-      _functionArgNames.clear();
-
-      await voiceSessionUseCase.endSessionWithMessage(event.message);
-
-      _refreshConversationMetrics(state.currentSessionId);
-
-      emit(
-        state.copyWith(
-          status: VoiceAssistantStatus.idle,
-          messages: const [],
-          agentState: const AgentStateEntity(),
-          currentSessionId: null,
-          sessionEstimatedCostUsd: 0,
-          totalLoggedTurns: 0,
-          totalLoggedTokens: 0,
-          isProcessing: false,
-          isMuted: false,
-          error: null,
-        ),
-      );
-
-      AppLogger.info('VoiceAssistant', 'Voice assistant completed and stopped');
-    } catch (e, stackTrace) {
-      AppLogger.error(
-        'VoiceAssistant',
-        'Error completing voice assistant session',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      emit(
-        state.copyWith(
-          status: VoiceAssistantStatus.idle,
-          currentSessionId: null,
-          error: 'Failed to complete session: ${_formatError(e)}',
-        ),
-      );
-      voiceSessionUseCase.updateStatus(VoiceAssistantStatus.idle);
-    }
-  }
-
   Future<void> _onToggleVoiceAssistantMute(
     ToggleVoiceAssistantMute event,
     Emitter<VoiceAssistantState> emit,
@@ -396,8 +340,6 @@ class VoiceAssistantBloc
   ) async {
     // Handle specific events
     final eventType = event.event['type'] as String?;
-
-    voiceSessionUseCase.handleAgentEvent(event.event);
 
     if (eventType == 'input_audio_buffer.speech_started') {
       emit(state.copyWith(status: VoiceAssistantStatus.listening));

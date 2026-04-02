@@ -109,6 +109,18 @@ class NavigationService {
         case 'room_id':
           normalizedParams['roomId'] = entry.value;
           break;
+        case 'sort_by':
+          normalizedParams['sortBy'] = entry.value;
+          break;
+        case 'budget_key':
+          normalizedParams['budgetKey'] = entry.value;
+          break;
+        case 'min_price':
+          normalizedParams['minPrice'] = entry.value;
+          break;
+        case 'max_price':
+          normalizedParams['maxPrice'] = entry.value;
+          break;
         default:
           normalizedParams[entry.key] = entry.value;
       }

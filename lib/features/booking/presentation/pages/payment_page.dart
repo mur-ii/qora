@@ -7,6 +7,9 @@ import '../../../../core/di/booking_injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_event.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
 import '../../domain/entities/booking_entity.dart';
 import '../bloc/booking_bloc.dart';
 import '../bloc/booking_event.dart';
@@ -66,8 +69,38 @@ class _PaymentPageContentState extends State<_PaymentPageContent> {
   ];
 
   String _selectedPaymentMethod = _paymentMethods.first.key;
+  bool _hasPaymentVoiceMessage = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _notifyVoiceAssistantPaymentLimit();
+  }
+
+  void _notifyVoiceAssistantPaymentLimit() {
+    if (_hasPaymentVoiceMessage) return;
+
+    final voiceState = context.read<VoiceAssistantBloc>().state;
+    if (!voiceState.isActive) {
+      return;
+    }
+
+    _hasPaymentVoiceMessage = true;
+    context.read<VoiceAssistantBloc>().add(
+      const RequestAssistantResponse(
+        instructions:
+            'Sampaikan ke pengguna: Saya hanya bisa bantu sampai disini karena saya tidak ada akses ke fitur selanjutnya.',
+      ),
+    );
+  }
 
   void _processPayment() {
+    final voiceBloc = context.read<VoiceAssistantBloc>();
+    if (voiceBloc.state.status != VoiceAssistantStatus.idle &&
+        voiceBloc.state.status != VoiceAssistantStatus.disconnecting) {
+      voiceBloc.add(const StopVoiceAssistant());
+    }
+
     context.read<BookingBloc>().add(
       ConfirmBookingEvent(_selectedPaymentMethod),
     );

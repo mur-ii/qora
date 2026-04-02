@@ -28,6 +28,9 @@ class HotelListBloc extends Bloc<HotelListEvent, HotelListState> {
 
     emit(const HotelListLoading());
 
+    _activeSort = event.initialSort;
+    _activeFilters = event.initialFilters ?? const HotelListFilters();
+
     try {
       final hotels = await getHotelList();
 

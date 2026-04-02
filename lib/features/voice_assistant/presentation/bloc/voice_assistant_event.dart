@@ -105,20 +105,6 @@ class SyncVoiceSearchConstraints extends VoiceAssistantEvent {
   List<Object?> get props => [location, checkIn, checkOut, guests, rooms];
 }
 
-/// Ask assistant to deliver final message then close the session.
-class CompleteVoiceSessionWithMessage extends VoiceAssistantEvent {
-  final String message;
-  final String reason;
-
-  const CompleteVoiceSessionWithMessage({
-    required this.message,
-    this.reason = 'voice_session_completed',
-  });
-
-  @override
-  List<Object?> get props => [message, reason];
-}
-
 /// Internal event to sync persisted conversation metrics to UI state
 class ConversationMetricsUpdated extends VoiceAssistantEvent {
   final double sessionCostUsd;

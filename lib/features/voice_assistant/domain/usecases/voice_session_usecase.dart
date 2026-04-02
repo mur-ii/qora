@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 import '../entities/connection_state_entity.dart';
@@ -24,8 +22,6 @@ class VoiceSessionUseCase {
   VoiceSessionEntity? _session;
   bool _isConnecting = false;
   bool _isStopping = false;
-  bool _isClosingSession = false;
-  Completer<void>? _responseDoneCompleter;
 
   final ValueNotifier<VoiceAssistantStatus> statusNotifier = ValueNotifier(
     VoiceAssistantStatus.idle,
@@ -96,36 +92,6 @@ class VoiceSessionUseCase {
       resetMemory();
       updateStatus(VoiceAssistantStatus.idle);
       _isStopping = false;
-    }
-  }
-
-  Future<VoiceSessionSummary?> endSessionWithMessage(String message) async {
-    if (_isClosingSession || !isConnected) return null;
-    _isClosingSession = true;
-    VoiceSessionSummary? summary;
-
-    try {
-      _responseDoneCompleter = Completer<void>();
-      await requestAssistantResponse(message);
-      await _waitForResponseDone();
-    } catch (_) {
-      // Ignore and continue to disconnect.
-    } finally {
-      _responseDoneCompleter = null;
-      summary = await stop();
-      _isClosingSession = false;
-    }
-
-    return summary;
-  }
-
-  void handleAgentEvent(Map<String, dynamic> event) {
-    final type = event['type']?.toString();
-    if (type == 'response.done' || type == 'error') {
-      final completer = _responseDoneCompleter;
-      if (completer != null && !completer.isCompleted) {
-        completer.complete();
-      }
     }
   }
 
@@ -208,17 +174,6 @@ class VoiceSessionUseCase {
     } finally {
       _session = null;
       logger.logLifecycle('Session closed');
-    }
-  }
-
-  Future<void> _waitForResponseDone() async {
-    final completer = _responseDoneCompleter;
-    if (completer == null) return;
-
-    try {
-      await completer.future.timeout(const Duration(seconds: 12));
-    } on TimeoutException {
-      // Proceed with disconnect on timeout.
     }
   }
 }

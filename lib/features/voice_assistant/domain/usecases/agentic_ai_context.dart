@@ -55,9 +55,7 @@ class AgenticAiContext {
     updated['check_out'] = (updated['check_out'] ?? _formatDate(tomorrow))
         .toString();
 
-    if (updated['amenities'] == null) {
-      updated['amenities'] = ['Free WiFi', 'Swimming Pool'];
-    } else if (updated['amenities'] is String) {
+    if (updated['amenities'] is String) {
       updated['amenities'] = [(updated['amenities'] as String).trim()];
     }
 
@@ -108,8 +106,10 @@ class AgenticAiContext {
           'Mau ganti lokasi? Saya tetap pakai $scheduleText, $guests tamu, $rooms kamar.';
     }
 
-    final shownHotels = hotels.take(3).toList(growable: false);
-    final buffer = StringBuffer('Ada ${hotels.length} hotel di $city. ');
+    final shownHotels = hotels.take(4).toList(growable: false);
+    final buffer = StringBuffer(
+      'Berikut hotel yang tersedia di $city, ada ${hotels.length} cabang yang kami miliki. ',
+    );
 
     for (var i = 0; i < shownHotels.length; i++) {
       final hotel = shownHotels[i];
@@ -121,7 +121,7 @@ class AgenticAiContext {
       buffer.write('Masih ada opsi lain. ');
     }
 
-    buffer.write('Pilih nama hotel atau nomor.');
+    buffer.write('Hotel mana yang ingin Anda pilih?');
     return buffer.toString();
   }
 
@@ -131,6 +131,10 @@ class AgenticAiContext {
     }
 
     final name = selectedHotel['name']?.toString() ?? 'Hotel ini';
+    final facilities = (selectedHotel['amenities'] as List<dynamic>? ?? [])
+        .map((item) => item.toString())
+        .take(3)
+        .toList(growable: false);
     final roomTypes = selectedHotel['roomTypes'] as List<dynamic>? ?? [];
     final roomNames = roomTypes
         .map((room) => (room as Map<String, dynamic>)['name']?.toString())
@@ -138,11 +142,15 @@ class AgenticAiContext {
         .take(3)
         .toList();
 
+    final facilitiesText = facilities.isNotEmpty
+        ? '$name memiliki ${facilities.join(', ')}.'
+        : '$name siap Anda pilih.';
+
     final roomsText = roomNames.isNotEmpty
-        ? 'Pilihan: ${roomNames.join(', ')}.'
+        ? 'Pilihan kamar: ${roomNames.join(', ')}.'
         : 'Silakan pilih tipe kamar.';
 
-    return '$name. $roomsText Tipe kamar yang diinginkan?';
+    return '$facilitiesText $roomsText Tipe kamar apa yang ingin kamu pilih?';
   }
 
   BookingEntity? buildBookingEntityFromCache() {
@@ -256,8 +264,10 @@ Aturan WAJIB:
 7) Saat user pilih hotel, panggil get_hotel_details.
 8) Saat user pilih kamar, panggil select_room lalu jawab singkat: "Kamar dipilih. Lanjutkan pemesanan?"
 9) Jika user setuju lanjut, panggil create_booking.
-10) Di ringkasan, baca ringkas lalu akhiri sesi voice assistant. Jangan arahkan ke pembayaran.
-11) Jangan minta data tamu lagi.
+10) Di ringkasan, jelaskan total lalu tanyakan apakah user ingin lanjut ke pembayaran.
+11) Jika user setuju lanjut pembayaran, panggil navigate_to_screen ke booking_payment.
+12) Saat sudah di halaman pembayaran, sampaikan: "Saya hanya bisa bantu sampai disini karena saya tidak ada akses ke fitur selanjutnya".
+13) Jangan minta data tamu lagi.
 
 Gunakan fungsi ini saat relevan:
 search_hotels, get_hotel_details, select_room, create_booking, confirm_booking, navigate_to_screen, update_booking_step.

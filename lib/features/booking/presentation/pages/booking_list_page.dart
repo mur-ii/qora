@@ -8,59 +8,11 @@ class BookingListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          elevation: 0,
-          backgroundColor: AppColors.surfaceWhite,
-          title: Text(
-            'Booking Saya',
-            style: AppTypography.titleLarge.copyWith(
-              color: AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          centerTitle: false,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(48),
-            child: Container(
-              color: AppColors.surfaceWhite,
-              child: TabBar(
-                indicatorColor: AppColors.brandGreen,
-                indicatorWeight: 3,
-                labelColor: AppColors.brandGreen,
-                unselectedLabelColor: AppColors.textTertiary,
-                labelStyle: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-                unselectedLabelStyle: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
-                tabs: const [
-                  Tab(text: 'Ongoing'),
-                  Tab(text: 'History'),
-                ],
-              ),
-            ),
-          ),
-        ),
-        body: const TabBarView(
-          children: [
-            _BookingEmptyState(
-              title: 'Belum ada booking berjalan',
-              subtitle:
-                  'Data booking yang sedang berlangsung akan tampil di sini.',
-            ),
-            _BookingEmptyState(
-              title: 'Belum ada riwayat booking',
-              subtitle: 'Data riwayat booking akan tampil di sini.',
-            ),
-          ],
-        ),
+    return Scaffold(
+      body: const _BookingEmptyState(
+        title: 'No Bookings Yet',
+        subtitle:
+            'You haven\'t made any bookings. Start exploring hotels and make your first booking!',
       ),
     );
   }

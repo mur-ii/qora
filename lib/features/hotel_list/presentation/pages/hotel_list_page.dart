@@ -21,6 +21,10 @@ class HotelListPage extends StatefulWidget {
   final String? rooms;
   final String? guests;
   final String? searchKey;
+  final String? initialSort;
+  final String? initialBudgetKey;
+  final String? initialMinPrice;
+  final String? initialMaxPrice;
 
   const HotelListPage({
     super.key,
@@ -30,6 +34,10 @@ class HotelListPage extends StatefulWidget {
     this.rooms,
     this.guests,
     this.searchKey,
+    this.initialSort,
+    this.initialBudgetKey,
+    this.initialMinPrice,
+    this.initialMaxPrice,
   });
 
   @override
@@ -39,11 +47,47 @@ class HotelListPage extends StatefulWidget {
 class _HotelListPageState extends State<HotelListPage> {
   late final HotelListBloc _hotelListBloc;
 
+  HotelListFilters _buildInitialFilters() {
+    final budgetKey = widget.initialBudgetKey;
+    if (budgetKey != null && budgetKey.trim().isNotEmpty) {
+      return HotelListFilters(budgetKey: budgetKey.trim());
+    }
+
+    final minPrice = double.tryParse(widget.initialMinPrice ?? '');
+    final maxPrice = double.tryParse(widget.initialMaxPrice ?? '');
+
+    if (maxPrice != null && maxPrice <= 200000) {
+      return const HotelListFilters(budgetKey: 'lt_200k');
+    }
+
+    if ((minPrice == null || minPrice <= 200000) &&
+        maxPrice != null &&
+        maxPrice <= 500000) {
+      return const HotelListFilters(budgetKey: '200_500k');
+    }
+
+    if (minPrice != null && minPrice >= 500000 && maxPrice != null) {
+      return const HotelListFilters(budgetKey: '500_1000k');
+    }
+
+    if (minPrice != null && minPrice >= 1000000 && maxPrice == null) {
+      return const HotelListFilters(budgetKey: 'gt_1000k');
+    }
+
+    return const HotelListFilters();
+  }
+
   @override
   void initState() {
     super.initState();
     _hotelListBloc = HotelListInjection.createBloc()
-      ..add(LoadHotelListEvent(location: widget.location));
+      ..add(
+        LoadHotelListEvent(
+          location: widget.location,
+          initialSort: widget.initialSort,
+          initialFilters: _buildInitialFilters(),
+        ),
+      );
   }
 
   @override
@@ -55,11 +99,20 @@ class _HotelListPageState extends State<HotelListPage> {
         oldWidget.checkOut != widget.checkOut ||
         oldWidget.rooms != widget.rooms ||
         oldWidget.guests != widget.guests ||
-        oldWidget.searchKey != widget.searchKey;
+        oldWidget.searchKey != widget.searchKey ||
+        oldWidget.initialSort != widget.initialSort ||
+        oldWidget.initialBudgetKey != widget.initialBudgetKey ||
+        oldWidget.initialMinPrice != widget.initialMinPrice ||
+        oldWidget.initialMaxPrice != widget.initialMaxPrice;
 
     if (hasSearchChanged) {
-      _hotelListBloc.add(const ResetHotelFiltersEvent());
-      _hotelListBloc.add(LoadHotelListEvent(location: widget.location));
+      _hotelListBloc.add(
+        LoadHotelListEvent(
+          location: widget.location,
+          initialSort: widget.initialSort,
+          initialFilters: _buildInitialFilters(),
+        ),
+      );
     }
   }
 
@@ -79,6 +132,10 @@ class _HotelListPageState extends State<HotelListPage> {
         checkOut: widget.checkOut,
         rooms: widget.rooms,
         guests: widget.guests,
+        initialSort: widget.initialSort,
+        initialBudgetKey: widget.initialBudgetKey,
+        initialMinPrice: widget.initialMinPrice,
+        initialMaxPrice: widget.initialMaxPrice,
       ),
     );
   }
@@ -90,6 +147,10 @@ class _HotelListPageContent extends StatelessWidget {
   final String? checkOut;
   final String? rooms;
   final String? guests;
+  final String? initialSort;
+  final String? initialBudgetKey;
+  final String? initialMinPrice;
+  final String? initialMaxPrice;
 
   static final DateFormat _shortDateFormatter = DateFormat('dd MMM');
   static const List<_CityPickerItem> _cityOptions = [
@@ -113,6 +174,10 @@ class _HotelListPageContent extends StatelessWidget {
     this.checkOut,
     this.rooms,
     this.guests,
+    this.initialSort,
+    this.initialBudgetKey,
+    this.initialMinPrice,
+    this.initialMaxPrice,
   });
 
   int _parsePositiveInt(String? rawValue, int fallback) {
@@ -246,6 +311,14 @@ class _HotelListPageContent extends StatelessWidget {
         'rooms': resolvedRooms.toString(),
         'guests': resolvedGuests.toString(),
         'searchKey': DateTime.now().millisecondsSinceEpoch.toString(),
+        if (initialSort != null && initialSort!.trim().isNotEmpty)
+          'sortBy': initialSort!.trim(),
+        if (initialBudgetKey != null && initialBudgetKey!.trim().isNotEmpty)
+          'budgetKey': initialBudgetKey!.trim(),
+        if (initialMinPrice != null && initialMinPrice!.trim().isNotEmpty)
+          'minPrice': initialMinPrice!.trim(),
+        if (initialMaxPrice != null && initialMaxPrice!.trim().isNotEmpty)
+          'maxPrice': initialMaxPrice!.trim(),
       },
     );
 

@@ -18,6 +18,11 @@ class SearchHotelsUseCase {
     normalizedArgs['searchKey'] = DateTime.now().millisecondsSinceEpoch
         .toString();
 
+    final requestedSort = normalizedArgs['sort_by']?.toString();
+    final requestedMinPrice = _toDouble(normalizedArgs['min_price']);
+    final requestedMaxPrice = _toDouble(normalizedArgs['max_price']);
+    final requestedBudget = _toDouble(normalizedArgs['budget_per_night']);
+
     context.updateAgentState(
       currentStep: BookingStep.searching,
       userConstraints: normalizedArgs,
@@ -32,6 +37,14 @@ class SearchHotelsUseCase {
     final requestedAmenities =
         (normalizedArgs['amenities'] as List?)?.cast<String>() ?? [];
 
+    final effectiveMinPrice = requestedMinPrice;
+    final effectiveMaxPrice = requestedMaxPrice ?? requestedBudget;
+    final budgetKey = _resolveBudgetKey(
+      minPrice: effectiveMinPrice,
+      maxPrice: effectiveMaxPrice,
+      budgetPerNight: requestedBudget,
+    );
+
     final filteredHotels = hotels.where((hotel) {
       final hotelLocation = (hotel['location'] ?? '').toString().toLowerCase();
       final locationMatch = hotelLocation.contains(
@@ -39,6 +52,13 @@ class SearchHotelsUseCase {
       );
 
       if (!locationMatch) return false;
+
+      final pricePerNight = _toDouble(hotel['pricePerNight']) ?? 0;
+      final aboveMin =
+          effectiveMinPrice == null || pricePerNight >= effectiveMinPrice;
+      final belowMax =
+          effectiveMaxPrice == null || pricePerNight <= effectiveMaxPrice;
+      if (!aboveMin || !belowMax) return false;
 
       if (requestedAmenities.isEmpty) return true;
 
@@ -51,18 +71,34 @@ class SearchHotelsUseCase {
       );
     }).toList();
 
+    _applySort(filteredHotels, requestedSort);
+
     context.hotelSearchResults = {
       'hotels': filteredHotels,
       'total': filteredHotels.length,
       'location': normalizedArgs['location'],
       'check_in': normalizedArgs['check_in'],
       'check_out': normalizedArgs['check_out'],
+      'min_price': effectiveMinPrice,
+      'max_price': effectiveMaxPrice,
+      'budget_per_night': requestedBudget,
+      'budget_key': budgetKey,
+      'sort_by': requestedSort,
       'amenities': normalizedArgs['amenities'],
+    };
+
+    final navigationParams = {
+      ...normalizedArgs,
+      if (requestedSort != null && requestedSort.isNotEmpty)
+        'sort_by': requestedSort,
+      if (budgetKey != null) 'budget_key': budgetKey,
+      if (effectiveMinPrice != null) 'min_price': effectiveMinPrice,
+      if (effectiveMaxPrice != null) 'max_price': effectiveMaxPrice,
     };
 
     await navigationService.navigateTo(
       screenName: AppRoutes.screenHotelList,
-      params: normalizedArgs,
+      params: navigationParams,
     );
 
     context.updateAgentState(
@@ -84,11 +120,81 @@ class SearchHotelsUseCase {
       'success': true,
       'message': 'Pencarian hotel berhasil.',
       'hotels': assistantHotels,
+      'applied_filters': {
+        'sort_by': requestedSort,
+        'budget_key': budgetKey,
+        'min_price': effectiveMinPrice,
+        'max_price': effectiveMaxPrice,
+      },
       'assistant_prompt': context.buildHotelListSpeech(
         filteredHotels,
         normalizedArgs['location'].toString(),
       ),
     };
+  }
+
+  double? _toDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    return double.tryParse(value.toString());
+  }
+
+  String? _resolveBudgetKey({
+    required double? minPrice,
+    required double? maxPrice,
+    required double? budgetPerNight,
+  }) {
+    if (minPrice == null && maxPrice == null) {
+      if (budgetPerNight == null) return null;
+      if (budgetPerNight <= 200000) return 'lt_200k';
+      if (budgetPerNight <= 500000) return '200_500k';
+      if (budgetPerNight <= 1000000) return '500_1000k';
+      return 'gt_1000k';
+    }
+
+    if ((minPrice == null || minPrice <= 0) && maxPrice != null) {
+      if (maxPrice <= 200000) return 'lt_200k';
+      if (maxPrice <= 500000) return '200_500k';
+      if (maxPrice <= 1000000) return '500_1000k';
+    }
+
+    if (minPrice != null && maxPrice != null) {
+      if (minPrice >= 200000 && maxPrice <= 500000) return '200_500k';
+      if (minPrice >= 500000 && maxPrice <= 1000000) return '500_1000k';
+    }
+
+    if (minPrice != null && maxPrice == null && minPrice >= 1000000) {
+      return 'gt_1000k';
+    }
+
+    return null;
+  }
+
+  void _applySort(List<Map<String, dynamic>> hotels, String? requestedSort) {
+    switch (requestedSort) {
+      case 'lowest_price':
+        hotels.sort(
+          (a, b) => (_toDouble(a['pricePerNight']) ?? 0).compareTo(
+            _toDouble(b['pricePerNight']) ?? 0,
+          ),
+        );
+        break;
+      case 'highest_price':
+        hotels.sort(
+          (a, b) => (_toDouble(b['pricePerNight']) ?? 0).compareTo(
+            _toDouble(a['pricePerNight']) ?? 0,
+          ),
+        );
+        break;
+      case 'highest_rating':
+      case 'popular':
+        hotels.sort(
+          (a, b) => (_toDouble(b['rating']) ?? 0).compareTo(
+            _toDouble(a['rating']) ?? 0,
+          ),
+        );
+        break;
+    }
   }
 }
 

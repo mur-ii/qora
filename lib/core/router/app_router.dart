@@ -31,10 +31,14 @@ final GoRouter appRouter = GoRouter(
         final rooms = state.uri.queryParameters['rooms'];
         final guests = state.uri.queryParameters['guests'];
         final searchKey = state.uri.queryParameters['searchKey'];
+        final sortBy = state.uri.queryParameters['sortBy'];
+        final budgetKey = state.uri.queryParameters['budgetKey'];
+        final minPrice = state.uri.queryParameters['minPrice'];
+        final maxPrice = state.uri.queryParameters['maxPrice'];
 
         return HotelListPage(
           key: ValueKey(
-            'hotel-list-${location ?? ''}-${checkIn ?? ''}-${checkOut ?? ''}-${rooms ?? ''}-${guests ?? ''}-${searchKey ?? ''}',
+            'hotel-list-${location ?? ''}-${checkIn ?? ''}-${checkOut ?? ''}-${rooms ?? ''}-${guests ?? ''}-${searchKey ?? ''}-${sortBy ?? ''}-${budgetKey ?? ''}-${minPrice ?? ''}-${maxPrice ?? ''}',
           ),
           location: location,
           checkIn: checkIn,
@@ -42,6 +46,10 @@ final GoRouter appRouter = GoRouter(
           rooms: rooms,
           guests: guests,
           searchKey: searchKey,
+          initialSort: sortBy,
+          initialBudgetKey: budgetKey,
+          initialMinPrice: minPrice,
+          initialMaxPrice: maxPrice,
         );
       },
     ),

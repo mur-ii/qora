@@ -66,17 +66,17 @@ class _BookingSummaryPageContent extends StatefulWidget {
 
 class _BookingSummaryPageContentState
     extends State<_BookingSummaryPageContent> {
-  bool _hasVoiceCompleted = false;
+  bool _hasSummaryPromptRequested = false;
 
-  void _completeVoiceSessionAtSummary(BookingEntity booking) {
-    if (_hasVoiceCompleted) return;
+  void _requestSummaryVoicePrompt(BookingEntity booking) {
+    if (_hasSummaryPromptRequested) return;
 
     final voiceState = context.read<VoiceAssistantBloc>().state;
     if (!voiceState.isActive) {
       return;
     }
 
-    _hasVoiceCompleted = true;
+    _hasSummaryPromptRequested = true;
 
     final currencySymbol = booking.pricing.currency.toUpperCase() == 'IDR'
         ? 'Rp '
@@ -94,16 +94,11 @@ class _BookingSummaryPageContentState
         '${booking.bookingDetails.nights} malam, '
         '${booking.bookingDetails.guests} tamu, '
         '${booking.bookingDetails.rooms} kamar. '
-        'Total pembayaran ${currencyFormat.format(booking.pricing.grandTotal)} dan dibayar lunas saat pemesanan. '
-        'Ringkasan pemesanan hotel Anda sudah ditampilkan pada layar. '
-        'Saat ini voice assistant hanya dapat membantu sampai tahap ini dan belum mendukung proses pembayaran. '
-        'Terima kasih telah menggunakan voice assistant.';
+        'Total yang harus dibayarkan ${currencyFormat.format(booking.pricing.grandTotal)}. '
+        'Apakah ingin melanjutkan ke pembayaran?';
 
     context.read<VoiceAssistantBloc>().add(
-      CompleteVoiceSessionWithMessage(
-        message: prompt,
-        reason: 'booking_summary_completed',
-      ),
+      RequestAssistantResponse(instructions: prompt),
     );
   }
 
@@ -134,7 +129,7 @@ class _BookingSummaryPageContentState
             }
 
             if (state is BookingSummaryLoaded) {
-              _completeVoiceSessionAtSummary(state.booking);
+              _requestSummaryVoicePrompt(state.booking);
             }
           },
         ),
@@ -147,7 +142,7 @@ class _BookingSummaryPageContentState
 
             final bookingState = context.read<BookingBloc>().state;
             if (bookingState is BookingSummaryLoaded) {
-              _completeVoiceSessionAtSummary(bookingState.booking);
+              _requestSummaryVoicePrompt(bookingState.booking);
             }
           },
         ),

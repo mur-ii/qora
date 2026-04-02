@@ -226,14 +226,14 @@ class _LocationFieldState extends State<_LocationField> {
   }
 
   Future<String?> _showCityPickerBottomSheet(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
-
     return showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: AppColors.transparent,
       builder: (sheetContext) {
+        final bottomInset = MediaQuery.of(sheetContext).viewPadding.bottom;
+
         return Padding(
           padding: EdgeInsets.fromLTRB(
             16,
@@ -547,8 +547,15 @@ class _RoomGuestFieldState extends State<_RoomGuestField> {
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
+            final bottomInset = MediaQuery.of(ctx).viewPadding.bottom;
+
             return Container(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                20,
+                20,
+                20 + (bottomInset > 0 ? bottomInset : 8),
+              ),
               constraints: BoxConstraints(
                 maxHeight: MediaQuery.of(ctx).size.height * 0.7,
               ),
@@ -966,8 +973,15 @@ class _CustomDateRangePickerState extends State<_CustomDateRangePicker> {
           ValueListenableBuilder<_DateSelection>(
             valueListenable: _selection,
             builder: (context, sel, _) {
+              final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+
               return Container(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  16 + (bottomInset > 0 ? bottomInset : 8),
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceWhite,
                   boxShadow: [

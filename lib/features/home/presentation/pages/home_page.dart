@@ -6,6 +6,7 @@ import '../../../../core/di/home_injection.dart';
 import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_bloc.dart';
+import '../../../voice_assistant/presentation/bloc/voice_assistant_event.dart';
 import '../../../voice_assistant/presentation/bloc/voice_assistant_state.dart';
 import '../bloc/home_bloc.dart';
 import '../widgets/featured_hotels_section.dart';
@@ -60,6 +61,8 @@ class _HomeView extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const HomeHeader(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: const _VoiceAssistantFab(),
       body: BlocListener<HomeBloc, HomeState>(
         listenWhen: (prev, curr) => prev.status != curr.status,
         listener: (context, state) {
@@ -122,6 +125,82 @@ class _HomeContentList extends StatelessWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+class _VoiceAssistantFab extends StatelessWidget {
+  const _VoiceAssistantFab();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<
+      VoiceAssistantBloc,
+      VoiceAssistantState,
+      VoiceAssistantStatus
+    >(
+      selector: (state) => state.status,
+      builder: (context, status) {
+        final isConnected =
+            status == VoiceAssistantStatus.connected ||
+            status == VoiceAssistantStatus.listening ||
+            status == VoiceAssistantStatus.speaking;
+        final isBusy =
+            status == VoiceAssistantStatus.connecting ||
+            status == VoiceAssistantStatus.disconnecting;
+
+        final fabColor = switch (status) {
+          VoiceAssistantStatus.connected ||
+          VoiceAssistantStatus.listening ||
+          VoiceAssistantStatus.speaking => AppColors.brandGreen,
+          VoiceAssistantStatus.connecting ||
+          VoiceAssistantStatus.disconnecting => AppColors.primaryOrange,
+          VoiceAssistantStatus.idle => AppColors.textSecondary,
+        };
+
+        final label = switch (status) {
+          VoiceAssistantStatus.connected => 'Connected',
+          VoiceAssistantStatus.listening => 'Listening',
+          VoiceAssistantStatus.speaking => 'Speaking',
+          VoiceAssistantStatus.connecting => 'Connecting...',
+          VoiceAssistantStatus.disconnecting => 'Disconnecting...',
+          VoiceAssistantStatus.idle => 'Disconnected',
+        };
+
+        final icon = isConnected ? Icons.mic : Icons.mic_off;
+
+        return FloatingActionButton.extended(
+          onPressed: isBusy
+              ? null
+              : () {
+                  if (isConnected) {
+                    context.read<VoiceAssistantBloc>().add(
+                      const StopVoiceAssistant(),
+                    );
+                    return;
+                  }
+
+                  context.read<VoiceAssistantBloc>().add(
+                    const StartVoiceAssistant(),
+                  );
+                },
+          backgroundColor: fabColor,
+          foregroundColor: AppColors.surfaceWhite,
+          icon: isBusy
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.surfaceWhite,
+                    ),
+                  ),
+                )
+              : Icon(icon),
+          label: Text(label),
+        );
+      },
     );
   }
 }

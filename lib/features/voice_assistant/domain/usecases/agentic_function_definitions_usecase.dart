@@ -30,6 +30,28 @@ class AgenticFunctionDefinitionsUseCase {
               'description': 'Number of rooms',
               'default': 1,
             },
+            'budget_per_night': {
+              'type': 'number',
+              'description': 'Target nightly budget in IDR',
+            },
+            'min_price': {
+              'type': 'number',
+              'description': 'Minimum nightly price in IDR',
+            },
+            'max_price': {
+              'type': 'number',
+              'description': 'Maximum nightly price in IDR',
+            },
+            'sort_by': {
+              'type': 'string',
+              'description': 'Sort preference for hotel results',
+              'enum': [
+                'lowest_price',
+                'highest_price',
+                'highest_rating',
+                'popular',
+              ],
+            },
             'amenities': {
               'type': 'array',
               'items': {'type': 'string'},
