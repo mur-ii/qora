@@ -425,40 +425,26 @@ class _HotelListPageContent extends StatelessWidget {
   }
 
   Future<void> _openDateRangePicker(BuildContext context) async {
-    final now = DateTime.now();
-    final firstDate = DateTime(now.year, now.month, now.day);
-    final currentCheckIn = _resolveCheckInDate();
-    final initialStartDate = currentCheckIn.isBefore(firstDate)
-        ? firstDate
-        : currentCheckIn;
-    final initialEndDate = _resolveCheckOutDate(checkInDate: initialStartDate);
-
-    final result = await showDateRangePicker(
+    await showModalBottomSheet<void>(
       context: context,
-      firstDate: firstDate,
-      lastDate: firstDate.add(const Duration(days: 365)),
-      initialDateRange: DateTimeRange(
-        start: initialStartDate,
-        end: initialEndDate,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surfaceWhite,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      helpText: 'Pilih tanggal menginap',
-      saveText: 'Terapkan',
-      cancelText: 'Batal',
-      confirmText: 'Pilih',
-    );
-
-    if (result == null) {
-      return;
-    }
-
-    if (!context.mounted) {
-      return;
-    }
-
-    _applyUpdatedSearch(
-      context,
-      nextCheckIn: DateFormat('yyyy-MM-dd').format(result.start),
-      nextCheckOut: DateFormat('yyyy-MM-dd').format(result.end),
+      builder: (sheetContext) {
+        return _HotelListDateRangePicker(
+          onConfirm: (start, end) {
+            Navigator.pop(sheetContext);
+            _applyUpdatedSearch(
+              context,
+              nextCheckIn: DateFormat('yyyy-MM-dd').format(start),
+              nextCheckOut: DateFormat('yyyy-MM-dd').format(end),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -469,90 +455,92 @@ class _HotelListPageContent extends StatelessWidget {
     await showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
+      isScrollControlled: true,
       backgroundColor: AppColors.surfaceWhite,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
         return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const _BottomSheetHandle(),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Pilih kamar dan tamu',
-                    style: AppTypography.titleMedium.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+          builder: (ctx, setSheetState) {
+            final bottomInset = MediaQuery.of(ctx).viewPadding.bottom;
+
+            return Container(
+              padding: EdgeInsets.fromLTRB(
+                20,
+                20,
+                20,
+                20 + (bottomInset > 0 ? bottomInset : 8),
+              ),
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(ctx).size.height * 0.7,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const _BottomSheetHandle(),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Pilih kamar dan tamu',
+                      style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  _CountAdjusterRow(
-                    label: 'Kamar',
-                    count: tempRooms,
-                    onIncrement: () {
-                      setSheetState(() {
-                        tempRooms += 1;
-                      });
-                    },
-                    onDecrement: () {
-                      if (tempRooms <= 1) return;
-                      setSheetState(() {
-                        tempRooms -= 1;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 14),
-                  _CountAdjusterRow(
-                    label: 'Tamu',
-                    count: tempGuests,
-                    onIncrement: () {
-                      setSheetState(() {
-                        tempGuests += 1;
-                      });
-                    },
-                    onDecrement: () {
-                      if (tempGuests <= 1) return;
-                      setSheetState(() {
-                        tempGuests -= 1;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(sheetContext);
-                        _applyUpdatedSearch(
-                          context,
-                          nextRooms: tempRooms,
-                          nextGuests: tempGuests,
-                        );
+                    const SizedBox(height: 20),
+                    _CounterRow(
+                      label: 'Kamar',
+                      count: tempRooms,
+                      onIncrement: () => setSheetState(() => tempRooms++),
+                      onDecrement: () {
+                        if (tempRooms > 1) {
+                          setSheetState(() => tempRooms--);
+                        }
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.textOnPrimary,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    ),
+                    const SizedBox(height: 16),
+                    _CounterRow(
+                      label: 'Tamu',
+                      count: tempGuests,
+                      onIncrement: () => setSheetState(() => tempGuests++),
+                      onDecrement: () {
+                        if (tempGuests > 1) {
+                          setSheetState(() => tempGuests--);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(sheetContext);
+                          _applyUpdatedSearch(
+                            context,
+                            nextRooms: tempRooms,
+                            nextGuests: tempGuests,
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.textOnPrimary,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
                         ),
-                      ),
-                      child: const Text(
-                        'Terapkan',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 15,
+                        child: const Text(
+                          'Terapkan',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -869,6 +857,7 @@ class _HotelListPageContent extends StatelessWidget {
 
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: AppColors.surfaceWhite,
       shape: const RoundedRectangleBorder(
@@ -1217,56 +1206,61 @@ class _HotelListPageContent extends StatelessWidget {
 
     showModalBottomSheet(
       context: context,
+      useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: AppColors.surfaceWhite,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const _BottomSheetHandle(),
-          const _BottomSheetHeader(title: 'Urutkan'),
-          const Divider(height: 1, color: AppColors.divider),
-          _SortOption(
-            title: 'Harga: Rendah ke Tinggi',
-            icon: Icons.arrow_upward_rounded,
-            isActive: activeFilter == 'lowest_price',
-            onTap: () {
-              hotelListBloc.add(const FilterHotelListEvent('lowest_price'));
-              Navigator.pop(context);
-            },
-          ),
-          _SortOption(
-            title: 'Harga: Tinggi ke Rendah',
-            icon: Icons.arrow_downward_rounded,
-            isActive: activeFilter == 'highest_price',
-            onTap: () {
-              hotelListBloc.add(const FilterHotelListEvent('highest_price'));
-              Navigator.pop(context);
-            },
-          ),
-          _SortOption(
-            title: 'Rating: Tinggi ke Rendah',
-            icon: Icons.star_rounded,
-            isActive: activeFilter == 'highest_rating',
-            onTap: () {
-              hotelListBloc.add(const FilterHotelListEvent('highest_rating'));
-              Navigator.pop(context);
-            },
-          ),
-          _SortOption(
-            title: 'Populer',
-            icon: Icons.trending_up_rounded,
-            isActive: activeFilter == 'popular',
-            onTap: () {
-              hotelListBloc.add(const FilterHotelListEvent('popular'));
-              Navigator.pop(context);
-            },
-          ),
-          const SizedBox(height: 24),
-        ],
-      ),
+      builder: (sheetContext) {
+        final bottomInset = MediaQuery.of(sheetContext).viewPadding.bottom;
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const _BottomSheetHandle(),
+            const _BottomSheetHeader(title: 'Urutkan'),
+            const Divider(height: 1, color: AppColors.divider),
+            _SortOption(
+              title: 'Harga: Rendah ke Tinggi',
+              icon: Icons.arrow_upward_rounded,
+              isActive: activeFilter == 'lowest_price',
+              onTap: () {
+                hotelListBloc.add(const FilterHotelListEvent('lowest_price'));
+                Navigator.pop(sheetContext);
+              },
+            ),
+            _SortOption(
+              title: 'Harga: Tinggi ke Rendah',
+              icon: Icons.arrow_downward_rounded,
+              isActive: activeFilter == 'highest_price',
+              onTap: () {
+                hotelListBloc.add(const FilterHotelListEvent('highest_price'));
+                Navigator.pop(sheetContext);
+              },
+            ),
+            _SortOption(
+              title: 'Rating: Tinggi ke Rendah',
+              icon: Icons.star_rounded,
+              isActive: activeFilter == 'highest_rating',
+              onTap: () {
+                hotelListBloc.add(const FilterHotelListEvent('highest_rating'));
+                Navigator.pop(sheetContext);
+              },
+            ),
+            _SortOption(
+              title: 'Populer',
+              icon: Icons.trending_up_rounded,
+              isActive: activeFilter == 'popular',
+              onTap: () {
+                hotelListBloc.add(const FilterHotelListEvent('popular'));
+                Navigator.pop(sheetContext);
+              },
+            ),
+            SizedBox(height: 24 + (bottomInset > 0 ? bottomInset : 8)),
+          ],
+        );
+      },
     );
   }
 }
@@ -1283,6 +1277,420 @@ class _CityPickerItem {
   final String label;
   final String subtitle;
   final IconData icon;
+}
+
+@immutable
+class _HotelListDateSelection {
+  const _HotelListDateSelection({this.start, this.end});
+
+  final DateTime? start;
+  final DateTime? end;
+
+  _HotelListDateSelection tap(DateTime date) {
+    if (start == null || end != null) {
+      return _HotelListDateSelection(start: date);
+    }
+    if (date.isBefore(start!)) {
+      return _HotelListDateSelection(start: date, end: start);
+    }
+    return _HotelListDateSelection(start: start, end: date);
+  }
+
+  bool isSelected(DateTime date) {
+    if (start == null) {
+      return false;
+    }
+    return _same(date, start!) || (end != null && _same(date, end!));
+  }
+
+  bool isInRange(DateTime date) {
+    if (start == null || end == null) {
+      return false;
+    }
+    return date.isAfter(start!) && date.isBefore(end!);
+  }
+
+  String toDisplayText() {
+    if (start == null) {
+      return '';
+    }
+    if (end == null) {
+      return '${start!.day} ${_kMonthNamesShort[start!.month - 1]}';
+    }
+    final nights = end!.difference(start!).inDays;
+    return '${start!.day} ${_kMonthNamesShort[start!.month - 1]} - '
+        '${end!.day} ${_kMonthNamesShort[end!.month - 1]} ($nights malam)';
+  }
+
+  static bool _same(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
+const _kMonthNamesShort = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'Mei',
+  'Jun',
+  'Jul',
+  'Agt',
+  'Sep',
+  'Okt',
+  'Nov',
+  'Des',
+];
+
+const _kMonthNamesFull = [
+  'Januari',
+  'Februari',
+  'Maret',
+  'April',
+  'Mei',
+  'Juni',
+  'Juli',
+  'Agustus',
+  'September',
+  'Oktober',
+  'November',
+  'Desember',
+];
+
+const _kDayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+class _HotelListDateRangePicker extends StatefulWidget {
+  const _HotelListDateRangePicker({required this.onConfirm});
+
+  final void Function(DateTime start, DateTime end) onConfirm;
+
+  @override
+  State<_HotelListDateRangePicker> createState() =>
+      _HotelListDateRangePickerState();
+}
+
+class _HotelListDateRangePickerState extends State<_HotelListDateRangePicker> {
+  final ScrollController _scrollController = ScrollController();
+  late final List<DateTime> _months;
+  late final ValueNotifier<_HotelListDateSelection> _selection;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _months = List.generate(12, (i) => DateTime(now.year, now.month + i, 1));
+    _selection = ValueNotifier(const _HotelListDateSelection());
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _selection.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(top: 12, bottom: 16),
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Pilih tanggal',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: _kDayNames
+                  .map(
+                    (day) => Expanded(
+                      child: Center(
+                        child: Text(
+                          day,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _months.length,
+              itemBuilder: (_, i) => _HotelListMonthCalendar(
+                month: _months[i],
+                selectionNotifier: _selection,
+              ),
+            ),
+          ),
+          ValueListenableBuilder<_HotelListDateSelection>(
+            valueListenable: _selection,
+            builder: (context, selection, _) {
+              final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+
+              return Container(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  16 + (bottomInset > 0 ? bottomInset : 8),
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceWhite,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.deepBlack.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (selection.start != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          selection.toDisplayText(),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed:
+                            selection.start != null && selection.end != null
+                            ? () => widget.onConfirm(
+                                selection.start!,
+                                selection.end!,
+                              )
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: AppColors.surfaceWhite,
+                          disabledBackgroundColor: AppColors.border,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Pilih tanggal',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HotelListMonthCalendar extends StatelessWidget {
+  const _HotelListMonthCalendar({
+    required this.month,
+    required this.selectionNotifier,
+  });
+
+  final DateTime month;
+  final ValueNotifier<_HotelListDateSelection> selectionNotifier;
+
+  List<DateTime?> _buildDays() {
+    final first = DateTime(month.year, month.month, 1);
+    final last = DateTime(month.year, month.month + 1, 0);
+    final offset = first.weekday % 7;
+    return [
+      ...List<DateTime?>.filled(offset, null),
+      for (int d = 1; d <= last.day; d++) DateTime(month.year, month.month, d),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final days = _buildDays();
+    final today = DateTime.now();
+    final todayNormalized = DateTime(today.year, today.month, today.day);
+
+    final rows = <Widget>[];
+    for (int i = 0; i < days.length; i += 7) {
+      rows.add(
+        Row(
+          children: List.generate(7, (j) {
+            if (i + j >= days.length || days[i + j] == null) {
+              return const Expanded(child: SizedBox());
+            }
+            final date = days[i + j]!;
+            return Expanded(
+              child: _HotelListDayCell(
+                key: ValueKey(date),
+                date: date,
+                isPast: date.isBefore(todayNormalized),
+                selectionNotifier: selectionNotifier,
+              ),
+            );
+          }),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Text(
+            '${_kMonthNamesFull[month.month - 1]} ${month.year}',
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
+        ),
+        ...rows,
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}
+
+class _HotelListDayCell extends StatefulWidget {
+  const _HotelListDayCell({
+    super.key,
+    required this.date,
+    required this.isPast,
+    required this.selectionNotifier,
+  });
+
+  final DateTime date;
+  final bool isPast;
+  final ValueNotifier<_HotelListDateSelection> selectionNotifier;
+
+  @override
+  State<_HotelListDayCell> createState() => _HotelListDayCellState();
+}
+
+class _HotelListDayCellState extends State<_HotelListDayCell> {
+  bool _selected = false;
+  bool _inRange = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.selectionNotifier.addListener(_onSelectionChanged);
+    _update(widget.selectionNotifier.value);
+  }
+
+  @override
+  void dispose() {
+    widget.selectionNotifier.removeListener(_onSelectionChanged);
+    super.dispose();
+  }
+
+  void _onSelectionChanged() {
+    final selection = widget.selectionNotifier.value;
+    final newSelected = selection.isSelected(widget.date);
+    final newInRange = selection.isInRange(widget.date);
+    if (newSelected != _selected || newInRange != _inRange) {
+      setState(() {
+        _selected = newSelected;
+        _inRange = newInRange;
+      });
+    }
+  }
+
+  void _update(_HotelListDateSelection selection) {
+    _selected = selection.isSelected(widget.date);
+    _inRange = selection.isInRange(widget.date);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.isPast) {
+      return SizedBox(
+        height: 40,
+        child: Center(
+          child: Text(
+            '${widget.date.day}',
+            style: const TextStyle(fontSize: 14, color: AppColors.textTertiary),
+          ),
+        ),
+      );
+    }
+
+    Color? backgroundColor;
+    Color textColor = AppColors.textPrimary;
+    BorderRadius? borderRadius;
+
+    if (_selected) {
+      backgroundColor = AppColors.primary;
+      textColor = AppColors.surfaceWhite;
+      borderRadius = BorderRadius.circular(8);
+    } else if (_inRange) {
+      backgroundColor = AppColors.primary.withValues(alpha: 0.12);
+    }
+
+    return GestureDetector(
+      onTap: () {
+        widget.selectionNotifier.value = widget.selectionNotifier.value.tap(
+          widget.date,
+        );
+      },
+      child: Container(
+        height: 40,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: borderRadius,
+        ),
+        child: Center(
+          child: Text(
+            '${widget.date.day}',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: _selected ? FontWeight.w700 : FontWeight.w400,
+              color: textColor,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _CityPickerTile extends StatelessWidget {
@@ -1424,13 +1832,13 @@ class _SearchCriteriaButton extends StatelessWidget {
   }
 }
 
-class _CountAdjusterRow extends StatelessWidget {
+class _CounterRow extends StatelessWidget {
   final String label;
   final int count;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
 
-  const _CountAdjusterRow({
+  const _CounterRow({
     required this.label,
     required this.count,
     required this.onIncrement,
@@ -1444,35 +1852,46 @@ class _CountAdjusterRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: AppTypography.bodyLarge.copyWith(
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         Container(
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.border),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(4),
           ),
           child: Row(
             children: [
-              _CountAdjusterButton(icon: Icons.remove, onTap: onDecrement),
-              Container(width: 1, height: 36, color: AppColors.border),
+              _CounterButton(
+                icon: Icons.remove,
+                onTap: onDecrement,
+                isEnabled: count > 1,
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(4),
+                ),
+              ),
+              Container(width: 1, height: 44, color: AppColors.border),
               SizedBox(
                 width: 44,
-                height: 36,
+                height: 44,
                 child: Center(
                   child: Text(
                     '$count',
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ),
-              Container(width: 1, height: 36, color: AppColors.border),
-              _CountAdjusterButton(icon: Icons.add, onTap: onIncrement),
+              Container(width: 1, height: 44, color: AppColors.border),
+              _CounterButton(
+                icon: Icons.add,
+                onTap: onIncrement,
+                isEnabled: true,
+                borderRadius: const BorderRadius.horizontal(
+                  right: Radius.circular(4),
+                ),
+              ),
             ],
           ),
         ),
@@ -1481,20 +1900,35 @@ class _CountAdjusterRow extends StatelessWidget {
   }
 }
 
-class _CountAdjusterButton extends StatelessWidget {
+class _CounterButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
+  final bool isEnabled;
+  final BorderRadius borderRadius;
 
-  const _CountAdjusterButton({required this.icon, required this.onTap});
+  const _CounterButton({
+    required this.icon,
+    required this.onTap,
+    required this.isEnabled,
+    required this.borderRadius,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: SizedBox(
-        width: 36,
-        height: 36,
-        child: Icon(icon, size: 18, color: AppColors.primary),
+    return Material(
+      color: AppColors.transparent,
+      child: InkWell(
+        onTap: isEnabled ? onTap : null,
+        borderRadius: borderRadius,
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Icon(
+            icon,
+            color: isEnabled ? AppColors.primary : AppColors.textSecondary,
+            size: 20,
+          ),
+        ),
       ),
     );
   }
@@ -1809,9 +2243,16 @@ class _BottomSheetActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewPadding.bottom;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        20 + (bottomInset > 0 ? bottomInset : 8),
+      ),
       decoration: const BoxDecoration(
         color: AppColors.surfaceWhite,
         border: Border(top: BorderSide(color: AppColors.divider)),
