@@ -74,7 +74,7 @@ class FramePerformanceMonitor {
     _isMonitoring = false;
 
     if (logSummary) {
-      _printSummary();
+      _printSummary(synchronousLogging: true);
     }
   }
 
@@ -127,7 +127,7 @@ class FramePerformanceMonitor {
     _accumulatedFrameTimeMicros = 0;
   }
 
-  void _printSummary() {
+  void _printSummary({bool synchronousLogging = false}) {
     final startedAt = _sessionStart;
     final endedAt = _sessionEnd ?? DateTime.now();
     final duration = startedAt == null
@@ -150,7 +150,12 @@ class FramePerformanceMonitor {
     ];
 
     for (final line in lines) {
-      debugPrint('$_logPrefix $line');
+      final message = '$_logPrefix $line';
+      if (synchronousLogging) {
+        debugPrintSynchronously(message);
+      } else {
+        debugPrint(message);
+      }
     }
   }
 

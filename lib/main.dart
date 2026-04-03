@@ -41,21 +41,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     _navigationService = VoiceAssistantInjection.getNavigationService();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Stop only when the app is actually being terminated.
-    if (state == AppLifecycleState.detached) {
-      FramePerformanceMonitor.instance.stopMonitoring();
-    }
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    FramePerformanceMonitor.instance.stopMonitoring();
     super.dispose();
   }
 

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/di/booking_injection.dart';
 import '../../../../core/router/app_routes.dart';
+import '../../../../core/services/frame_performance_monitor.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/booking_record.dart';
 import '../../domain/entities/booking_entity.dart';
@@ -63,6 +64,9 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
     }
 
     _isNavigatingHome = true;
+
+    // End frame monitoring at task completion before leaving the flow.
+    FramePerformanceMonitor.instance.stopMonitoring();
 
     if (mounted) {
       context.go(AppRoutes.homePath);
