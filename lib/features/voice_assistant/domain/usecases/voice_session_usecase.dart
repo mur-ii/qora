@@ -86,7 +86,7 @@ class VoiceSessionUseCase {
 
     try {
       await _disconnect();
-      summary = await logger.logSessionSummary();
+      summary = await logger.printSessionSummary();
       return summary;
     } finally {
       resetMemory();
