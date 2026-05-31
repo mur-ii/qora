@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-/// Optimized BlocBuilder that rebuilds only when a specific field changes
-/// Uses BlocSelector under the hood for better performance
 class OptimizedBlocBuilder<B extends StateStreamable<S>, S, T>
     extends StatelessWidget {
   const OptimizedBlocBuilder({

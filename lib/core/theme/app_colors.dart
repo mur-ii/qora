@@ -1,125 +1,134 @@
 import 'package:flutter/material.dart';
 
-/// Qora Color System
-/// A modern hotel booking application color palette designed for
-/// clean, professional, and premium user experience.
+/// Qora Color System — Hotel Booking Brand Identity
 class AppColors {
-  // Private constructor to prevent instantiation
   AppColors._();
 
-  // ==================== PRIMARY COLOR ====================
-  /// Brand Color - Vibrant Red
-  /// Usage: Primary CTA buttons, price text, important status labels
-  static const Color primary = Color(0xFFFF2D2D);
-  static const Color primaryVariant = Color(0xFFF53B3B);
-  static const Color primaryLight = Color(0xFFFF6666);
-  static const Color primaryDark = Color(0xFFCC2424);
+  // ==================== BRAND COLORS ====================
+  /// Call To Action Orange — buttons, highlights, primary actions
+  static const Color primaryOrange = Color(0xFFF37321);
+  static const Color primary = primaryOrange;
+  static const Color primaryVariant = Color(0xFFE05C10);
+  static const Color primaryLight = Color(0xFFFF9549);
+  static const Color primaryDark = Color(0xFFB85520);
+  static const Color primaryContainer = Color(0xFFFFE8D6);
 
-  // ==================== SECONDARY COLOR ====================
-  /// Sky Blue
-  /// Usage: Promotional banners, hotel highlights, featured deals
-  static const Color secondary = Color(0xFF6BCBFF);
-  static const Color secondaryVariant = Color(0xFF5AC8FA);
-  static const Color secondaryLight = Color(0xFF9DDBFF);
-  static const Color secondaryDark = Color(0xFF3AAFE0);
+  /// Brand / Active State Dark Green — navigation, active states
+  static const Color brandGreen = Color(0xFF155A32);
 
   // ==================== SURFACE & BACKGROUND ====================
-  /// Light & Clean backgrounds
-  /// Usage: Main app background, screen containers
-  static const Color background = Color(0xFFF8F8F8);
-  static const Color backgroundVariant = Color(0xFFF2F2F7);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceVariant = Color(0xFFF5F5F5);
+  /// Pure white — cards, modals, surfaces
+  static const Color surfaceWhite = Color(0xFFFFFFFF);
+  static const Color surface = surfaceWhite;
+
+  /// Light grey — page backgrounds
+  static const Color backgroundGrey = Color(0xFFF4F5F5);
+  static const Color background = backgroundGrey;
+  static const Color backgroundVariant = Color(0xFFEEEEEE);
+  static const Color surfaceVariant = Color(0xFFF1F5F9);
 
   // ==================== NEUTRAL COLORS ====================
-  /// Dark Grey / Near Black
-  /// Usage: Navigation, cards, active states, important text
-  static const Color neutral = Color(0xFF1C1C1E);
-  static const Color neutralVariant = Color(0xFF121212);
-  static const Color neutralLight = Color(0xFF2C2C2E);
-  static const Color neutralDark = Color(0xFF000000);
+  static const Color neutral900 = Color(0xFF212121);
+  static const Color neutral800 = Color(0xFF424242);
+  static const Color neutral700 = Color(0xFF616161);
+  static const Color neutral600 = Color(0xFF757575);
+  static const Color neutral500 = Color(0xFF9E9E9E);
+  static const Color neutral400 = Color(0xFFBDBDBD);
+  static const Color neutral300 = Color(0xFFE0E0E0);
+  static const Color neutral200 = Color(0xFFEEEEEE);
+  static const Color neutral100 = Color(0xFFF5F5F5);
+  static const Color neutral50 = Color(0xFFFAFAFA);
 
-  // Text colors
+  // ==================== TEXT COLORS ====================
+  /// Primary text — headings, body text
   static const Color textPrimary = Color(0xFF333333);
-  static const Color textSecondary = Color(0xFF666666);
-  static const Color textTertiary = Color(0xFF999999);
+
+  /// Secondary text, borders, and placeholders
+  static const Color textSecondary = Color(0xFF9E9E9E);
+  static const Color textTertiary = Color(0xFFBDBDBD);
+  static const Color textDisabled = Color(0xFFE0E0E0);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
   static const Color textOnDark = Color(0xFFFFFFFF);
 
-  // ==================== ACCENT COLOR ====================
-  /// Golden Yellow
-  /// Usage: Discount badges, limited-time offers, special highlights
-  static const Color accent = Color(0xFFFFCC00);
-  static const Color accentLight = Color(0xFFFFDD66);
-  static const Color accentDark = Color(0xFFCCA300);
-
   // ==================== SEMANTIC COLORS ====================
-  /// Success, warning, error states
-  static const Color success = Color(0xFF34C759);
-  static const Color warning = Color(0xFFFF9500);
-  static const Color error = Color(0xFFFF3B30);
-  static const Color info = Color(0xFF007AFF);
+  static const Color success = Color(0xFF16A34A);
+  static const Color successLight = Color(0xFFDCFCE7);
+  static const Color warning = Color(0xFFD97706);
+  static const Color warningLight = Color(0xFFFEF3C7);
+  static const Color error = Color(0xFFDC2626);
+  static const Color errorLight = Color(0xFFFEE2E2);
+  static const Color info = Color(0xFF0284C7);
+  static const Color infoLight = Color(0xFFE0F2FE);
+
+  // ==================== PROMO / ACCENT COLORS ====================
+  /// Gold accent — promo banners, special offers
+  static const Color promoGold = Color(0xFFD4AF37);
+  static const Color promoGoldLight = Color(0xFFFAF0C8);
+  static const Color promoGoldDark = Color(0xFFB8960A);
+
+  /// Deep Black — promo banner text, high-contrast elements
+  static const Color deepBlack = Color(0xFF000000);
 
   // ==================== UI ELEMENT COLORS ====================
-  /// Borders, dividers, shadows
-  static const Color border = Color(0xFFE5E5E5);
-  static const Color borderDark = Color(0xFFCCCCCC);
-  static const Color divider = Color(0xFFEEEEEE);
+  static const Color border = Color(0xFFE0E0E0);
+  static const Color borderFocus = primaryOrange;
+  static const Color divider = Color(0xFFF4F5F5);
+  static const Color transparent = Color(0x00000000);
+  static const Color primaryOverlay = Color(0x1FF37321);
 
-  /// Shadow colors for elevation
-  static const Color shadowLight = Color(0x0F000000);
-  static const Color shadowMedium = Color(0x1A000000);
-  static const Color shadowDark = Color(0x33000000);
+  static const Color shadowLight = Color(0x0A000000);
+  static const Color shadowMedium = Color(0x14000000);
 
-  // ==================== OVERLAY COLORS ====================
-  /// For modals, sheets, and overlays
+  // ==================== RATING ====================
+  static const Color rating = Color(0xFFF59E0B);
+
+  // ==================== STATUS COLORS ====================
+  static const Color statusConfirmed = success;
+  static const Color statusPending = warning;
+  static const Color statusCancelled = textTertiary;
+  static const Color statusBooked = primary;
+
+  // ==================== LEGACY ALIASES ====================
+  static const Color secondary = brandGreen;
+  static const Color secondaryVariant = Color(0xFF0D3D22);
+  static const Color secondaryLight = Color(0xFFE8F5E9);
+  static const Color secondaryDark = Color(0xFF0A2714);
+  static const Color accent = promoGold;
+  static const Color accentLight = promoGoldLight;
+  static const Color accentDark = promoGoldDark;
+  static const Color neutral = Color(0xFF424242);
+  static const Color neutralVariant = Color(0xFF333333);
+  static const Color neutralLight = Color(0xFF616161);
+  static const Color neutralDark = deepBlack;
+  static const Color borderDark = Color(0xFFBDBDBD);
+  static const Color shadowDark = Color(0x29000000);
   static const Color overlay = Color(0x80000000);
   static const Color overlayLight = Color(0x40000000);
   static const Color scrim = Color(0xB3000000);
-
-  // ==================== RATING & SPECIAL ====================
-  /// Star ratings and special badges
-  static const Color rating = Color(0xFFFFB800);
-  static const Color discount = accent;
-
-  // ==================== OPACITY HELPERS ====================
-  /// Common opacity values for consistent UI
+  static const Color discount = primary;
   static const double opacityDisabled = 0.38;
   static const double opacityMedium = 0.6;
   static const double opacityHigh = 0.87;
+  static const Color cardLight = surfaceWhite;
+  static const Color cardDark = neutral;
+  static const Color cardActive = neutralLight;
+  static const Color cardHover = Color(0xFFFAFAFA);
 
-  // ==================== GRADIENT DEFINITIONS ====================
-  /// Premium gradients for special UI elements
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primary, primaryVariant],
+    colors: [primaryOrange, primaryVariant],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient secondaryGradient = LinearGradient(
-    colors: [secondary, secondaryVariant],
+    colors: [brandGreen, secondaryVariant],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient accentGradient = LinearGradient(
-    colors: [accent, accentLight],
+    colors: [promoGold, promoGoldLight],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
-
-  // ==================== STATUS COLORS ====================
-  /// For booking status indicators
-  static const Color statusBooked = primary;
-  static const Color statusPreparing = Color(0xFFFF9500);
-  static const Color statusConfirmed = Color(0xFF34C759);
-  static const Color statusCancelled = Color(0xFF8E8E93);
-  static const Color statusPending = secondaryVariant;
-
-  // ==================== CARD COLORS ====================
-  /// Specific card background colors
-  static const Color cardLight = surface;
-  static const Color cardDark = neutral;
-  static const Color cardActive = neutralLight;
-  static const Color cardHover = Color(0xFFFAFAFA);
 }

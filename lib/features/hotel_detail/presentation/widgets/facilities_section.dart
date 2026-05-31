@@ -15,46 +15,53 @@ class FacilitiesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Fasilitas',
+          'Fasilitas Hotel',
           style: AppTypography.titleLarge.copyWith(
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: facilities.map((facility) {
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _getIconData(facility.icon),
-                    size: 18,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    facility.name,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
+          spacing: 8,
+          runSpacing: 8,
+          children: facilities
+              .map(
+                (facility) => _FacilityChip(
+                  icon: _getIconData(facility.icon),
+                  label: _translateFacilityName(facility.name),
+                ),
+              )
+              .toList(growable: false),
         ),
       ],
     );
+  }
+
+  String _translateFacilityName(String name) {
+    final normalized = name.toLowerCase();
+    const dictionary = {
+      'free wifi': 'WiFi Gratis',
+      'wifi gratis': 'WiFi Gratis',
+      'swimming pool': 'Kolam Renang',
+      'infinity pool': 'Kolam Renang',
+      'pool': 'Kolam Renang',
+      'fitness center': 'Pusat Kebugaran',
+      'gym': 'Pusat Kebugaran',
+      'restaurant': 'Restoran',
+      'beachfront restaurant': 'Restoran Pantai',
+      'spa & wellness': 'Spa dan Wellness',
+      '24/7 room service': 'Layanan Kamar 24 Jam',
+      'room service': 'Layanan Kamar',
+      'free parking': 'Parkir Gratis',
+      'parking': 'Parkir',
+      'airport shuttle': 'Antar Jemput Bandara',
+      'private beach': 'Pantai Pribadi',
+      'sunset bar': 'Bar Sunset',
+      'business center': 'Pusat Bisnis',
+      'meeting rooms': 'Ruang Rapat',
+    };
+    return dictionary[normalized] ?? name;
   }
 
   IconData _getIconData(String iconName) {
@@ -79,8 +86,45 @@ class FacilitiesSection extends StatelessWidget {
         return Icons.beach_access;
       case 'local_bar':
         return Icons.local_bar;
+      case 'business_center':
+        return Icons.business_center;
+      case 'meeting_room':
+        return Icons.meeting_room;
       default:
         return Icons.check_circle;
     }
+  }
+}
+
+class _FacilityChip extends StatelessWidget {
+  const _FacilityChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWhite,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: AppColors.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

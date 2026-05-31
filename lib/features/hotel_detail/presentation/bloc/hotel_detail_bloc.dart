@@ -22,7 +22,8 @@ class HotelDetailBloc extends Bloc<HotelDetailEvent, HotelDetailState> {
       final hotel = await getHotelDetail(event.hotelId);
       emit(HotelDetailLoaded(hotel));
     } catch (e) {
-      emit(HotelDetailError(e.toString()));
+      final message = e.toString().replaceFirst('Exception: ', '');
+      emit(HotelDetailError(message));
     }
   }
 }

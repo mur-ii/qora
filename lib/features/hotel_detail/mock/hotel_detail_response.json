@@ -104,11 +104,11 @@
     },
     "2": {
       "id": "2",
-      "name": "Sunset Beach Resort",
-      "description": "Experience beachfront luxury at Sunset Beach Resort. Our resort offers stunning ocean views, world-class facilities, and exceptional service to make your stay unforgettable.",
-      "location": "Bali, Indonesia",
-      "city": "Bali",
-      "address": "Jl. Pantai Kuta No. 88, Bali",
+      "name": "Braga Heritage Hotel",
+      "description": "Nikmati suasana heritage Bandung di kawasan Braga dengan fasilitas premium, kamar luas, dan layanan modern untuk perjalanan bisnis maupun liburan.",
+      "location": "Bandung, Indonesia",
+      "city": "Bandung",
+      "address": "Jl. Braga No. 88, Bandung",
       "rating": 4.9,
       "reviewCount": 2130,
       "starRating": 5,
@@ -210,6 +210,845 @@
           "rating": 5,
           "comment": "Best resort experience in Bali. The infinity pool is stunning!",
           "date": "2026-01-10"
+        }
+      ]
+    },
+    "7": {
+      "id": "7",
+      "name": "Skyline Tower Hotel",
+      "description": "Modern business hotel in Central Jakarta with quick access to offices, dining, and shopping districts.",
+      "location": "Jakarta, Indonesia",
+      "city": "Jakarta",
+      "address": "Jl. MH Thamrin No. 45, Jakarta Pusat",
+      "rating": 4.4,
+      "reviewCount": 842,
+      "starRating": 4,
+      "pricePerNight": 1200000,
+      "imageUrl": "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?w=800",
+        "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800",
+        "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800",
+        "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800"
+      ],
+      "facilities": [
+        { "name": "Free WiFi", "icon": "wifi" },
+        { "name": "Swimming Pool", "icon": "pool" },
+        { "name": "Business Center", "icon": "business_center" },
+        { "name": "Restaurant", "icon": "restaurant" },
+        { "name": "Gym", "icon": "fitness_center" }
+      ],
+      "policies": {
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "pets": false,
+        "smoking": false
+      },
+      "roomTypes": [
+        {
+          "id": "room-701",
+          "name": "Superior Room",
+          "description": "Comfortable room with city view",
+          "pricePerNight": 1200000,
+          "maxGuests": 2,
+          "size": 28,
+          "bedType": "1 Queen Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV", "Coffee Maker"]
+        },
+        {
+          "id": "room-702",
+          "name": "Executive Room",
+          "description": "Spacious room with work desk",
+          "pricePerNight": 1600000,
+          "maxGuests": 2,
+          "size": 36,
+          "bedType": "1 King Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600",
+          "amenities": [
+            "Free WiFi",
+            "Air Conditioning",
+            "TV",
+            "Mini Bar",
+            "Work Desk"
+          ]
+        }
+      ],
+      "reviews": [
+        {
+          "userName": "Andre L.",
+          "userAvatar": "https://i.pravatar.cc/150?img=21",
+          "rating": 4.4,
+          "comment": "Great location for business trips and easy access to MRT.",
+          "date": "2026-01-22"
+        },
+        {
+          "userName": "Putri S.",
+          "userAvatar": "https://i.pravatar.cc/150?img=33",
+          "rating": 4.2,
+          "comment": "Clean rooms and friendly staff. Breakfast is decent.",
+          "date": "2026-01-19"
+        }
+      ]
+    },
+    "9": {
+      "id": "9",
+      "name": "Menteng Park Suites",
+      "description": "Boutique suites in Menteng with a quiet atmosphere and curated local dining nearby.",
+      "location": "Jakarta, Indonesia",
+      "city": "Jakarta",
+      "address": "Jl. Cikini Raya No. 29, Jakarta Pusat",
+      "rating": 4.3,
+      "reviewCount": 564,
+      "starRating": 4,
+      "pricePerNight": 980000,
+      "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1501117716987-c8e1ecb2105a?w=800",
+        "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800",
+        "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?w=800",
+        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"
+      ],
+      "facilities": [
+        { "name": "Free WiFi", "icon": "wifi" },
+        { "name": "Gym", "icon": "fitness_center" },
+        { "name": "Restaurant", "icon": "restaurant" },
+        { "name": "Parking", "icon": "local_parking" }
+      ],
+      "policies": {
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "pets": false,
+        "smoking": false
+      },
+      "roomTypes": [
+        {
+          "id": "room-901",
+          "name": "Studio Suite",
+          "description": "Cozy suite with kitchenette",
+          "pricePerNight": 980000,
+          "maxGuests": 2,
+          "size": 30,
+          "bedType": "1 Queen Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV", "Kitchenette"]
+        },
+        {
+          "id": "room-902",
+          "name": "Premier Suite",
+          "description": "Suite with separate living area",
+          "pricePerNight": 1350000,
+          "maxGuests": 3,
+          "size": 42,
+          "bedType": "1 King Bed + Sofa Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600",
+          "amenities": [
+            "Free WiFi",
+            "Air Conditioning",
+            "TV",
+            "Mini Bar",
+            "Living Room"
+          ]
+        }
+      ],
+      "reviews": [
+        {
+          "userName": "Nadia P.",
+          "userAvatar": "https://i.pravatar.cc/150?img=28",
+          "rating": 4.5,
+          "comment": "Quiet area and nice cafes nearby. Room was clean.",
+          "date": "2026-01-20"
+        },
+        {
+          "userName": "Rizky A.",
+          "userAvatar": "https://i.pravatar.cc/150?img=18",
+          "rating": 4.1,
+          "comment": "Good value for money and friendly staff.",
+          "date": "2026-01-16"
+        }
+      ]
+    },
+    "10": {
+      "id": "10",
+      "name": "Kuningan Executive Hotel",
+      "description": "Executive hotel near Kuningan business district with meeting facilities and premium services.",
+      "location": "Jakarta, Indonesia",
+      "city": "Jakarta",
+      "address": "Jl. HR Rasuna Said No. 10, Jakarta Selatan",
+      "rating": 4.6,
+      "reviewCount": 921,
+      "starRating": 5,
+      "pricePerNight": 1350000,
+      "imageUrl": "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
+        "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+        "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800",
+        "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800"
+      ],
+      "facilities": [
+        { "name": "Free WiFi", "icon": "wifi" },
+        { "name": "Business Center", "icon": "business_center" },
+        { "name": "Meeting Rooms", "icon": "meeting_room" },
+        { "name": "Restaurant", "icon": "restaurant" },
+        { "name": "Gym", "icon": "fitness_center" }
+      ],
+      "policies": {
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "pets": false,
+        "smoking": false
+      },
+      "roomTypes": [
+        {
+          "id": "room-1001",
+          "name": "Executive Room",
+          "description": "Business-ready room with fast WiFi",
+          "pricePerNight": 1350000,
+          "maxGuests": 2,
+          "size": 32,
+          "bedType": "1 King Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV", "Work Desk"]
+        },
+        {
+          "id": "room-1002",
+          "name": "Executive Suite",
+          "description": "Suite with meeting corner",
+          "pricePerNight": 1900000,
+          "maxGuests": 3,
+          "size": 48,
+          "bedType": "1 King Bed + Sofa Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600",
+          "amenities": [
+            "Free WiFi",
+            "Air Conditioning",
+            "TV",
+            "Mini Bar",
+            "Meeting Corner"
+          ]
+        }
+      ],
+      "reviews": [
+        {
+          "userName": "Kevin D.",
+          "userAvatar": "https://i.pravatar.cc/150?img=6",
+          "rating": 4.7,
+          "comment": "Great business hotel with excellent service.",
+          "date": "2026-01-23"
+        },
+        {
+          "userName": "Arini M.",
+          "userAvatar": "https://i.pravatar.cc/150?img=24",
+          "rating": 4.4,
+          "comment": "Meeting facilities were complete and staff was helpful.",
+          "date": "2026-01-17"
+        }
+      ]
+    },
+    "11": {
+      "id": "11",
+      "name": "Dago Hills Retreat",
+      "description": "Retret nyaman di area Dago dengan pemandangan hijau, udara sejuk, dan fasilitas modern untuk pengalaman menginap yang tenang.",
+      "location": "Bandung, Indonesia",
+      "city": "Bandung",
+      "address": "Jl. Ir. H. Juanda No. 25, Bandung",
+      "rating": 4.7,
+      "reviewCount": 1304,
+      "starRating": 5,
+      "pricePerNight": 1600000,
+      "imageUrl": "https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?w=800",
+        "https://images.unsplash.com/photo-1560448071-60b0cde5f6f6?w=800",
+        "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800",
+        "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800"
+      ],
+      "facilities": [
+        { "name": "Free WiFi", "icon": "wifi" },
+        { "name": "Swimming Pool", "icon": "pool" },
+        { "name": "Fitness Center", "icon": "fitness_center" },
+        { "name": "Rooftop Bar", "icon": "local_bar" },
+        { "name": "Restaurant", "icon": "restaurant" }
+      ],
+      "policies": {
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "pets": false,
+        "smoking": false
+      },
+      "roomTypes": [
+        {
+          "id": "room-1101",
+          "name": "Premium Room",
+          "description": "Bright room with skyline view",
+          "pricePerNight": 1600000,
+          "maxGuests": 2,
+          "size": 34,
+          "bedType": "1 King Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV", "City View"]
+        },
+        {
+          "id": "room-1102",
+          "name": "Rooftop Suite",
+          "description": "Suite with lounge and view",
+          "pricePerNight": 2300000,
+          "maxGuests": 3,
+          "size": 60,
+          "bedType": "1 King Bed + Sofa Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600",
+          "amenities": [
+            "Free WiFi",
+            "Air Conditioning",
+            "TV",
+            "Mini Bar",
+            "Lounge Area"
+          ]
+        }
+      ],
+      "reviews": [
+        {
+          "userName": "Bima K.",
+          "userAvatar": "https://i.pravatar.cc/150?img=40",
+          "rating": 4.8,
+          "comment": "Rooftop bar is amazing. Great city view.",
+          "date": "2026-01-24"
+        },
+        {
+          "userName": "Alya N.",
+          "userAvatar": "https://i.pravatar.cc/150?img=13",
+          "rating": 4.6,
+          "comment": "Very clean and modern hotel.",
+          "date": "2026-01-18"
+        }
+      ]
+    },
+    "12": {
+      "id": "12",
+      "name": "Kemang Boutique Residence",
+      "description": "Boutique residence in Kemang with artistic interiors and a relaxed neighborhood vibe.",
+      "location": "Jakarta, Indonesia",
+      "city": "Jakarta",
+      "address": "Jl. Kemang Raya No. 56, Jakarta Selatan",
+      "rating": 4.2,
+      "reviewCount": 477,
+      "starRating": 4,
+      "pricePerNight": 890000,
+      "imageUrl": "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800",
+        "https://images.unsplash.com/photo-1501117716987-c8e1ecb2105a?w=800",
+        "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?w=800",
+        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800"
+      ],
+      "facilities": [
+        { "name": "Free WiFi", "icon": "wifi" },
+        { "name": "Garden", "icon": "park" },
+        { "name": "Cafe", "icon": "local_cafe" },
+        { "name": "Parking", "icon": "local_parking" }
+      ],
+      "policies": {
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "pets": false,
+        "smoking": false
+      },
+      "roomTypes": [
+        {
+          "id": "room-1201",
+          "name": "Garden Room",
+          "description": "Room with garden view",
+          "pricePerNight": 890000,
+          "maxGuests": 2,
+          "size": 26,
+          "bedType": "1 Queen Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV", "Garden View"]
+        },
+        {
+          "id": "room-1202",
+          "name": "Artist Suite",
+          "description": "Suite with lounge area",
+          "pricePerNight": 1200000,
+          "maxGuests": 3,
+          "size": 40,
+          "bedType": "1 King Bed + Sofa Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600",
+          "amenities": [
+            "Free WiFi",
+            "Air Conditioning",
+            "TV",
+            "Mini Bar",
+            "Lounge Area"
+          ]
+        }
+      ],
+      "reviews": [
+        {
+          "userName": "Dewi A.",
+          "userAvatar": "https://i.pravatar.cc/150?img=31",
+          "rating": 4.1,
+          "comment": "Nice atmosphere and cozy rooms.",
+          "date": "2026-01-21"
+        },
+        {
+          "userName": "Bagas R.",
+          "userAvatar": "https://i.pravatar.cc/150?img=9",
+          "rating": 4.3,
+          "comment": "Quiet area and good cafes around.",
+          "date": "2026-01-14"
+        }
+      ]
+    },
+    "13": {
+      "id": "13",
+      "name": "Senayan Grand Hotel",
+      "description": "Five-star experience near Senayan with premium facilities and exceptional service.",
+      "location": "Jakarta, Indonesia",
+      "city": "Jakarta",
+      "address": "Jl. Asia Afrika No. 1, Jakarta Pusat",
+      "rating": 4.9,
+      "reviewCount": 1760,
+      "starRating": 5,
+      "pricePerNight": 1750000,
+      "imageUrl": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1560448071-60b0cde5f6f6?w=800",
+        "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+        "https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba?w=800",
+        "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800"
+      ],
+      "facilities": [
+        { "name": "Free WiFi", "icon": "wifi" },
+        { "name": "Swimming Pool", "icon": "pool" },
+        { "name": "Spa & Wellness", "icon": "spa" },
+        { "name": "Restaurant", "icon": "restaurant" },
+        { "name": "Fitness Center", "icon": "fitness_center" }
+      ],
+      "policies": {
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "pets": false,
+        "smoking": false
+      },
+      "roomTypes": [
+        {
+          "id": "room-1301",
+          "name": "Grand Deluxe",
+          "description": "Elegant room with premium amenities",
+          "pricePerNight": 1750000,
+          "maxGuests": 2,
+          "size": 38,
+          "bedType": "1 King Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV", "Mini Bar"]
+        },
+        {
+          "id": "room-1302",
+          "name": "Senayan Suite",
+          "description": "Spacious suite with living room",
+          "pricePerNight": 2600000,
+          "maxGuests": 3,
+          "size": 62,
+          "bedType": "1 King Bed + Sofa Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600",
+          "amenities": [
+            "Free WiFi",
+            "Air Conditioning",
+            "TV",
+            "Mini Bar",
+            "Living Room"
+          ]
+        }
+      ],
+      "reviews": [
+        {
+          "userName": "Yoga W.",
+          "userAvatar": "https://i.pravatar.cc/150?img=3",
+          "rating": 5,
+          "comment": "Outstanding service and facilities.",
+          "date": "2026-01-25"
+        },
+        {
+          "userName": "Selvi T.",
+          "userAvatar": "https://i.pravatar.cc/150?img=41",
+          "rating": 4.8,
+          "comment": "Great location near shopping and stadium.",
+          "date": "2026-01-19"
+        }
+      ]
+    },
+    "14": {
+      "id": "14",
+      "name": "Thamrin Business Hotel",
+      "description": "Efficient business stay with fast access to Thamrin and nearby offices.",
+      "location": "Jakarta, Indonesia",
+      "city": "Jakarta",
+      "address": "Jl. Thamrin No. 77, Jakarta Pusat",
+      "rating": 4.1,
+      "reviewCount": 389,
+      "starRating": 3,
+      "pricePerNight": 1050000,
+      "imageUrl": "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?w=800",
+        "https://images.unsplash.com/photo-1501117716987-c8e1ecb2105a?w=800",
+        "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800",
+        "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800"
+      ],
+      "facilities": [
+        { "name": "Free WiFi", "icon": "wifi" },
+        { "name": "Business Center", "icon": "business_center" },
+        { "name": "Laundry Service", "icon": "local_laundry_service" }
+      ],
+      "policies": {
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "pets": false,
+        "smoking": false
+      },
+      "roomTypes": [
+        {
+          "id": "room-1401",
+          "name": "Standard Room",
+          "description": "Simple and efficient room",
+          "pricePerNight": 1050000,
+          "maxGuests": 2,
+          "size": 24,
+          "bedType": "1 Queen Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV"]
+        },
+        {
+          "id": "room-1402",
+          "name": "Business Room",
+          "description": "Room with work area",
+          "pricePerNight": 1250000,
+          "maxGuests": 2,
+          "size": 28,
+          "bedType": "1 King Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV", "Work Desk"]
+        }
+      ],
+      "reviews": [
+        {
+          "userName": "Rina P.",
+          "userAvatar": "https://i.pravatar.cc/150?img=8",
+          "rating": 4.0,
+          "comment": "Good for short business trips.",
+          "date": "2026-01-13"
+        },
+        {
+          "userName": "Eko M.",
+          "userAvatar": "https://i.pravatar.cc/150?img=27",
+          "rating": 4.2,
+          "comment": "Convenient location and clean rooms.",
+          "date": "2026-01-12"
+        }
+      ]
+    },
+    "15": {
+      "id": "15",
+      "name": "Pondok Indah Resort",
+      "description": "Resort-style stay in South Jakarta with family-friendly facilities and green spaces.",
+      "location": "Jakarta, Indonesia",
+      "city": "Jakarta",
+      "address": "Jl. Metro Pondok Indah No. 2, Jakarta Selatan",
+      "rating": 4.5,
+      "reviewCount": 1012,
+      "starRating": 5,
+      "pricePerNight": 1450000,
+      "imageUrl": "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=800",
+        "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+        "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800",
+        "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800"
+      ],
+      "facilities": [
+        { "name": "Free WiFi", "icon": "wifi" },
+        { "name": "Swimming Pool", "icon": "pool" },
+        { "name": "Tennis Court", "icon": "sports_tennis" },
+        { "name": "Restaurant", "icon": "restaurant" },
+        { "name": "Kids Club", "icon": "child_care" }
+      ],
+      "policies": {
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "pets": false,
+        "smoking": false
+      },
+      "roomTypes": [
+        {
+          "id": "room-1501",
+          "name": "Resort Room",
+          "description": "Room with garden view",
+          "pricePerNight": 1450000,
+          "maxGuests": 2,
+          "size": 34,
+          "bedType": "1 King Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV", "Garden View"]
+        },
+        {
+          "id": "room-1502",
+          "name": "Family Suite",
+          "description": "Suite with extra space for families",
+          "pricePerNight": 2100000,
+          "maxGuests": 4,
+          "size": 58,
+          "bedType": "2 Queen Beds",
+          "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600",
+          "amenities": [
+            "Free WiFi",
+            "Air Conditioning",
+            "TV",
+            "Mini Bar",
+            "Living Room"
+          ]
+        }
+      ],
+      "reviews": [
+        {
+          "userName": "Hendra S.",
+          "userAvatar": "https://i.pravatar.cc/150?img=44",
+          "rating": 4.6,
+          "comment": "Great for family stay and kids enjoyed the pool.",
+          "date": "2026-01-26"
+        },
+        {
+          "userName": "Lina V.",
+          "userAvatar": "https://i.pravatar.cc/150?img=4",
+          "rating": 4.4,
+          "comment": "Nice resort feel in the city.",
+          "date": "2026-01-18"
+        }
+      ]
+    },
+    "16": {
+      "id": "16",
+      "name": "Gatot Subroto Hotel",
+      "description": "Comfortable stay near Gatot Subroto corridor with airport access and modern facilities.",
+      "location": "Jakarta, Indonesia",
+      "city": "Jakarta",
+      "address": "Jl. Gatot Subroto No. 22, Jakarta Selatan",
+      "rating": 4.0,
+      "reviewCount": 321,
+      "starRating": 3,
+      "pricePerNight": 990000,
+      "imageUrl": "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800",
+        "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?w=800",
+        "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800",
+        "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800"
+      ],
+      "facilities": [
+        { "name": "Free WiFi", "icon": "wifi" },
+        { "name": "Gym", "icon": "fitness_center" },
+        { "name": "Restaurant", "icon": "restaurant" },
+        { "name": "Airport Shuttle", "icon": "airport_shuttle" }
+      ],
+      "policies": {
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "pets": false,
+        "smoking": false
+      },
+      "roomTypes": [
+        {
+          "id": "room-1601",
+          "name": "Comfort Room",
+          "description": "Simple comfort room",
+          "pricePerNight": 990000,
+          "maxGuests": 2,
+          "size": 25,
+          "bedType": "1 Queen Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV"]
+        },
+        {
+          "id": "room-1602",
+          "name": "Premium Room",
+          "description": "Room with better workspace",
+          "pricePerNight": 1150000,
+          "maxGuests": 2,
+          "size": 30,
+          "bedType": "1 King Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV", "Work Desk"]
+        }
+      ],
+      "reviews": [
+        {
+          "userName": "Fajar P.",
+          "userAvatar": "https://i.pravatar.cc/150?img=2",
+          "rating": 4.0,
+          "comment": "Good access to the airport and city center.",
+          "date": "2026-01-11"
+        },
+        {
+          "userName": "Maya S.",
+          "userAvatar": "https://i.pravatar.cc/150?img=23",
+          "rating": 4.1,
+          "comment": "Comfortable rooms for a short stay.",
+          "date": "2026-01-09"
+        }
+      ]
+    },
+    "17": {
+      "id": "17",
+      "name": "Kelapa Gading Family Hotel",
+      "description": "Family-oriented hotel in North Jakarta with kids facilities and spacious rooms.",
+      "location": "Jakarta, Indonesia",
+      "city": "Jakarta",
+      "address": "Jl. Boulevard Barat No. 8, Jakarta Utara",
+      "rating": 4.2,
+      "reviewCount": 612,
+      "starRating": 4,
+      "pricePerNight": 820000,
+      "imageUrl": "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
+        "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800",
+        "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?w=800",
+        "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800"
+      ],
+      "facilities": [
+        { "name": "Free WiFi", "icon": "wifi" },
+        { "name": "Kids Club", "icon": "child_care" },
+        { "name": "Restaurant", "icon": "restaurant" },
+        { "name": "Parking", "icon": "local_parking" }
+      ],
+      "policies": {
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "pets": false,
+        "smoking": false
+      },
+      "roomTypes": [
+        {
+          "id": "room-1701",
+          "name": "Family Room",
+          "description": "Family room with extra space",
+          "pricePerNight": 820000,
+          "maxGuests": 4,
+          "size": 40,
+          "bedType": "2 Queen Beds",
+          "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV", "Kids Amenities"]
+        },
+        {
+          "id": "room-1702",
+          "name": "Superior Room",
+          "description": "Comfortable room for small families",
+          "pricePerNight": 980000,
+          "maxGuests": 3,
+          "size": 34,
+          "bedType": "1 King Bed + Sofa Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600",
+          "amenities": [
+            "Free WiFi",
+            "Air Conditioning",
+            "TV",
+            "Mini Bar",
+            "Sofa Bed"
+          ]
+        }
+      ],
+      "reviews": [
+        {
+          "userName": "Santi N.",
+          "userAvatar": "https://i.pravatar.cc/150?img=15",
+          "rating": 4.3,
+          "comment": "Kids club was fun and staff was friendly.",
+          "date": "2026-01-27"
+        },
+        {
+          "userName": "Dito H.",
+          "userAvatar": "https://i.pravatar.cc/150?img=34",
+          "rating": 4.1,
+          "comment": "Good family stay and close to malls.",
+          "date": "2026-01-20"
+        }
+      ]
+    },
+    "18": {
+      "id": "18",
+      "name": "Ancol Marina View",
+      "description": "Harbor-side hotel with sea views near Ancol recreational area.",
+      "location": "Jakarta, Indonesia",
+      "city": "Jakarta",
+      "address": "Jl. Lodan Raya No. 3, Jakarta Utara",
+      "rating": 4.4,
+      "reviewCount": 738,
+      "starRating": 4,
+      "pricePerNight": 1300000,
+      "imageUrl": "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800",
+      "gallery": [
+        "https://images.unsplash.com/photo-1505691938895-1758d7feb511?w=800",
+        "https://images.unsplash.com/photo-1501117716987-c8e1ecb2105a?w=800",
+        "https://images.unsplash.com/photo-1444201983204-c43cbd584d93?w=800",
+        "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800"
+      ],
+      "facilities": [
+        { "name": "Free WiFi", "icon": "wifi" },
+        { "name": "Ocean View", "icon": "waves" },
+        { "name": "Restaurant", "icon": "restaurant" },
+        { "name": "Swimming Pool", "icon": "pool" }
+      ],
+      "policies": {
+        "checkIn": "14:00",
+        "checkOut": "12:00",
+        "pets": false,
+        "smoking": false
+      },
+      "roomTypes": [
+        {
+          "id": "room-1801",
+          "name": "Marina Room",
+          "description": "Room with marina view",
+          "pricePerNight": 1300000,
+          "maxGuests": 2,
+          "size": 30,
+          "bedType": "1 King Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1590490360182-c33d57733427?w=600",
+          "amenities": ["Free WiFi", "Air Conditioning", "TV", "Sea View"]
+        },
+        {
+          "id": "room-1802",
+          "name": "Ocean Suite",
+          "description": "Suite with panoramic sea view",
+          "pricePerNight": 1850000,
+          "maxGuests": 3,
+          "size": 55,
+          "bedType": "1 King Bed + Sofa Bed",
+          "imageUrl": "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600",
+          "amenities": [
+            "Free WiFi",
+            "Air Conditioning",
+            "TV",
+            "Mini Bar",
+            "Living Room"
+          ]
+        }
+      ],
+      "reviews": [
+        {
+          "userName": "Nico R.",
+          "userAvatar": "https://i.pravatar.cc/150?img=19",
+          "rating": 4.5,
+          "comment": "Nice sea view and close to Ancol.",
+          "date": "2026-01-22"
+        },
+        {
+          "userName": "Siska J.",
+          "userAvatar": "https://i.pravatar.cc/150?img=29",
+          "rating": 4.3,
+          "comment": "Good facilities and friendly staff.",
+          "date": "2026-01-16"
         }
       ]
     }

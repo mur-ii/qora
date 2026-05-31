@@ -24,10 +24,13 @@ class HotelDetailRemoteDataSourceImpl implements HotelDetailRemoteDataSource {
     final Map<String, dynamic> hotels = data['hotels'];
 
     if (!hotels.containsKey(hotelId)) {
-      throw Exception('Hotel with ID $hotelId not found');
+      throw Exception(
+        'Detail hotel belum tersedia untuk area ini. Silakan pilih hotel lain.',
+      );
     }
 
     final hotelData = hotels[hotelId];
-    return HotelDetailModel.fromJson(hotelData);
+    final result = HotelDetailModel.fromJson(hotelData);
+    return result;
   }
 }

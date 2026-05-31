@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/entities/booking_entity.dart';
 import '../../domain/usecases/confirm_booking.dart';
 import '../../domain/usecases/get_booking_summary.dart';
 import '../../domain/usecases/submit_guest_info.dart';
@@ -41,9 +42,9 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
       );
 
       _currentBookingId = booking.bookingId;
-      emit(BookingSummaryLoaded(booking));
+      emit(BookingSummaryLoaded(_applyBookingOverrides(booking, event)));
     } catch (e) {
-      emit(BookingError(e.toString()));
+      emit(BookingError(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -71,7 +72,7 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
 
       emit(GuestInfoSubmitted(booking));
     } catch (e) {
-      emit(BookingError(e.toString()));
+      emit(BookingError(e.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -94,7 +95,47 @@ class BookingBloc extends Bloc<BookingEvent, BookingState> {
 
       emit(BookingConfirmed(booking));
     } catch (e) {
-      emit(BookingError(e.toString()));
+      emit(BookingError(e.toString().replaceAll('Exception: ', '')));
     }
+  }
+
+  BookingEntity _applyBookingOverrides(
+    BookingEntity booking,
+    LoadBookingSummaryEvent event,
+  ) {
+    final parsedCheckIn = DateTime.tryParse(event.checkIn);
+    final parsedCheckOut = DateTime.tryParse(event.checkOut);
+    var nights = booking.bookingDetails.nights;
+
+    if (parsedCheckIn != null && parsedCheckOut != null) {
+      final diff = parsedCheckOut.difference(parsedCheckIn).inDays;
+      if (diff > 0) {
+        nights = diff;
+      }
+    }
+
+    final updatedDetails = BookingDetailsEntity(
+      checkIn: event.checkIn,
+      checkOut: event.checkOut,
+      checkInTime: booking.bookingDetails.checkInTime,
+      checkOutTime: booking.bookingDetails.checkOutTime,
+      nights: nights,
+      guests: event.guests,
+      rooms: event.rooms,
+    );
+
+    return BookingEntity(
+      bookingId: booking.bookingId,
+      confirmationNumber: booking.confirmationNumber,
+      bookingStatus: booking.bookingStatus,
+      bookingDate: booking.bookingDate,
+      hotel: booking.hotel,
+      room: booking.room,
+      bookingDetails: updatedDetails,
+      guestInfo: booking.guestInfo,
+      pricing: booking.pricing,
+      payment: booking.payment,
+      cancellationPolicy: booking.cancellationPolicy,
+    );
   }
 }

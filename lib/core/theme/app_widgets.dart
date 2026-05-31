@@ -98,25 +98,16 @@ class AppWidgets {
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.textOnPrimary,
         ),
-        child: isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.textOnPrimary,
-                ),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 20),
-                    const SizedBox(width: AppTheme.spacingSmall),
-                  ],
-                  Text(text),
-                ],
-              ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 20),
+              const SizedBox(width: AppTheme.spacingSmall),
+            ],
+            Text(text),
+          ],
+        ),
       ),
     );
   }
@@ -241,7 +232,7 @@ class AppWidgets {
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
       ),
       child: Material(
-        color: Colors.transparent,
+        color: AppColors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
@@ -299,9 +290,7 @@ class AppWidgets {
 
   /// Loading indicator
   static Widget loadingIndicator() {
-    return const Center(
-      child: CircularProgressIndicator(color: AppColors.primary),
-    );
+    return const SizedBox.shrink();
   }
 
   /// Empty state message
@@ -334,27 +323,6 @@ class AppWidgets {
             ],
           ],
         ),
-      ),
-    );
-  }
-
-  // ==================== IMAGE PLACEHOLDERS ====================
-
-  /// Image placeholder with shimmer effect hint
-  static Widget imagePlaceholder({
-    double? width,
-    double? height,
-    BorderRadius? borderRadius,
-  }) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: borderRadius,
-      ),
-      child: const Center(
-        child: Icon(Icons.image, size: 48, color: AppColors.border),
       ),
     );
   }

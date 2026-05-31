@@ -93,7 +93,6 @@ class HotelInfoModel {
   final String name;
   final String address;
   final double rating;
-  final String imageUrl;
   final String phone;
   final String email;
 
@@ -102,7 +101,6 @@ class HotelInfoModel {
     required this.name,
     required this.address,
     required this.rating,
-    required this.imageUrl,
     required this.phone,
     required this.email,
   });
@@ -113,9 +111,8 @@ class HotelInfoModel {
       name: json['name'] as String,
       address: json['address'] as String,
       rating: (json['rating'] as num).toDouble(),
-      imageUrl: json['imageUrl'] as String,
-      phone: json['phone'] as String,
-      email: json['email'] as String,
+      phone: json['phone'] as String? ?? '',
+      email: json['email'] as String? ?? '',
     );
   }
 
@@ -125,7 +122,6 @@ class HotelInfoModel {
       'name': name,
       'address': address,
       'rating': rating,
-      'imageUrl': imageUrl,
       'phone': phone,
       'email': email,
     };
@@ -137,7 +133,6 @@ class HotelInfoModel {
       name: name,
       address: address,
       rating: rating,
-      imageUrl: imageUrl,
       phone: phone,
       email: email,
     );
@@ -147,7 +142,6 @@ class HotelInfoModel {
 class RoomInfoModel {
   final String id;
   final String name;
-  final String imageUrl;
   final String bedType;
   final int maxGuests;
   final String? roomNumber;
@@ -155,7 +149,6 @@ class RoomInfoModel {
   RoomInfoModel({
     required this.id,
     required this.name,
-    required this.imageUrl,
     required this.bedType,
     required this.maxGuests,
     this.roomNumber,
@@ -165,9 +158,8 @@ class RoomInfoModel {
     return RoomInfoModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      imageUrl: json['imageUrl'] as String,
-      bedType: json['bedType'] as String,
-      maxGuests: json['maxGuests'] as int,
+      bedType: json['bedType'] as String? ?? 'Double',
+      maxGuests: json['maxGuests'] as int? ?? 2,
       roomNumber: json['roomNumber'] as String?,
     );
   }
@@ -176,7 +168,6 @@ class RoomInfoModel {
     return {
       'id': id,
       'name': name,
-      'imageUrl': imageUrl,
       'bedType': bedType,
       'maxGuests': maxGuests,
       'roomNumber': roomNumber,
@@ -187,7 +178,6 @@ class RoomInfoModel {
     return RoomInfoEntity(
       id: id,
       name: name,
-      imageUrl: imageUrl,
       bedType: bedType,
       maxGuests: maxGuests,
       roomNumber: roomNumber,
@@ -255,10 +245,7 @@ class GuestInfoModel {
   final PrimaryGuestModel primaryGuest;
   final String? specialRequests;
 
-  GuestInfoModel({
-    required this.primaryGuest,
-    this.specialRequests,
-  });
+  GuestInfoModel({required this.primaryGuest, this.specialRequests});
 
   factory GuestInfoModel.fromJson(Map<String, dynamic> json) {
     return GuestInfoModel(
@@ -354,7 +341,9 @@ class PricingModel {
       discount: (json['discount'] as num).toDouble(),
       grandTotal: (json['grandTotal'] as num).toDouble(),
       currency: json['currency'] as String,
-      dueNow: json['dueNow'] != null ? (json['dueNow'] as num).toDouble() : null,
+      dueNow: json['dueNow'] != null
+          ? (json['dueNow'] as num).toDouble()
+          : null,
       dueAtProperty: json['dueAtProperty'] != null
           ? (json['dueAtProperty'] as num).toDouble()
           : null,

@@ -21,6 +21,7 @@ class HotelListRemoteDataSourceImpl implements HotelListRemoteDataSource {
     final Map<String, dynamic> data = json.decode(response);
 
     final List<dynamic> hotelsJson = data['hotels'];
-    return hotelsJson.map((json) => HotelModel.fromJson(json)).toList();
+    final result = hotelsJson.map((json) => HotelModel.fromJson(json)).toList();
+    return result;
   }
 }
